@@ -36,7 +36,7 @@
 - [x] 主体认证（个人）
 - [ ] 名称、头像、简介、类目
 - [ ] 主体、类目和资质实时核验（需用户登录后台查看可选细分类目）
-- [ ] AppID（已注册，待用户填入 docs/miniapp/project-plan.md）
+- [x] AppID（wx497be72973d7ea09，2026-10-25 已记录到 project-plan.md 与 project.config.json）
 - [x] 微信开发者工具（2026-10-25 用户确认已安装）
 - [x] 后台方案确认（CloudBase）
 - [ ] 腾讯云环境或已有后台（待用户在云开发控制台创建并给 EnvId）
