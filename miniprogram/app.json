@@ -1,0 +1,30 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/catDetail/catDetail",
+    "pages/about/about",
+    "pages/admin/admin",
+    "pages/catForm/catForm",
+    "pages/denied/denied"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#E9F1FC",
+    "navigationBarTitleText": "校园猫咪档案馆",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#E9F1FC",
+    "backgroundColorTop": "#E9F1FC",
+    "backgroundColorBottom": "#E9F1FC"
+  },
+  "tabBar": {
+    "color": "#9AA3AD",
+    "selectedColor": "#2F6FDB",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "查猫" },
+      { "pagePath": "pages/about/about", "text": "关于" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

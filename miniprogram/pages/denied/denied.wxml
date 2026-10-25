@@ -1,0 +1,6 @@
+<view class="state">
+  <view class="lock">!</view>
+  <view class="big">你还没有管理权限</view>
+  <view>管理操作仅对授权管理员开放；如需权限，请联系超级管理员。</view>
+  <view class="retry" bindtap="goBack">返回</view>
+</view>

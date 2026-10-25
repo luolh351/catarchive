@@ -1,0 +1,12 @@
+<view class="about">
+  <view class="h">项目介绍</view>
+  <view class="p">校园猫咪档案馆收录校内流浪与家养猫咪的档案，帮助师生认识、关注与科学照护它们。</view>
+
+  <view class="h">资料维护原则</view>
+  <view class="p">所有信息以客观事实为准；绝育、健康等状态未知时标注「尚未确认」，不臆测；位置仅到校园区域级，不公开精确窝点。</view>
+
+  <view class="h">信息纠错</view>
+  <view class="p">发现信息有误或猫咪情况变化，请联系管理员更新。（联系方式由负责人确认后填写）</view>
+
+  <view class="btn" bindtap="goAdmin">进入管理（管理员）</view>
+</view>

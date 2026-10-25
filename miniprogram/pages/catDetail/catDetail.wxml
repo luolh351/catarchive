@@ -1,0 +1,22 @@
+<view class="hero" style="background:linear-gradient(135deg,#FFB46B,#FF8A3D)">猫咪照片</view>
+
+<view class="d-name">
+  小橘
+  <text wx:if="{{cat.isAdoptable}}" class="badge">待领养</text>
+  <text class="statustag st-on">{{cat.statusText}}</text>
+</view>
+
+<view class="attrs">
+  <view class="attr" wx:for="{{attrs}}" wx:key="k">
+    <view class="k">{{item.k}}</view>
+    <view class="v">{{item.v}}</view>
+  </view>
+</view>
+
+<view class="section-t">近况时间线</view>
+<view class="tl">
+  <view class="it" wx:for="{{timeline}}" wx:key="t">
+    <view class="t">{{item.t}}</view>
+    <view class="c">{{item.c}}</view>
+  </view>
+</view>

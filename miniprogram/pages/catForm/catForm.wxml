@@ -1,0 +1,73 @@
+<view class="field">
+  <view class="lab"><text class="req">*</text> 名字</view>
+  <input placeholder="如：小橘" value="{{form.name}}" bindinput="onInput" data-field="name" />
+</view>
+<view class="field">
+  <view class="lab">昵称（用于搜索）</view>
+  <input placeholder="多个用逗号分隔" value="{{form.aliases}}" bindinput="onInput" data-field="aliases" />
+</view>
+<view class="field">
+  <view class="lab">毛色</view>
+  <view class="opts">
+    <view class="opt {{form.coatColor==='橘白'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="橘白">橘白</view>
+    <view class="opt {{form.coatColor==='黑白'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="黑白">黑白</view>
+    <view class="opt {{form.coatColor==='狸花'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="狸花">狸花</view>
+    <view class="opt {{form.coatColor==='白'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="白">白</view>
+    <view class="opt {{form.coatColor==='其他'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="其他">其他</view>
+    <view class="opt {{form.coatColor==='未知'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="未知">未知</view>
+  </view>
+</view>
+<view class="field">
+  <view class="lab">性别</view>
+  <view class="opts">
+    <view class="opt {{form.gender==='公'?'on':''}}" bindtap="selectOpt" data-group="gender" data-val="公">公</view>
+    <view class="opt {{form.gender==='母'?'on':''}}" bindtap="selectOpt" data-group="gender" data-val="母">母</view>
+    <view class="opt {{form.gender==='未知'?'on':''}}" bindtap="selectOpt" data-group="gender" data-val="未知">未知</view>
+  </view>
+</view>
+<view class="field">
+  <view class="lab">绝育情况</view>
+  <view class="opts">
+    <view class="opt {{form.sterilizationStatus==='已绝育'?'on':''}}" bindtap="selectOpt" data-group="sterilizationStatus" data-val="已绝育">已绝育</view>
+    <view class="opt {{form.sterilizationStatus==='未绝育'?'on':''}}" bindtap="selectOpt" data-group="sterilizationStatus" data-val="未绝育">未绝育</view>
+    <view class="opt {{form.sterilizationStatus==='未知'?'on':''}}" bindtap="selectOpt" data-group="sterilizationStatus" data-val="未知">未知</view>
+  </view>
+</view>
+<view class="field">
+  <view class="lab">绝育时间</view>
+  <input placeholder="如 2024-05（可空）" value="{{form.sterilizedAt}}" bindinput="onInput" data-field="sterilizedAt" />
+</view>
+<view class="field">
+  <view class="lab">常出没区域</view>
+  <input placeholder="如 食堂、宿舍区" value="{{form.usualLocations}}" bindinput="onInput" data-field="usualLocations" />
+</view>
+<view class="field">
+  <view class="lab">最近情况</view>
+  <input placeholder="当前近况摘要" value="{{form.latestNote}}" bindinput="onInput" data-field="latestNote" />
+</view>
+<view class="field">
+  <view class="lab">照片 / 声音上传</view>
+  <view class="opts">
+    <view class="opt">＋ 上传封面</view>
+    <view class="opt">＋ 上传照片</view>
+    <view class="opt">＋ 上传声音</view>
+  </view>
+</view>
+<view class="field">
+  <view class="row2">
+    <view class="lab" style="margin:0">待领养</view>
+    <view class="switch {{form.isAdoptable?'on':''}}" bindtap="toggleSwitch"></view>
+  </view>
+</view>
+<view class="field">
+  <view class="lab">去向状态</view>
+  <view class="opts">
+    <view class="opt {{form.lifeStatus==='在校'?'on':''}}" bindtap="selectOpt" data-group="lifeStatus" data-val="在校">在校</view>
+    <view class="opt {{form.lifeStatus==='毕业'?'on':''}}" bindtap="selectOpt" data-group="lifeStatus" data-val="毕业">毕业</view>
+    <view class="opt {{form.lifeStatus==='休学'?'on':''}}" bindtap="selectOpt" data-group="lifeStatus" data-val="休学">休学</view>
+    <view class="opt {{form.lifeStatus==='喵星'?'on':''}}" bindtap="selectOpt" data-group="lifeStatus" data-val="喵星">喵星</view>
+  </view>
+</view>
+
+<view class="save" bindtap="save">保存</view>
+<view class="cancel" bindtap="cancel">取消</view>

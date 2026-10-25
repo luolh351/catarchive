@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>校园猫咪档案馆 · UI 方案对比（A/B/C · 蓝底）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: #e9eef4; color: #1a1a1a; padding: 24px 16px 48px;
+  }
+  .page-note {
+    max-width: 1240px; margin: 0 auto 22px; background: #fff;
+    border: 1px solid #e3e7ee; border-radius: 12px; padding: 14px 18px;
+    font-size: 13px; line-height: 1.75; color: #44505f;
+  }
+  .page-note b { color: #1a1a1a; }
+  .legend { max-width:1240px; margin:0 auto 22px; display:flex; flex-wrap:wrap; gap:10px 22px;
+            background:#fff; border:1px solid #e3e7ee; border-radius:12px; padding:12px 18px; font-size:12.5px; color:#46515e; }
+  .legend span b { color:#2f6fdb; }
+  .row { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; align-items: flex-start; max-width: 1240px; margin: 0 auto; }
+  .stack { display: flex; flex-direction: column; align-items: center; }
+
+  .phone { width: 375px; flex: 0 0 375px; }
+  .bezel { background: #0d0f12; border-radius: 44px; padding: 12px; box-shadow: 0 12px 30px rgba(20,40,80,.18); }
+  .screen {
+    position: relative; width: 351px; height: 740px; background: var(--bg);
+    border-radius: 34px; overflow: hidden; display: flex; flex-direction: column;
+  }
+
+  /* 状态栏 */
+  .statusbar { height: 44px; flex: 0 0 44px; padding: 0 22px; display: flex; align-items: center;
+               justify-content: space-between; font-size: 13px; color: var(--fg); font-weight: 600; position: relative; z-index: 3; }
+  .statusbar .sys { display: flex; gap: 5px; align-items: center; opacity: .9; }
+  .statusbar .sys i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
+  .statusbar .bat { width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
+  .statusbar .bat::after { content:""; position:absolute; right:-3px; top:3px; width:2px; height:5px; background:currentColor; border-radius:1px; }
+  .statusbar .bat::before { content:""; position:absolute; left:1.5px; top:1.5px; bottom:1.5px; width:13px; background:currentColor; border-radius:1px; }
+
+  /* 微信胶囊 */
+  .capsule { position: absolute; top: 50px; right: 14px; z-index: 30; width: 87px; height: 32px;
+             background: rgba(255,255,255,.78); border: 1px solid rgba(0,0,0,.08); border-radius: 16px;
+             display: flex; align-items: center; justify-content: center; gap: 10px; backdrop-filter: blur(4px); }
+  .capsule .cd { width: 14px; height: 14px; border-radius: 50%; border: 1.6px solid #1a1a1a; }
+  .capsule .cd.s { width: 16px; height: 16px; border-radius: 50%; border: 1.6px solid #1a1a1a; position: relative; }
+  .capsule .cd.s::after { content:""; position:absolute; inset:3px; border-radius:50%; border:1.6px solid #1a1a1a; }
+
+  .navbar { height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center;
+            font-size: 17px; font-weight: 600; color: var(--fg); padding-right: 100px; position: relative; z-index: 2; }
+
+  .content { flex: 1 1 auto; overflow: hidden; padding: 6px 16px 0; position: relative; z-index: 1; }
+
+  /* 搜索 */
+  .search { display: flex; align-items: center; gap: 8px; background: var(--field);
+            border-radius: 12px; padding: 10px 14px; color: #9aa3ad; font-size: 14px; margin-bottom: 8px; }
+  .cat-icon { width: 22px; height: 22px; flex: 0 0 22px; }
+
+  /* 状态标签 */
+  .tabs { display: flex; align-items: center; justify-content: space-between; padding: 6px 2px 0; margin-bottom: 10px; }
+  .tabs .t { flex: 1 1 0; text-align: center; font-size: 15px; color: #8b96a3; padding: 8px 0; position: relative; }
+  .tabs .t.on { color: var(--primary); font-weight: 600; }
+  .tabs .t.on::after { content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:0;
+                       width: 22px; height: 3px; border-radius: 2px; background: var(--primary); }
+
+  /* 列表 */
+  .list { margin-top: 2px; }
+  .row-item { display: flex; align-items: center; gap: 14px; padding: 13px 2px; border-bottom: 1px solid var(--line); }
+  .row-item:last-child { border-bottom: none; }
+  .avatar { width: 50px; height: 50px; border-radius: 50%; flex: 0 0 50px;
+            display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.9);
+            font-size: 11px; letter-spacing: 1px; }
+  .row-item .nm { font-size: 16px; color: var(--fg); }
+  .row-item .sub { font-size: 12px; color: #97a0aa; margin-top: 2px; }
+
+  /* 底部 tabBar */
+  .tabbar { flex: 0 0 auto; height: 56px; background: var(--tab-bg); border-top: 1px solid var(--tab-bd);
+            display: flex; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+  .tab { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+         color: #9aa3ad; font-size: 11px; }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.on { color: var(--primary); }
+  .home-ind { height: 6px; width: 120px; background: #c7ccd3; border-radius: 3px; margin: 6px auto 4px; }
+
+  /* ===== A：原生稳妥（浅蓝 + 极简列表，贴近参考图） ===== */
+  .vA { --bg:#f2f6fb; --field:#ffffff; --primary:#2f6fdb; --fg:#1b2a3d;
+        --line:#e7edf5; --tab-bg:#ffffff; --tab-bd:#e7edf5; }
+
+  /* ===== B：品牌定制（蓝 + 卡片化 + 分段标签，TDesign 风） ===== */
+  .vB { --bg:#e9f1fc; --field:#ffffff; --primary:#2f6fdb; --fg:#182a44;
+        --line:#eef3fb; --tab-bg:#ffffff; --tab-bd:#dce7f7; }
+  .vB .search { box-shadow: 0 3px 10px rgba(47,111,219,.08); }
+  .vB .tabs { background:#fff; border-radius: 14px; padding: 5px; box-shadow: 0 3px 10px rgba(47,111,219,.08); }
+  .vB .tabs .t { padding: 8px 0; border-radius: 10px; font-size: 14px; }
+  .vB .tabs .t.on { background: var(--primary); color:#fff; }
+  .vB .tabs .t.on::after { display:none; }
+  .vB .list { background:#fff; border-radius: 18px; padding: 4px 16px; margin-top: 12px;
+              box-shadow: 0 5px 16px rgba(47,111,219,.08); }
+  .vB .row-item { padding: 12px 0; }
+  .vB .avatar { box-shadow: 0 2px 6px rgba(20,40,80,.15); }
+
+  /* ===== C：差异化治愈（蓝紫渐变 + 大圆角 + 可落地装饰） ===== */
+  .vC { --bg:linear-gradient(180deg,#e6f0ff 0%,#f4f8ff 60%); --field:#ffffff; --primary:#3757c9;
+        --fg:#1c2550; --line:rgba(55,87,201,.10); --tab-bg:rgba(255,255,255,.9); --tab-bd:rgba(55,87,201,.10); }
+  .vC .screen::before { content:""; position:absolute; width:170px; height:170px; border-radius:50%;
+                        background:rgba(80,120,240,.14); top:-60px; right:-50px; z-index:0; }
+  .vC .screen::after { content:""; position:absolute; width:120px; height:120px; border-radius:50%;
+                       background:rgba(120,160,255,.12); bottom:120px; left:-40px; z-index:0; }
+  .vC .tabs .t.on::after { width: 0; height: 26px; border-radius: 13px; background: rgba(55,87,201,.12); z-index:-1; bottom: -4px; }
+  .vC .list { background: rgba(255,255,255,.72); border-radius: 20px; padding: 6px 16px; margin-top: 12px;
+              border: 1px solid rgba(255,255,255,.8); box-shadow: 0 8px 22px rgba(55,87,201,.10); }
+  .vC .row-item { padding: 14px 0; }
+  .vC .avatar { box-shadow: 0 3px 8px rgba(55,87,201,.20); }
+
+  /* 说明卡 */
+  .desc { width: 375px; flex: 0 0 375px; background:#fff; border:1px solid #e3e7ee; border-radius: 14px;
+          padding: 16px 18px; margin-top: 14px; }
+  .desc h3 { font-size: 16px; margin-bottom: 8px; }
+  .desc .pill { display:inline-block; font-size:11px; padding:2px 9px; border-radius:10px; background:#eef1f5; color:#55606d; margin-bottom:10px; }
+  .desc ul { list-style: none; font-size: 12.5px; line-height: 1.75; color:#46515e; }
+  .desc ul li b { color:#1a1a1a; }
+</style>
+</head>
+<body>
+
+<div class="page-note">
+  <b>说明：</b>三套 <b>蓝底、参考北大猫咪图鉴结构</b>的方案对比（同一首页、同一模拟数据），仅用于电脑上比较视觉与布局，
+  <b>不是最终小程序</b>。最终以微信开发者工具和安卓 / iPhone 真机为准。三套都满足：375px 竖屏画布、状态栏、右上角胶囊避让、
+  底部安全区、tabBar 2 项、点击区域 ≥ 44px；真实小程序中 tabBar 图标使用项目内本地 PNG。
+</div>
+
+<div class="legend">
+  <span><b>在校</b> 正在校园生活</span>
+  <span><b>毕业</b> 已被领养</span>
+  <span><b>休学</b> 不知所踪</span>
+  <span><b>喵星</b> 已去世</span>
+</div>
+
+<div class="row">
+
+  <!-- 方案 A -->
+  <div class="stack">
+    <div class="phone"><div class="bezel"><div class="screen vA">
+      <div class="statusbar"><span>9:41</span>
+        <span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+      <div class="navbar">校园猫咪档案馆</div>
+      <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+      <div class="content">
+        <div class="search">
+          <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="#9aa3ad" stroke-width="1.6">
+            <path d="M4 9c0-2 1-4 1-4l3 2h8l3-2s1 2 1 4v5a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6z"/>
+            <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M12 15v2"/>
+          </svg>
+          搜索猫咪名字
+        </div>
+        <div class="tabs">
+          <span class="t on">在校</span><span class="t">毕业</span><span class="t">休学</span><span class="t">喵星</span>
+        </div>
+        <div class="list">
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#ffb46b,#ff8a3d)">猫</div>
+            <div><div class="nm">小橘</div><div class="sub">橘白 · 食堂附近</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#5b6470,#2f3640)">猫</div>
+            <div><div class="nm">煤球</div><div class="sub">黑白 · 操场</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#e6ecf3,#c3ccd8)">猫</div>
+            <div><div class="nm">牛奶</div><div class="sub">白 · 图书馆</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#cdd7e3,#9aa9bb)">猫</div>
+            <div><div class="nm">大白</div><div class="sub">白灰 · 宿舍区</div></div></div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 11h2v9h5v-6h4v6h5v-9h2z"/></svg>查猫</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><rect x="11" y="10" width="2" height="6" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>关于</div>
+      </div>
+      <div class="home-ind"></div>
+    </div></div></div>
+    <div class="desc">
+      <h3>A · 原生稳妥（浅蓝极简）</h3>
+      <span class="pill">难度：低</span>
+      <ul>
+        <li><b>来源</b>：贴近北大猫咪图鉴的极简列表 + WeUI 原生感。</li>
+        <li><b>气质</b>：清爽、留白多、像微信自带；上手零成本。</li>
+        <li><b>样式</b>：浅蓝底 #F2F6FB，主色 #2F6FDB，1px 细分隔线。</li>
+        <li><b>差异</b>：最稳、最省开发，辨识度中等。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 方案 B -->
+  <div class="stack">
+    <div class="phone"><div class="bezel"><div class="screen vB">
+      <div class="statusbar"><span>9:41</span>
+        <span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+      <div class="navbar">校园猫咪档案馆</div>
+      <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+      <div class="content">
+        <div class="search">
+          <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="#2f6fdb" stroke-width="1.6">
+            <path d="M4 9c0-2 1-4 1-4l3 2h8l3-2s1 2 1 4v5a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6z"/>
+            <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M12 15v2"/>
+          </svg>
+          搜索猫咪名字
+        </div>
+        <div class="tabs">
+          <span class="t on">在校</span><span class="t">毕业</span><span class="t">休学</span><span class="t">喵星</span>
+        </div>
+        <div class="list">
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#ffb46b,#ff8a3d)">猫</div>
+            <div><div class="nm">小橘</div><div class="sub">橘白 · 食堂附近</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#5b6470,#2f3640)">猫</div>
+            <div><div class="nm">煤球</div><div class="sub">黑白 · 操场</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#e6ecf3,#c3ccd8)">猫</div>
+            <div><div class="nm">牛奶</div><div class="sub">白 · 图书馆</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#cdd7e3,#9aa9bb)">猫</div>
+            <div><div class="nm">大白</div><div class="sub">白灰 · 宿舍区</div></div></div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 11h2v9h5v-6h4v6h5v-9h2z"/></svg>查猫</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><rect x="11" y="10" width="2" height="6" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>关于</div>
+      </div>
+      <div class="home-ind"></div>
+    </div></div></div>
+    <div class="desc">
+      <h3>B · 品牌定制（蓝 + 卡片）</h3>
+      <span class="pill">难度：中</span>
+      <ul>
+        <li><b>来源</b>：TDesign MiniProgram 组件基座，品牌化调整。</li>
+        <li><b>气质</b>：更精致、内容有卡片归属，像成熟产品。</li>
+        <li><b>样式</b>：蓝底 #E9F1FC，主色 #2F6FDB，18px 大圆角卡片，分段式状态标签。</li>
+        <li><b>差异</b>：视觉更完整，组件化好维护；实现比 A 多。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 方案 C -->
+  <div class="stack">
+    <div class="phone"><div class="bezel"><div class="screen vC">
+      <div class="statusbar"><span>9:41</span>
+        <span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+      <div class="navbar">校园猫咪档案馆</div>
+      <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+      <div class="content">
+        <div class="search">
+          <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="#3757c9" stroke-width="1.6">
+            <path d="M4 9c0-2 1-4 1-4l3 2h8l3-2s1 2 1 4v5a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6z"/>
+            <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M12 15v2"/>
+          </svg>
+          搜索猫咪名字
+        </div>
+        <div class="tabs">
+          <span class="t on">在校</span><span class="t">毕业</span><span class="t">休学</span><span class="t">喵星</span>
+        </div>
+        <div class="list">
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#ffb46b,#ff8a3d)">猫</div>
+            <div><div class="nm">小橘</div><div class="sub">橘白 · 食堂附近</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#5b6470,#2f3640)">猫</div>
+            <div><div class="nm">煤球</div><div class="sub">黑白 · 操场</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#e6ecf3,#c3ccd8)">猫</div>
+            <div><div class="nm">牛奶</div><div class="sub">白 · 图书馆</div></div></div>
+          <div class="row-item"><div class="avatar" style="background:linear-gradient(135deg,#cdd7e3,#9aa9bb)">猫</div>
+            <div><div class="nm">大白</div><div class="sub">白灰 · 宿舍区</div></div></div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 11h2v9h5v-6h4v6h5v-9h2z"/></svg>查猫</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><rect x="11" y="10" width="2" height="6" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>关于</div>
+      </div>
+      <div class="home-ind"></div>
+    </div></div></div>
+    <div class="desc">
+      <h3>C · 差异化治愈（蓝紫渐变）</h3>
+      <span class="pill">难度：中</span>
+      <ul>
+        <li><b>来源</b>：自定义 WXSS + 项目内装饰，辨识度最高。</li>
+        <li><b>气质</b>：温柔、有记忆点，符合"校园猫咪"情感。</li>
+        <li><b>样式</b>：蓝紫渐变底 #E6F0FF→#F4F8FF，主色 #3757C9，20px 大圆角，柔光圆斑装饰。</li>
+        <li><b>差异</b>：最有品牌感；圆斑用 WXSS 纯色实现，可落地，无需图片。</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

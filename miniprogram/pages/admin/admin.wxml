@@ -1,0 +1,43 @@
+<view class="panel">
+  <view class="h">收录概览</view>
+  <view class="mstat">
+    <view class="b"><view class="n">12</view><view class="l">在校</view></view>
+    <view class="b"><view class="n">3</view><view class="l">待领养</view></view>
+    <view class="b"><view class="n">5</view><view class="l">毕业</view></view>
+    <view class="b"><view class="n">2</view><view class="l">休学</view></view>
+    <view class="b"><view class="n">4</view><view class="l">喵星</view></view>
+  </view>
+</view>
+
+<view class="fab" bindtap="goForm">＋ 新增猫咪档案</view>
+
+<view class="panel">
+  <view class="h">猫咪管理</view>
+  <view class="mrow" wx:for="{{cats}}" wx:key="id">
+    <view class="l">
+      <view class="n">{{item.name}}</view>
+      <view class="s">{{item.s}}</view>
+    </view>
+    <view>
+      <text class="mini" bindtap="goForm" data-id="{{item.id}}">编辑</text>
+      <text class="mini" bindtap="archive" data-id="{{item.id}}" style="margin-left:12rpx">归档</text>
+    </view>
+  </view>
+</view>
+
+<view class="panel">
+  <view class="h">管理员名单（super 专属）</view>
+  <view class="mrow" wx:for="{{admins}}" wx:key="openid">
+    <view class="l">
+      <view class="n">{{item.realName}}（{{item.roleText}}）</view>
+      <view class="s">{{item.major}} · {{item.className}} · {{item.dorm}}</view>
+    </view>
+    <view>
+      <text wx:if="{{item.canTransfer}}" class="mini" bindtap="transfer" data-id="{{item.openid}}">转让</text>
+      <text wx:if="{{item.canRemove}}" class="mini" bindtap="remove" data-id="{{item.openid}}" style="margin-left:12rpx">撤权</text>
+    </view>
+  </view>
+  <view class="fab" style="background:#fff;color:#2F6FDB;border:1px solid #2F6FDB">＋ 新增管理员</view>
+</view>
+
+<view class="muted" style="padding:20rpx 4rpx 40rpx">提示：管理员身份与权限由云端 checkAdmin / adminAdd 等云函数校验，前端不持有 openid/角色。</view>

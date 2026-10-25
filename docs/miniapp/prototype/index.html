@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>校园猫咪档案馆 · 高保真原型（方向 B · 蓝底卡片）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+         background: #e9eef4; color: #182a44; padding: 20px 14px 40px; }
+  .top { max-width: 980px; margin: 0 auto 16px; }
+  .top h2 { font-size: 16px; margin-bottom: 8px; color:#1b2a3d; }
+  .nav { display: flex; flex-wrap: wrap; gap: 8px; }
+  .nav button { font-size: 12px; padding: 6px 12px; border-radius: 16px; border: 1px solid #cdd8e6;
+                background: #fff; color: #34465c; cursor: pointer; }
+  .nav button:hover { border-color: #2f6fdb; color: #2f6fdb; }
+
+  .phone { width: 375px; margin: 0 auto; }
+  .bezel { background: #0d0f12; border-radius: 44px; padding: 12px; box-shadow: 0 12px 30px rgba(20,40,80,.18); }
+  .screen { position: relative; width: 351px; height: 740px; background: #e9f1fc; border-radius: 34px;
+            overflow: hidden; display: none; flex-direction: column; }
+  .screen.on { display: flex; }
+
+  .statusbar { height: 44px; flex: 0 0 44px; padding: 0 22px; display: flex; align-items: center;
+               justify-content: space-between; font-size: 13px; font-weight: 600; color: #182a44; }
+  .statusbar .sys { display: flex; gap: 5px; align-items: center; opacity: .9; }
+  .statusbar .sys i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
+  .statusbar .bat { width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
+  .statusbar .bat::after { content:""; position:absolute; right:-3px; top:3px; width:2px; height:5px; background:currentColor; border-radius:1px; }
+  .statusbar .bat::before { content:""; position:absolute; left:1.5px; top:1.5px; bottom:1.5px; width:13px; background:currentColor; border-radius:1px; }
+
+  .capsule { position: absolute; top: 50px; right: 14px; z-index: 30; width: 87px; height: 32px;
+             background: rgba(255,255,255,.78); border: 1px solid rgba(0,0,0,.08); border-radius: 16px;
+             display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .capsule .cd { width: 14px; height: 14px; border-radius: 50%; border: 1.6px solid #1a1a1a; }
+  .capsule .cd.s { width: 16px; height: 16px; border-radius: 50%; border: 1.6px solid #1a1a1a; position: relative; }
+  .capsule .cd.s::after { content:""; position:absolute; inset:3px; border-radius:50%; border:1.6px solid #1a1a1a; }
+
+  .navbar { height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center;
+            font-size: 17px; font-weight: 600; color: #182a44; padding-right: 100px; position: relative; }
+  .navbar .back { position: absolute; left: 14px; top: 0; bottom: 0; display: flex; align-items: center;
+                  color: #2f6fdb; font-size: 15px; gap: 3px; }
+  .content { flex: 1 1 auto; overflow-y: auto; padding: 6px 16px 0; }
+  .content::-webkit-scrollbar { width: 0; }
+
+  .search { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 12px;
+            padding: 10px 14px; color: #9aa3ad; font-size: 14px; margin-bottom: 8px; box-shadow: 0 3px 10px rgba(47,111,219,.08); }
+  .tabs { display: flex; background:#fff; border-radius: 14px; padding: 5px; margin-bottom: 12px;
+          box-shadow: 0 3px 10px rgba(47,111,219,.08); }
+  .tabs .t { flex: 1 1 0; text-align: center; font-size: 14px; color: #8b96a3; padding: 8px 0; border-radius: 10px; }
+  .tabs .t.on { background: #2f6fdb; color: #fff; font-weight: 600; }
+
+  .card { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 18px;
+          padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 5px 16px rgba(47,111,219,.08); }
+  .avatar { width: 52px; height: 52px; border-radius: 50%; flex: 0 0 52px; display: flex; align-items: center;
+            justify-content: center; color: rgba(255,255,255,.92); font-size: 11px; box-shadow: 0 2px 6px rgba(20,40,80,.15); }
+  .card .nm { font-size: 16px; font-weight: 600; color: #182a44; display: flex; align-items: center; gap: 6px; }
+  .card .sub { font-size: 12px; color: #97a0aa; margin-top: 2px; }
+  .badge { font-size: 10px; padding: 1px 7px; border-radius: 9px; background: #ff4d4f; color: #fff; }
+  .statustag { font-size: 11px; padding: 2px 9px; border-radius: 10px; }
+  .st-on { background:#eaf1fd; color:#2f6fdb; } .st-ad { background:#eafaf0; color:#2f9e4f; }
+  .st-mi { background:#fff7e6; color:#d48806; } .st-de { background:#f2f2f2; color:#8c8c8c; }
+
+  .tabbar { flex: 0 0 auto; height: 56px; background: #fff; border-top: 1px solid #dce7f7;
+            display: flex; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+  .tab { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+         color: #9aa3ad; font-size: 11px; cursor:pointer; }
+  .tab svg { width: 22px; height: 22px; } .tab.on { color: #2f6fdb; }
+  .home-ind { height: 6px; width: 120px; background: #c7ccd3; border-radius: 3px; margin: 6px auto 4px; }
+
+  .hero { width: 100%; height: 200px; border-radius: 18px; display: flex; align-items: center;
+          justify-content: center; color: rgba(255,255,255,.92); font-size: 13px; letter-spacing:1px;
+          box-shadow: 0 5px 16px rgba(47,111,219,.10); }
+  .d-name { font-size: 20px; font-weight: 700; margin: 12px 0 6px; display:flex; align-items:center; gap:8px; }
+  .attrs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 4px; }
+  .attr { background: #fff; border-radius: 14px; padding: 10px 12px; box-shadow: 0 3px 10px rgba(47,111,219,.06); }
+  .attr .k { font-size: 11px; color: #97a0aa; } .attr .v { font-size: 14px; color: #182a44; margin-top: 2px; }
+  .section-t { font-size: 14px; font-weight: 600; margin: 14px 2px 8px; }
+  .tl { background:#fff; border-radius:14px; padding: 10px 14px; box-shadow: 0 3px 10px rgba(47,111,219,.06); }
+  .tl .it { padding: 8px 0; border-bottom: 1px solid #eef3fb; }
+  .tl .it:last-child { border-bottom: none; }
+  .tl .it .t { font-size: 12px; color: #97a0aa; } .tl .it .c { font-size: 14px; margin-top: 2px; }
+
+  .about p { font-size: 13.5px; line-height: 1.8; color: #34465c; margin-bottom: 10px; }
+  .about h4 { font-size: 14px; margin: 14px 0 6px; color:#182a44; }
+  .about .btn { display: block; text-align:center; background:#2f6fdb; color:#fff; border-radius: 12px;
+                padding: 12px; margin-top: 14px; font-size: 15px; }
+
+  .panel { background:#fff; border-radius:16px; padding:14px; margin-bottom:12px; box-shadow:0 4px 12px rgba(47,111,219,.07); }
+  .panel h4 { font-size:14px; margin-bottom:10px; }
+  .mstat { display:flex; gap:10px; }
+  .mstat .b { flex:1; text-align:center; background:#eaf1fd; border-radius:12px; padding:10px 0; }
+  .mstat .b .n { font-size:20px; font-weight:700; color:#2f6fdb; } .mstat .b .l { font-size:11px; color:#8b96a3; }
+  .mrow { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid #eef3fb; }
+  .mrow:last-child { border-bottom:none; }
+  .mrow .l .n { font-size:14px; } .mrow .l .s { font-size:11px; color:#97a0aa; }
+  .mini { font-size:12px; padding:5px 10px; border-radius:10px; border:1px solid #d0d9e6; background:#fff; color:#34465c; }
+  .mini.primary { background:#2f6fdb; color:#fff; border-color:#2f6fdb; }
+  .fab { background:#2f6fdb; color:#fff; text-align:center; padding:12px; border-radius:12px; font-size:15px; margin-top:4px; }
+
+  .field { background:#fff; border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 3px 10px rgba(47,111,219,.06); }
+  .field .lab { font-size:12px; color:#97a0aa; margin-bottom:6px; }
+  .field .lab .req { color:#ff4d4f; }
+  .field input { width:100%; border:none; outline:none; font-size:14px; color:#182a44; padding:4px 0; }
+  .opts { display:flex; gap:8px; flex-wrap:wrap; }
+  .opt { font-size:13px; padding:7px 14px; border-radius:12px; background:#eaf1fd; color:#2f6fdb; border:1px solid transparent; }
+  .opt.on { background:#2f6fdb; color:#fff; }
+  .row2 { display:flex; align-items:center; justify-content:space-between; }
+  .switch { width:46px; height:26px; border-radius:13px; background:#cdd8e6; position:relative; }
+  .switch.on { background:#2f6fdb; } .switch::after { content:""; position:absolute; width:22px; height:22px; border-radius:50%;
+               background:#fff; top:2px; left:2px; } .switch.on::after { left:22px; }
+  .save { background:#2f6fdb; color:#fff; text-align:center; padding:13px; border-radius:12px; font-size:15px; margin-top:4px; }
+  .cancel { text-align:center; color:#8b96a3; font-size:14px; padding:12px; }
+
+  .state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#97a0aa; gap:10px; padding:0 30px; text-align:center; }
+  .state .big { font-size:15px; color:#34465c; }
+  .sk { width:90%; height:14px; border-radius:8px; background:#dce7f7; animation:p 1.2s infinite; }
+  @keyframes p { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .err { color:#ff4d4f; } .retry { background:#2f6fdb; color:#fff; padding:9px 18px; border-radius:12px; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <h2>校园猫咪档案馆 · 高保真原型（方向 B · 蓝底卡片）</h2>
+  <div class="nav">
+    <button onclick="go('home','on')">首页·在校</button>
+    <button onclick="go('home','ad')">首页·毕业</button>
+    <button onclick="go('home','mi')">首页·休学</button>
+    <button onclick="go('home','de')">首页·喵星</button>
+    <button onclick="go('search')">搜索</button>
+    <button onclick="go('detail')">详情</button>
+    <button onclick="go('about')">关于</button>
+    <button onclick="go('admin')">管理台</button>
+    <button onclick="go('form')">新增/编辑表单</button>
+    <button onclick="go('denied')">无权限</button>
+    <button onclick="go('loading')">加载态</button>
+    <button onclick="go('empty')">空态</button>
+    <button onclick="go('error')">错误态</button>
+  </div>
+</div>
+
+<div class="phone"><div class="bezel">
+
+  <!-- 首页 -->
+  <div class="screen on" id="home">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar">校园猫咪档案馆</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="content">
+      <div class="search" onclick="go('search')">🔍 搜索猫咪名字或昵称</div>
+      <div class="tabs" id="hometabs">
+        <span class="t on" onclick="setTab('on')">在校</span>
+        <span class="t" onclick="setTab('ad')">毕业</span>
+        <span class="t" onclick="setTab('mi')">休学</span>
+        <span class="t" onclick="setTab('de')">喵星</span>
+      </div>
+      <div id="list-on">
+        <div class="card" onclick="go('detail')"><div class="avatar" style="background:linear-gradient(135deg,#ffb46b,#ff8a3d)">猫</div>
+          <div><div class="nm">小橘 <span class="badge">待领养</span></div><div class="sub">橘白 · 食堂附近</div></div></div>
+        <div class="card" onclick="go('detail')"><div class="avatar" style="background:linear-gradient(135deg,#5b6470,#2f3640)">猫</div>
+          <div><div class="nm">煤球</div><div class="sub">黑白 · 操场</div></div></div>
+        <div class="card" onclick="go('detail')"><div class="avatar" style="background:linear-gradient(135deg,#e6ecf3,#c3ccd8)">猫</div>
+          <div><div class="nm">牛奶</div><div class="sub">白 · 图书馆</div></div></div>
+        <div class="card" onclick="go('detail')"><div class="avatar" style="background:linear-gradient(135deg,#cdd7e3,#9aa9bb)">猫</div>
+          <div><div class="nm">大白</div><div class="sub">白灰 · 宿舍区</div></div></div>
+      </div>
+      <div id="list-ad" style="display:none">
+        <div class="card" onclick="go('detail')"><div class="avatar" style="background:linear-gradient(135deg,#ffb46b,#ff8a3d)">猫</div>
+          <div><div class="nm">小花</div><div class="sub"><span class="statustag st-ad">已领养</span> · 原宿舍区</div></div></div>
+        <div class="card" onclick="go('detail')"><div class="avatar" style="background:linear-gradient(135deg,#9aa9bb,#5b6470)">猫</div>
+          <div><div class="nm">阿灰</div><div class="sub"><span class="statustag st-ad">已领养</span> · 原食堂</div></div></div>
+      </div>
+      <div id="list-mi" style="display:none">
+        <div class="card"><div class="avatar" style="background:linear-gradient(135deg,#cdd7e3,#9aa9bb)">猫</div>
+          <div><div class="nm">雪球</div><div class="sub"><span class="statustag st-mi">不知所踪</span> · 3个月无记录</div></div></div>
+      </div>
+      <div id="list-de" style="display:none">
+        <div class="card"><div class="avatar" style="background:linear-gradient(135deg,#b8c0cc,#8c96a3)">猫</div>
+          <div><div class="nm">老橘</div><div class="sub"><span class="statustag st-de">已回喵星</span> · 享年约9岁</div></div></div>
+      </div>
+    </div>
+    <div class="tabbar">
+      <div class="tab on" onclick="go('home','on')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 11h2v9h5v-6h4v6h5v-9h2z"/></svg>查猫</div>
+      <div class="tab" onclick="go('about')"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><rect x="11" y="10" width="2" height="6" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>关于</div>
+    </div>
+    <div class="home-ind"></div>
+  </div>
+
+  <!-- 搜索 -->
+  <div class="screen" id="search">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar"><span class="back" onclick="go('home','on')">‹ 返回</span>搜索</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="content">
+      <div class="search">🔍 输入名字或昵称</div>
+      <div class="card" onclick="go('detail')"><div class="avatar" style="background:linear-gradient(135deg,#ffb46b,#ff8a3d)">猫</div>
+        <div><div class="nm">小橘 <span class="badge">待领养</span></div><div class="sub">橘白 · 食堂附近</div></div></div>
+      <div class="card"><div class="avatar" style="background:linear-gradient(135deg,#5b6470,#2f3640)">猫</div>
+        <div><div class="nm">煤球</div><div class="sub">黑白 · 操场</div></div></div>
+      <div class="muted" style="text-align:center;padding:8px 0">还可按 毛色 / 性格 / 区域 筛选（后续增强）</div>
+    </div>
+  </div>
+
+  <!-- 详情 -->
+  <div class="screen" id="detail">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar"><span class="back" onclick="go('home','on')">‹</span>猫咪详情</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="content">
+      <div class="hero" style="background:linear-gradient(135deg,#ffb46b,#ff8a3d)">猫咪照片</div>
+      <div class="d-name">小橘 <span class="badge">待领养</span> <span class="statustag st-on">在校</span></div>
+      <div class="attrs">
+        <div class="attr"><div class="k">毛色</div><div class="v">橘白</div></div>
+        <div class="attr"><div class="k">性别</div><div class="v">公（已确认）</div></div>
+        <div class="attr"><div class="k">绝育情况</div><div class="v">已绝育</div></div>
+        <div class="attr"><div class="k">绝育时间</div><div class="v">2024-05</div></div>
+        <div class="attr"><div class="k">性格</div><div class="v">亲人、粘人</div></div>
+        <div class="attr"><div class="k">常出没</div><div class="v">食堂、宿舍区</div></div>
+        <div class="attr"><div class="k">状况</div><div class="v">健康（已确认）</div></div>
+        <div class="attr"><div class="k">最近情况</div><div class="v">近期食堂出没，状态良好</div></div>
+      </div>
+      <div class="section-t">近况时间线</div>
+      <div class="tl">
+        <div class="it"><div class="t">2026-10-22 · 食堂附近</div><div class="c">投喂正常，体型偏胖</div></div>
+        <div class="it"><div class="t">2026-09-10 · 宿舍区</div><div class="c">换季掉毛，精神好</div></div>
+      </div>
+    </div>
+    <div class="home-ind"></div>
+  </div>
+
+  <!-- 关于 -->
+  <div class="screen about" id="about">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar">关于我们</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="content">
+      <h4>项目介绍</h4>
+      <p>校园猫咪档案馆收录校内流浪与家养猫咪的档案，帮助师生认识、关注与科学照护它们。</p>
+      <h4>资料维护原则</h4>
+      <p>所有信息以客观事实为准；绝育、健康等状态未知时标注「尚未确认」，不臆测；位置仅到校园区域级，不公开精确窝点。</p>
+      <h4>信息纠错</h4>
+      <p>发现信息有误或猫咪情况变化，请联系管理员更新。（联系方式由负责人确认后填写）</p>
+      <div class="btn" onclick="go('admin')">进入管理（管理员）</div>
+    </div>
+    <div class="tabbar">
+      <div class="tab" onclick="go('home','on')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 11h2v9h5v-6h4v6h5v-9h2z"/></svg>查猫</div>
+      <div class="tab on" onclick="go('about')"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><rect x="11" y="10" width="2" height="6" fill="#fff"/><rect x="11" y="7" width="2" height="2" fill="#fff"/></svg>关于</div>
+    </div>
+    <div class="home-ind"></div>
+  </div>
+
+  <!-- 管理台（管理员） -->
+  <div class="screen" id="admin">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar"><span class="back" onclick="go('about')">‹</span>管理工作台</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="content">
+      <div class="panel">
+        <h4>收录概览</h4>
+        <div class="mstat">
+          <div class="b"><div class="n">12</div><div class="l">在校</div></div>
+          <div class="b"><div class="n">3</div><div class="l">待领养</div></div>
+          <div class="b"><div class="n">5</div><div class="l">毕业</div></div>
+          <div class="b"><div class="n">2</div><div class="l">休学</div></div>
+          <div class="b"><div class="n">4</div><div class="l">喵星</div></div>
+        </div>
+      </div>
+      <div class="fab" onclick="go('form')">＋ 新增猫咪档案</div>
+      <div class="panel">
+        <h4>猫咪管理</h4>
+        <div class="mrow"><div class="l"><div class="n">小橘</div><div class="s">在校 · 待领养</div></div>
+          <div><span class="mini" onclick="go('form')">编辑</span> <span class="mini">归档</span></div></div>
+        <div class="mrow"><div class="l"><div class="n">煤球</div><div class="s">在校</div></div>
+          <div><span class="mini" onclick="go('form')">编辑</span> <span class="mini">归档</span></div></div>
+      </div>
+      <div class="panel">
+        <h4>管理员名单（super 专属）</h4>
+        <div class="mrow"><div class="l"><div class="n">你（创建者）</div><div class="s">张三 · 计算机 · 计科1班 · 3栋</div></div>
+          <div><span class="mini">转让</span></div></div>
+        <div class="mrow"><div class="l"><div class="n">李四</div><div class="s">生科 · 生科2班 · 5栋</div></div>
+          <div><span class="mini">撤权</span></div></div>
+        <div class="fab" style="background:#fff;color:#2f6fdb;border:1px solid #2f6fdb">＋ 新增管理员</div>
+      </div>
+    </div>
+    <div class="home-ind"></div>
+  </div>
+
+  <!-- 新增/编辑表单 -->
+  <div class="screen" id="form">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar"><span class="back" onclick="go('admin')">‹</span>新增猫咪档案</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="content">
+      <div class="field"><div class="lab"><span class="req">*</span> 名字</div><input placeholder="如：小橘"/></div>
+      <div class="field"><div class="lab">昵称（用于搜索）</div><input placeholder="多个用逗号分隔"/></div>
+      <div class="field"><div class="lab">毛色</div>
+        <div class="opts"><span class="opt on">橘白</span><span class="opt">黑白</span><span class="opt">狸花</span><span class="opt">白</span><span class="opt">其他</span><span class="opt">未知</span></div></div>
+      <div class="field"><div class="lab">性别</div>
+        <div class="opts"><span class="opt on">公</span><span class="opt">母</span><span class="opt">未知</span></div></div>
+      <div class="field"><div class="lab">绝育情况</div>
+        <div class="opts"><span class="opt on">已绝育</span><span class="opt">未绝育</span><span class="opt">未知</span></div></div>
+      <div class="field"><div class="lab">绝育时间</div><input placeholder="如 2024-05（可空）"/></div>
+      <div class="field"><div class="lab">常出没区域</div><input placeholder="如 食堂、宿舍区"/></div>
+      <div class="field"><div class="lab">最近情况</div><input placeholder="当前近况摘要"/></div>
+      <div class="field"><div class="lab">照片 / 声音上传</div>
+        <div class="opts"><span class="opt">＋ 上传封面</span><span class="opt">＋ 上传照片</span><span class="opt">＋ 上传声音</span></div></div>
+      <div class="field"><div class="row2"><div class="lab" style="margin:0">待领养</div>
+        <div class="switch on"></div></div></div>
+      <div class="field"><div class="lab">去向状态</div>
+        <div class="opts"><span class="opt on">在校</span><span class="opt">毕业</span><span class="opt">休学</span><span class="opt">喵星</span></div></div>
+      <div class="save" onclick="go('admin')">保存</div>
+      <div class="cancel" onclick="go('admin')">取消</div>
+    </div>
+    <div class="home-ind"></div>
+  </div>
+
+  <!-- 无权限 -->
+  <div class="screen" id="denied">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar"><span class="back" onclick="go('about')">‹</span>无权限</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="state">
+      <div style="font-size:40px">🔒</div>
+      <div class="big">你还没有管理权限</div>
+      <div>管理操作仅对授权管理员开放；如需权限，请联系超级管理员。</div>
+      <div class="retry" onclick="go('about')">返回</div>
+    </div>
+  </div>
+
+  <!-- 加载态 -->
+  <div class="screen" id="loading">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar">校园猫咪档案馆</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="state"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="big">加载中…</div></div>
+  </div>
+
+  <!-- 空态 -->
+  <div class="screen" id="empty">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar">校园猫咪档案馆</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="state">
+      <div style="font-size:40px">🐱</div>
+      <div class="big">这里还没有猫咪档案</div>
+      <div>管理员可在工作台新增第一只猫咪。</div>
+    </div>
+  </div>
+
+  <!-- 错误态 -->
+  <div class="screen" id="error">
+    <div class="statusbar"><span>9:41</span><span class="sys"><i></i><i></i><i></i><span class="bat"></span></span></div>
+    <div class="navbar">校园猫咪档案馆</div>
+    <div class="capsule"><span class="cd"></span><span class="cd s"></span></div>
+    <div class="state">
+      <div style="font-size:40px">⚠️</div>
+      <div class="big err">加载失败，请检查网络</div>
+      <div>也可以稍后重试。</div>
+      <div class="retry">重新加载</div>
+    </div>
+  </div>
+
+</div></div>
+
+<script>
+  function go(id, tab){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+    const el=document.getElementById(id); if(el) el.classList.add('on');
+    if(tab) setTab(tab);
+    const scr=document.querySelector('.screen.on'); if(scr) scr.scrollTop=0;
+  }
+  function setTab(t){
+    ['on','ad','mi','de'].forEach(x=>{ const l=document.getElementById('list-'+x); if(l) l.style.display=(x===t)?'block':'none'; });
+    document.querySelectorAll('#hometabs .t').forEach((e,i)=>e.classList.toggle('on', ['on','ad','mi','de'][i]===t));
+  }
+</script>
+</body>
+</html>

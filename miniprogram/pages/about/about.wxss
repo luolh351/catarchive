@@ -1,0 +1,7 @@
+.about { padding: 24rpx 0; }
+.about .h { font-size: 28rpx; font-weight: 600; margin: 28rpx 4rpx 12rpx; color: #182A44; }
+.about .p { font-size: 27rpx; line-height: 1.8; color: #34465C; margin-bottom: 8rpx; }
+.about .btn {
+  display: block; text-align: center; background: #2F6FDB; color: #fff;
+  border-radius: 24rpx; padding: 24rpx; margin-top: 28rpx; font-size: 30rpx;
+}
