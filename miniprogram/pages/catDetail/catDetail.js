@@ -1,24 +1,20 @@
-// 猫咪详情（骨架）：展示照片、属性与近况时间线
-// 后续：根据 onLoad 的 id 从 cats 集合读取；缺字段显示「尚未确认」。
+// 猫咪详情（骨架）：经服务层读取（默认本地模拟，可切云端）
+const service = require('../../utils/service');
+
 Page({
   data: {
-    cat: { name: '小橘', isAdoptable: true, statusText: '在校' },
-    attrs: [
-      { k: '毛色', v: '橘白' },
-      { k: '性别', v: '公（已确认）' },
-      { k: '绝育情况', v: '已绝育' },
-      { k: '绝育时间', v: '2024-05' },
-      { k: '性格', v: '亲人、粘人' },
-      { k: '常出没', v: '食堂、宿舍区' },
-      { k: '状况', v: '健康（已确认）' },
-      { k: '最近情况', v: '近期食堂出没，状态良好' }
-    ],
-    timeline: [
-      { t: '2026-10-22 · 食堂附近', c: '投喂正常，体型偏胖' },
-      { t: '2026-09-10 · 宿舍区', c: '换季掉毛，精神好' }
-    ]
+    cat: { name: '', isAdoptable: false, statusText: '' },
+    attrs: [],
+    timeline: []
   },
   onLoad(options) {
-    // options.id 用于后续按 id 查询真实档案
+    const id = options && options.id;
+    service.getCat(id)
+      .then(res => this.setData({
+        cat: res.cat || { name: '', isAdoptable: false, statusText: '' },
+        attrs: res.attrs || [],
+        timeline: res.timeline || []
+      }))
+      .catch(() => {});
   }
 });

@@ -1,10 +1,18 @@
-# 云函数目录（待创建）
+# 云函数目录
 
-V1.0 的云函数将在环境准备完成后在此目录创建，至少包括：
-- `initAdmin`：受控初始化首位 superadmin
-- `checkAdmin`：校验当前 openid 是否在管理员白名单，返回角色
-- `catCreate` / `catUpdate` / `catArchive`：猫咪档案的增改归档（服务端校验角色与字段）
-- `updateCreate`：新增近况时间线
-- `adminList` / `adminAdd` / `adminRemove` / `adminTransfer`：管理员名单管理（super 专属）
+V1.0 云函数（需在云开发控制台创建环境后部署；设计见 `docs/miniapp/cloud-design.md`）：
 
-集合不会因 db.collection().add() 自动创建，需先在目标环境创建并设置权限。
+| 函数 | 权限 | 作用 |
+| --- | --- | --- |
+| `initAdmin` | 仅首次 | 把当前 openid 设为首位超级管理员 |
+| `checkAdmin` | 公开 | 校验管理员身份，返回角色与可见备注 |
+| `catList` | 公开 | 按状态取已发布档案 |
+| `catDetail` | 公开 | 按 id 取档案 + 近况时间线 |
+| `catManage` | admin | 新增 / 更新 / 归档（服务端校验字段与角色） |
+| `updateCreate` | admin | 追加近况时间线 |
+| `adminList` | super | 管理员名单 |
+| `adminManage` | super | 增删 / 转让管理员 |
+
+部署前还需在目标环境创建集合 `cats` / `cat_updates` / `admin_users` / `admin_audit_logs` 并设置权限与索引（见 cloud-design.md）。
+
+客户端通过 `miniprogram/utils/service.js` 调用；`USE_CLOUD=false` 时返回本地模拟数据，便于无云端时预览 UI。
