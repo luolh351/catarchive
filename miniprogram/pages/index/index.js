@@ -2,8 +2,8 @@
 const service = require('../../utils/service');
 
 Page({
-  data: { active: 'on', list: [] },
-  onLoad() { this.applyTab('on'); },
+  data: { active: '在校', list: [] },
+  onLoad() { this.applyTab('在校'); },
   setTab(e) { this.applyTab(e.currentTarget.dataset.s); },
   applyTab(s) {
     this.setData({ active: s });

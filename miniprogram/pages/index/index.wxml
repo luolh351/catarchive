@@ -1,10 +1,10 @@
 <view class="search">搜索猫咪名字或昵称</view>
 
 <view class="tabs">
-  <view class="t {{active==='on'?'on':''}}" bindtap="setTab" data-s="on">在校</view>
-  <view class="t {{active==='ad'?'on':''}}" bindtap="setTab" data-s="ad">毕业</view>
-  <view class="t {{active==='mi'?'on':''}}" bindtap="setTab" data-s="mi">休学</view>
-  <view class="t {{active==='de'?'on':''}}" bindtap="setTab" data-s="de">喵星</view>
+  <view class="t {{active==='在校'?'on':''}}" bindtap="setTab" data-s="在校">在校</view>
+  <view class="t {{active==='毕业'?'on':''}}" bindtap="setTab" data-s="毕业">毕业</view>
+  <view class="t {{active==='休学'?'on':''}}" bindtap="setTab" data-s="休学">休学</view>
+  <view class="t {{active==='喵星'?'on':''}}" bindtap="setTab" data-s="喵星">喵星</view>
 </view>
 
 <view wx:if="{{list.length===0}}" class="muted" style="text-align:center;padding:40rpx 0;">该分类下还没有猫咪</view>
