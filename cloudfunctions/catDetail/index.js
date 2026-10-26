@@ -4,12 +4,12 @@ const db = cloud.database();
 const cats = db.collection('cats');
 const updates = db.collection('cat_updates');
 
-// 公开：按 id 取档案与近况时间线（排除 operatorOpenid）
+// 公开：按 id 取档案与近况时间线；归档(published=false)或不存在返回 cat:null（阻止公开读取归档档案）
 exports.main = async (event) => {
-  if (!event || !event.id) return { err: 'missing id' };
+  if (!event || !event.id) return { cat: null, timeline: [] };
   const res = await cats.doc(event.id).get();
   const cat = res.data || null;
-  if (!cat) return { cat: null, timeline: [] };
+  if (!cat || cat.published === false) return { cat: null, timeline: [] };
   delete cat.operatorOpenid;
   const up = await updates.where({ catId: event.id }).orderBy('createdAt', 'desc').limit(50).get();
   const timeline = (up.data || []).map(({ operatorOpenid, ...r }) => r);

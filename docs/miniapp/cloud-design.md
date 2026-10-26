@@ -8,21 +8,22 @@
 - 微信身份由 `cloud.getWXContext().OPENID` 在云函数内可信获取，**前端不持有 openid，也不把 openid 作为授权依据**。
 - 管理员名单在 `admin_users` 集合：`superadmin`（可转让、可管理 editor）与 `editor`。
 - 所有写操作（猫咪增改归档、近况、管理员管理）必须在云函数内先 `checkAdmin` 校验角色，再校验字段；客户端调用只提交业务字段。
+- 所有**读**操作也必须经云函数：集合权限统一设为**私有（所有用户不可读写）**，杜绝客户端直接 `db.collection().get()` 读取原始文档、绕过云函数拿到 `operatorOpenid` 等敏感字段。云函数以环境管理员身份运行，自动绕过集合权限完成读写。
 - 客户端初始化：`app.js` 调用 `wx.cloud.init({ env: EnvId })`；云函数内用 `cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })` 锁定当前环境。
 
 ## 集合与权限
 
 | 集合 | 字段 | 客户端读 | 客户端写 | 说明 |
 | --- | --- | --- | --- | --- |
-| `cats` | name, aliases[], coatColor, gender, sterilizationStatus, sterilizedAt, personalityTags[], usualLocations[], healthNotes, latestNote, lifeStatus, isAdoptable, photos[], voice, published, createdAt, updatedAt, operatorOpenid | 公开（排除 operatorOpenid） | 否（仅云函数 admin SDK 写） | 档案主表；`published=false` 表示归档 |
-| `cat_updates` | catId, content, createdAt, operatorOpenid | 公开 | 否 | 近况时间线 |
+| `cats` | name, aliases[], coatColor, gender, sterilizationStatus, sterilizedAt, personalityTags[], usualLocations[], healthNotes, latestNote, lifeStatus, isAdoptable, photos[], voice, published, createdAt, updatedAt, operatorOpenid | **否（仅经云函数，函数内剔除 operatorOpenid 后返回）** | 否（仅云函数 admin SDK 写） | 档案主表；`published=false` 表示归档；**客户端不得直读，否则可绕过函数拿到 operatorOpenid** |
+| `cat_updates` | catId, content, createdAt, operatorOpenid | **否（仅经云函数）** | 否 | 近况时间线 |
 | `admin_users` | openid(唯一), role, realName, major, className, dorm, note, createdAt, createdBy | 否（仅管理员经云函数读） | 否（仅 super 经云函数写） | 管理员名单；realName/major/className/dorm/note 仅管理员间可见 |
 | `admin_audit_logs` | operatorOpenid, action, target, detail, createdAt | 否（仅管理员经云函数读） | 否 | 审计日志 |
 
-集合权限（CloudBase 安全规则，自定义）：
-- `cats`：`read: true`（公开），`write: false`（客户端不可写；云函数 admin SDK 绕过规则写）。
-- `cat_updates`：同 `cats`。
-- `admin_users` / `admin_audit_logs`：`read: false`，`write: false`（一律经云函数，且函数内校验角色）。
+集合权限（CloudBase 安全规则）：四张表统一设为 **“所有用户不可读写”**（即 `read:false`、`write:false`）。
+- 原因：所有数据访问都走云函数（catList/catDetail/checkAdmin/adminList 等），云函数以**环境管理员身份**运行，自动绕过集合权限规则完成读写；而客户端（含潜在恶意用户）因此**无法直接读取原始文档**，杜绝绕过云函数拿到 `operatorOpenid` 等敏感字段。
+- `cats` / `cat_updates`：客户端读=否、写=否（仅云函数读/写，且函数内对返回结果剔除 `operatorOpenid`）。
+- `admin_users` / `admin_audit_logs`：读=否、写=否（一律经云函数，且函数内校验角色）。
 
 索引建议：`cats.lifeStatus`、`cats.published`、`cats.name`（查询用）；`admin_users.openid`（唯一）。
 

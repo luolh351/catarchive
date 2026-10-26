@@ -1,22 +1,37 @@
-<view class="hero" style="background:linear-gradient(135deg,#FFB46B,#FF8A3D)">猫咪照片</view>
+<view wx:if="{{notFound}}" class="muted" style="text-align:center;padding:80rpx 0;">猫咪不存在或已归档</view>
 
-<view class="d-name">
-  小橘
-  <text wx:if="{{cat.isAdoptable}}" class="badge">待领养</text>
-  <text class="statustag st-on">{{cat.statusText}}</text>
-</view>
-
-<view class="attrs">
-  <view class="attr" wx:for="{{attrs}}" wx:key="k">
-    <view class="k">{{item.k}}</view>
-    <view class="v">{{item.v}}</view>
+<block wx:else>
+  <view class="hero" style="background:{{cat.photos.length ? 'url(' + cat.photos[0] + ') center/cover no-repeat' : 'linear-gradient(135deg,#FFB46B,#FF8A3D)'}}">
+    <block wx:if="{{!cat.photos.length}}">猫咪照片</block>
   </view>
-</view>
 
-<view class="section-t">近况时间线</view>
-<view class="tl">
-  <view class="it" wx:for="{{timeline}}" wx:key="t">
-    <view class="t">{{item.t}}</view>
-    <view class="c">{{item.c}}</view>
+  <view class="d-name">
+    {{cat.name}}
+    <text wx:if="{{cat.isAdoptable}}" class="badge">待领养</text>
+    <text class="statustag st-on">{{cat.statusText}}</text>
   </view>
-</view>
+
+  <view wx:if="{{cat.photos.length > 1}}" class="gallery">
+    <image wx:for="{{cat.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="gimg" />
+  </view>
+
+  <view wx:if="{{cat.voice}}" class="media">
+    <view class="mlab">叫声录音</view>
+    <audio src="{{cat.voice}}" controls></audio>
+  </view>
+
+  <view class="attrs">
+    <view class="attr" wx:for="{{attrs}}" wx:key="k">
+      <view class="k">{{item.k}}</view>
+      <view class="v">{{item.v}}</view>
+    </view>
+  </view>
+
+  <view class="section-t">近况时间线</view>
+  <view class="tl">
+    <view class="it" wx:for="{{timeline}}" wx:key="t">
+      <view class="t">{{item.t}}</view>
+      <view class="c">{{item.c}}</view>
+    </view>
+  </view>
+</block>

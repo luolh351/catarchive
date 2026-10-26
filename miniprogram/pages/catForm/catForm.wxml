@@ -48,10 +48,16 @@
 <view class="field">
   <view class="lab">照片 / 声音上传</view>
   <view class="opts">
-    <view class="opt">＋ 上传封面</view>
-    <view class="opt">＋ 上传照片</view>
-    <view class="opt">＋ 上传声音</view>
+    <view class="opt" bindtap="chooseImage">＋ 上传照片</view>
+    <view class="opt" bindtap="chooseVoice">＋ 上传声音</view>
   </view>
+  <view class="imgs" wx:if="{{form.photos.length}}">
+    <view class="img" wx:for="{{form.photos}}" wx:key="*this">
+      <image src="{{item}}" mode="aspectFill" />
+      <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
+    </view>
+  </view>
+  <view wx:if="{{form.voice}}" class="voice">已选录音 <text class="x" catchtap="clearVoice">×</text></view>
 </view>
 <view class="field">
   <view class="row2">

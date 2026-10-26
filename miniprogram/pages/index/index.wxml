@@ -1,4 +1,4 @@
-<view class="search">搜索猫咪名字或昵称</view>
+<input class="search" placeholder="搜索猫咪名字 / 常出没" value="{{q}}" bindinput="onSearch" confirm-type="search" />
 
 <view class="tabs">
   <view class="t {{active==='在校'?'on':''}}" bindtap="setTab" data-s="在校">在校</view>
@@ -7,7 +7,7 @@
   <view class="t {{active==='喵星'?'on':''}}" bindtap="setTab" data-s="喵星">喵星</view>
 </view>
 
-<view wx:if="{{list.length===0}}" class="muted" style="text-align:center;padding:40rpx 0;">该分类下还没有猫咪</view>
+<view wx:if="{{list.length===0}}" class="muted" style="text-align:center;padding:40rpx 0;">{{q ? '没有匹配的猫咪' : '该分类下还没有猫咪'}}</view>
 
 <view wx:for="{{list}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
   <view class="avatar" style="background:{{item.bg}}">{{item.photoText}}</view>
