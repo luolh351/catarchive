@@ -239,8 +239,13 @@ function submitCat(data) {
 }
 function listSubmissions() {
   if (!USE_CLOUD) {
+    // 返回完整字段，便于管理台“查看”直接展示详情（无需再请求）
     const list = MOCK_SUBS.filter(s => s.status === 'pending').map(s => ({
-      id: s.id, name: s.name, coatColor: s.coatColor, lifeStatus: s.lifeStatus, latestNote: s.latestNote || ''
+      id: s.id, name: s.name, aliases: s.aliases || [], coatColor: s.coatColor, gender: s.gender,
+      sterilizationStatus: s.sterilizationStatus, sterilizedAt: s.sterilizedAt || '', usualLocations: s.usualLocations || [],
+      healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
+      isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
+      submitterOpenid: s.submitterOpenid || '', createdAt: s.createdAt
     }));
     return Promise.resolve(list);
   }

@@ -28,7 +28,11 @@ exports.main = async (event) => {
   if (action === 'list') {
     const r = await subs.where({ status: 'pending' }).orderBy('createdAt', 'asc').get();
     const list = (r.data || []).map(s => ({
-      id: s._id, name: s.name, coatColor: s.coatColor, lifeStatus: s.lifeStatus, latestNote: s.latestNote || ''
+      id: s._id, name: s.name, aliases: s.aliases || [], coatColor: s.coatColor, gender: s.gender,
+      sterilizationStatus: s.sterilizationStatus, sterilizedAt: s.sterilizedAt || '', usualLocations: s.usualLocations || [],
+      healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
+      isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
+      submitterOpenid: s.submitterOpenid || '', createdAt: s.createdAt
     }));
     return { ok: true, list };
   }

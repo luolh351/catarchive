@@ -20,8 +20,32 @@
       <view class="s2" wx:if="{{item.latestNote}}">{{item.latestNote}}</view>
     </view>
     <view>
-      <text class="mini primary" bindtap="approveSub" data-id="{{item.id}}">采纳</text>
+      <text class="mini" bindtap="viewSub" data-id="{{item.id}}">查看</text>
       <text class="mini" bindtap="rejectSub" data-id="{{item.id}}" style="margin-left:12rpx">忽略</text>
+    </view>
+  </view>
+</view>
+
+<view wx:if="{{detail}}" class="mask" bindtap="closeSub">
+  <view class="sheet" catchtap="stop">
+    <view class="sh">投稿详情</view>
+    <view class="kv"><text>名字</text><text>{{detail.name}}</text></view>
+    <view class="kv"><text>昵称</text><text>{{detail.aliasesText}}</text></view>
+    <view class="kv"><text>毛色</text><text>{{detail.coatColor}}</text></view>
+    <view class="kv"><text>性别</text><text>{{detail.gender}}</text></view>
+    <view class="kv"><text>绝育</text><text>{{detail.sterilizationStatus}}{{detail.sterilizedAt ? ' · ' + detail.sterilizedAt : ''}}</text></view>
+    <view class="kv"><text>常出没</text><text>{{detail.usualText}}</text></view>
+    <view class="kv"><text>最近情况</text><text>{{detail.latestNote}}</text></view>
+    <view class="kv"><text>健康</text><text>{{detail.healthNotes}}</text></view>
+    <view class="kv"><text>待领养</text><text>{{detail.isAdoptable ? '是' : '否'}}</text></view>
+    <view class="kv"><text>去向</text><text>{{detail.lifeStatus}}</text></view>
+    <view class="kv" wx:if="{{detail.photos.length}}"><text>照片</text><text>{{detail.photos.length}} 张</text></view>
+    <view class="kv"><text>录音</text><text>{{detail.voice ? '已附' : '无'}}</text></view>
+    <view class="kv"><text>提交人</text><text>{{detail.submitter}}</text></view>
+    <view class="kv"><text>提交时间</text><text>{{detail.createdAtText}}</text></view>
+    <view class="btns">
+      <view class="mini" bindtap="rejectSub" data-id="{{detail.id}}">忽略</view>
+      <view class="mini primary" bindtap="closeSub">关闭</view>
     </view>
   </view>
 </view>

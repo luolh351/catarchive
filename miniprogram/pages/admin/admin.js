@@ -8,6 +8,7 @@ Page({
     cats: [],
     admins: [],
     subs: [],
+    detail: null,
     myRole: '',
     ready: false
   },
@@ -105,27 +106,36 @@ Page({
       }
     });
   },
-  approveSub(e) {
+  // 查看：从已加载的 subs 中取完整字段，格式化后弹出详情
+  viewSub(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showModal({
-      title: '采纳投稿', content: '采纳后该猫咪将公开收录？',
-      success: res => {
-        if (!res.confirm) return;
-        wx.showLoading({ title: '处理中' });
-        service.approveSubmission(id).then(r => {
-          wx.hideLoading();
-          if (r && r.ok === false) { wx.showToast({ title: r.msg || '失败', icon: 'none' }); return; }
-          wx.showToast({ title: '已采纳', icon: 'success' });
-          this.loadData();
-        }).catch(() => { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); });
+    const s = this.data.subs.find(x => x.id === id);
+    if (!s) return;
+    const arr2str = a => (Array.isArray(a) ? a.join('、') : (a || ''));
+    const createdAtText = (typeof s.createdAt === 'number')
+      ? new Date(s.createdAt).toLocaleString()
+      : (s.createdAt ? String(s.createdAt) : '—');
+    this.setData({
+      detail: {
+        id: s.id, name: s.name, aliasesText: arr2str(s.aliases) || '—', coatColor: s.coatColor || '—',
+        gender: s.gender || '—', sterilizationStatus: s.sterilizationStatus || '—', sterilizedAt: s.sterilizedAt || '',
+        usualText: arr2str(s.usualLocations) || '—', latestNote: s.latestNote || '—', healthNotes: s.healthNotes || '—',
+        isAdoptable: !!s.isAdoptable, lifeStatus: s.lifeStatus || '—',
+        photos: Array.isArray(s.photos) ? s.photos : [], voice: s.voice || '',
+        submitter: s.submitterOpenid || '游客投稿', createdAtText
       }
     });
   },
+  closeSub() { this.setData({ detail: null }); },
+  stop() {},
   rejectSub(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '忽略投稿', content: '确定忽略该投稿？',
-      success: res => { if (res.confirm) service.rejectSubmission(id).then(() => this.loadData()); }
+      success: res => {
+        if (!res.confirm) return;
+        service.rejectSubmission(id).then(() => { this.setData({ detail: null }); this.loadData(); });
+      }
     });
   }
 });
