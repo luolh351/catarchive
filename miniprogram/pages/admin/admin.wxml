@@ -17,9 +17,11 @@
     <view class="l">
       <view class="n">{{item.name}}</view>
       <view class="s">{{item.s}}</view>
+      <view class="s2" wx:if="{{item.latest}}">{{item.latest}}</view>
     </view>
     <view>
       <text class="mini" bindtap="goForm" data-id="{{item.id}}">编辑</text>
+      <text class="mini" bindtap="addUpdate" data-id="{{item.id}}" style="margin-left:12rpx">近况</text>
       <text class="mini" bindtap="archive" data-id="{{item.id}}" style="margin-left:12rpx">归档</text>
     </view>
   </view>

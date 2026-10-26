@@ -26,7 +26,7 @@ Page({
       const cats = list.map(c => {
         if (map[c.lifeStatus]) s[map[c.lifeStatus]]++;
         if (c.isAdoptable) s.dailingyang++;
-        return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : '') };
+        return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : ''), latest: c.latestNote || '' };
       });
       this.setData({ stats: s, cats });
     });
@@ -50,6 +50,23 @@ Page({
     wx.showModal({
       title: '归档', content: '确定归档该猫咪？公开页将不再展示。',
       success: res => { if (res.confirm) service.catManage('archive', { id }).then(() => this.loadData()); }
+    });
+  },
+  addUpdate(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '补充近况', editable: true, placeholderText: '输入本次近况',
+      success: res => {
+        if (res.confirm && res.content && res.content.trim()) {
+          wx.showLoading({ title: '提交中' });
+          service.addUpdate(id, res.content.trim()).then(r => {
+            wx.hideLoading();
+            if (r && r.ok === false) { wx.showToast({ title: r.msg || '失败', icon: 'none' }); return; }
+            wx.showToast({ title: '已补充', icon: 'success' });
+            this.loadData();
+          }).catch(() => { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); });
+        }
+      }
     });
   },
   transfer(e) {

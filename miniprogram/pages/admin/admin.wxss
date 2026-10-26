@@ -1,1 +1,2 @@
-/* 管理台样式复用 app.wxss 公共类 */
+/* 管理台样式 */
+.s2 { font-size: 22rpx; color: #8a8f99; margin-top: 6rpx; line-height: 1.4; }
