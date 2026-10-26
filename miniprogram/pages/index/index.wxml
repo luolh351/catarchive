@@ -1,11 +1,12 @@
 <input class="search" placeholder="搜索猫咪名字 / 常出没" value="{{q}}" bindinput="onSearch" confirm-type="search" />
 
-<view class="tabs">
+<view class="tabs" wx:if="{{!q}}">
   <view class="t {{active==='在校'?'on':''}}" bindtap="setTab" data-s="在校">在校</view>
   <view class="t {{active==='毕业'?'on':''}}" bindtap="setTab" data-s="毕业">毕业</view>
   <view class="t {{active==='休学'?'on':''}}" bindtap="setTab" data-s="休学">休学</view>
   <view class="t {{active==='喵星'?'on':''}}" bindtap="setTab" data-s="喵星">喵星</view>
 </view>
+<view wx:if="{{q}}" class="muted" style="padding:16rpx 4rpx;">搜索结果（{{list.length}}）</view>
 
 <view wx:if="{{list.length===0}}" class="muted" style="text-align:center;padding:40rpx 0;">{{q ? '没有匹配的猫咪' : '该分类下还没有猫咪'}}</view>
 
