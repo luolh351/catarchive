@@ -10,6 +10,7 @@ Page({
     subs: [],
     detail: null,
     myRole: '',
+    noEditor: false,
     ready: false
   },
   onLoad() {
@@ -41,7 +42,7 @@ Page({
         canTransfer: me === 'superadmin' && a.role === 'editor',
         canRemove: me === 'superadmin' && a.role === 'editor'
       }));
-      this.setData({ admins });
+      this.setData({ admins, noEditor: admins.filter(a => a.role === 'editor').length === 0 });
     });
   },
   goForm(e) {
@@ -72,17 +73,20 @@ Page({
       }
     });
   },
+  // 转让后当前用户变为普通管理员，重新拉取身份再刷新列表（修复转让后权限/界面未更新的问题）
   transfer(e) {
     const openid = e.currentTarget.dataset.id;
     wx.showModal({
-      title: '转让超级管理员', content: '确定转让给该用户？你将变为普通管理员。',
+      title: '转让超级管理员', content: '确定转让给该用户？你将变为普通管理员，且不能再转让/撤权。',
       success: res => {
         if (!res.confirm) return;
+        wx.showLoading({ title: '处理中' });
         service.adminManage('transfer', { openid }).then(r => {
+          wx.hideLoading();
           if (r && r.ok === false) { wx.showToast({ title: r.msg || '操作失败', icon: 'none' }); return; }
-          wx.showToast({ title: '已转让', icon: 'success' });
-          this.loadData();
-        });
+          wx.showToast({ title: '已转让，你已变为普通管理员', icon: 'none' });
+          this.refreshRole();
+        }).catch(() => { wx.hideLoading(); wx.showToast({ title: '操作失败', icon: 'none' }); });
       }
     });
   },
@@ -90,8 +94,15 @@ Page({
     const openid = e.currentTarget.dataset.id;
     wx.showModal({
       title: '撤权', content: '确定移除该管理员？',
-      success: res => { if (res.confirm) service.adminManage('remove', { openid }).then(() => this.loadData()); }
+      success: res => { if (res.confirm) service.adminManage('remove', { openid }).then(() => this.refreshRole()); }
     });
+  },
+  // 管理操作（转让/撤权/新增）后刷新当前身份与列表
+  refreshRole() {
+    service.checkAdmin().then(r => {
+      if (r && r.isAdmin) this.setData({ myRole: r.role });
+      this.loadData();
+    }).catch(() => this.loadData());
   },
   addAdmin() {
     wx.showModal({
@@ -100,7 +111,7 @@ Page({
         if (res.confirm && res.content) {
           service.adminManage('add', { openid: res.content, realName: res.content }).then(r => {
             if (r && r.ok === false) { wx.showToast({ title: r.msg || '操作失败', icon: 'none' }); return; }
-            this.loadData();
+            this.refreshRole();
           });
         }
       }

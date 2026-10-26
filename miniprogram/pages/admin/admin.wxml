@@ -78,6 +78,7 @@
       <text wx:if="{{item.canRemove}}" class="mini" bindtap="remove" data-id="{{item.openid}}" style="margin-left:12rpx">撤权</text>
     </view>
   </view>
+  <view wx:if="{{myRole==='superadmin' && noEditor}}" class="muted" style="padding:8rpx 4rpx 0">暂无其他管理员可接收转让，请先“＋ 新增管理员”。</view>
   <view class="fab" style="background:#fff;color:#2F6FDB;border:1px solid #2F6FDB" bindtap="addAdmin">＋ 新增管理员</view>
 </view>
 

@@ -3,9 +3,6 @@
 const app = getApp();
 
 const USE_CLOUD = (app && app.globalData && app.globalData.USE_CLOUD) || false;
-// 本地开发预览：USE_CLOUD=false 时是否以“超级管理员”身份进入管理台（仅本地演示用；部署时 USE_CLOUD=true 走云端 checkAdmin）
-const MOCK_AS_ADMIN = true;
-
 // ---------- 本地模拟数据（结构与 cats 集合一致；每只猫带完整属性与近况） ----------
 const MOCK_CATS = [
   { id: 'c1', name: '小橘', lifeStatus: '在校', isAdoptable: true, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2024-05', personalityTags: ['亲人', '粘人'], usualLocations: ['食堂', '宿舍区'], healthNotes: '健康', latestNote: '近期食堂出没，状态良好', photos: [], voice: '', bg: 'linear-gradient(135deg,#FFB46B,#FF8A3D)', photoText: '橘', sub: '橘白 · 食堂附近',
@@ -33,6 +30,8 @@ let MOCK_ADMINS = [
 
 // 游客投稿（待审核，不直发公开页）
 let MOCK_SUBS = [];
+// 本地“当前登录”的管理员 openid（mock 无真实登录，固定为 o_super 以模拟身份与转让效果）
+let MOCK_ME_OPENID = 'o_super';
 
 function call(name, data) {
   return new Promise((resolve, reject) => {
@@ -124,7 +123,11 @@ function getCat(id) {
 
 // ---------- 公开：校验管理员身份 ----------
 function checkAdmin() {
-  if (!USE_CLOUD) return Promise.resolve({ isAdmin: !!MOCK_AS_ADMIN, role: MOCK_AS_ADMIN ? 'superadmin' : '', profile: { realName: '本地管理员', note: '本地演示身份' } });
+  if (!USE_CLOUD) {
+    const me = MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID);
+    if (!me) return Promise.resolve({ isAdmin: false });
+    return Promise.resolve({ isAdmin: true, role: me.role, profile: { realName: me.realName, note: me.note || '' } });
+  }
   return call('checkAdmin', {});
 }
 
@@ -224,7 +227,17 @@ function adminManage(action, payload) {
 
 // ---------- 首次：初始化超级管理员（mock 直接成功） ----------
 function initAdmin(profile) {
-  if (!USE_CLOUD) return mockOk();
+  if (!USE_CLOUD) {
+    // 本地：若列表为空，则把“当前登录”身份置为首位超级管理员
+    if (!MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID)) {
+      MOCK_ADMINS.push({
+        openid: MOCK_ME_OPENID, realName: (profile && profile.realName) || '我（本地管理员）',
+        role: 'superadmin', major: (profile && profile.major) || '', className: (profile && profile.className) || '',
+        dorm: (profile && profile.dorm) || '', note: '本地演示'
+      });
+    }
+    return mockOk();
+  }
   return call('initAdmin', profile);
 }
 
