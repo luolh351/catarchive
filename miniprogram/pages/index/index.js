@@ -3,7 +3,8 @@ const service = require('../../utils/service');
 
 Page({
   data: { active: '在校', list: [], all: [], q: '' },
-  onLoad() { this.applyTab('在校'); },
+  // 每次显示（含切回首页/从详情返回）都重新拉取，保证编辑后首页即时更新颜色/名字
+  onShow() { this.applyTab(this.data.active); },
   setTab(e) { this.applyTab(e.currentTarget.dataset.s); },
   applyTab(s) {
     this.setData({ active: s, q: '' });

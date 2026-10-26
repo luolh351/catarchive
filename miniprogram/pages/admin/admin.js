@@ -7,15 +7,18 @@ Page({
     stats: { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 },
     cats: [],
     admins: [],
-    myRole: ''
+    myRole: '',
+    ready: false
   },
   onLoad() {
     service.checkAdmin().then(r => {
       if (!r.isAdmin) { wx.redirectTo({ url: '/pages/denied/denied' }); return; }
-      this.setData({ myRole: r.role });
+      this.setData({ myRole: r.role, ready: true });
       this.loadData();
     }).catch(() => { wx.redirectTo({ url: '/pages/denied/denied' }); });
   },
+  // 从编辑/新增页返回时刷新，保证名字/毛色等修改即时可见（修复“保存无反应”的错觉）
+  onShow() { if (this.data.ready) this.loadData(); },
   loadData() {
     service.getCats('').then(list => {
       const s = { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 };
