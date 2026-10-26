@@ -1,11 +1,11 @@
 <view class="panel">
   <view class="h">收录概览</view>
   <view class="mstat">
-    <view class="b"><view class="n">{{stats.在校}}</view><view class="l">在校</view></view>
-    <view class="b"><view class="n">{{stats.待领养}}</view><view class="l">待领养</view></view>
-    <view class="b"><view class="n">{{stats.毕业}}</view><view class="l">毕业</view></view>
-    <view class="b"><view class="n">{{stats.休学}}</view><view class="l">休学</view></view>
-    <view class="b"><view class="n">{{stats.喵星}}</view><view class="l">喵星</view></view>
+    <view class="b"><view class="n">{{stats.zaixiao}}</view><view class="l">在校</view></view>
+    <view class="b"><view class="n">{{stats.dailingyang}}</view><view class="l">待领养</view></view>
+    <view class="b"><view class="n">{{stats.biye}}</view><view class="l">毕业</view></view>
+    <view class="b"><view class="n">{{stats.xiuxue}}</view><view class="l">休学</view></view>
+    <view class="b"><view class="n">{{stats.miaoxing}}</view><view class="l">喵星</view></view>
   </view>
 </view>
 

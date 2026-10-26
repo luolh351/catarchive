@@ -3,7 +3,8 @@ const service = require('../../utils/service');
 
 Page({
   data: {
-    stats: { 在校: 0, 毕业: 0, 休学: 0, 喵星: 0, 待领养: 0 },
+    // 统计键用 ASCII，避免 WXML 表达式解析器不支持“点+中文属性名”
+    stats: { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 },
     cats: [],
     admins: [],
     myRole: ''
@@ -17,10 +18,11 @@ Page({
   },
   loadData() {
     service.getCats('').then(list => {
-      const s = { 在校: 0, 毕业: 0, 休学: 0, 喵星: 0, 待领养: 0 };
+      const s = { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 };
+      const map = { '在校': 'zaixiao', '毕业': 'biye', '休学': 'xiuxue', '喵星': 'miaoxing' };
       const cats = list.map(c => {
-        if (s[c.lifeStatus] !== undefined) s[c.lifeStatus]++;
-        if (c.isAdoptable) s.待领养++;
+        if (map[c.lifeStatus]) s[map[c.lifeStatus]]++;
+        if (c.isAdoptable) s.dailingyang++;
         return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : '') };
       });
       this.setData({ stats: s, cats });
