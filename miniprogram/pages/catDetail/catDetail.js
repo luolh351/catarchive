@@ -12,7 +12,7 @@ Page({
   },
   onLoad(options) {
     const id = options && options.id;
-    this.setData({ id });
+    this.setData({ id: id || '' });
     this.load(id);
   },
   load(id) {

@@ -15,7 +15,7 @@ Page({
   },
   onLoad(options) {
     const id = options && options.id;
-    this.setData({ id });
+    this.setData({ id: id || '' });
     // 表单属管理操作：非管理员（含游客）禁止进入，必须从管理台鉴权后进入
     service.checkAdmin().then(r => {
       if (!r || !r.isAdmin) { wx.redirectTo({ url: '/pages/denied/denied' }); return; }
