@@ -31,6 +31,9 @@ let MOCK_ADMINS = [
   { openid: 'o_editor', realName: '李四', role: 'editor', major: '生科', className: '生科2班', dorm: '5栋', note: '' }
 ];
 
+// 游客投稿（待审核，不直发公开页）
+let MOCK_SUBS = [];
+
 function call(name, data) {
   return new Promise((resolve, reject) => {
     wx.cloud.callFunction({ name, data }).then(res => resolve(res.result)).catch(reject);
@@ -225,6 +228,55 @@ function initAdmin(profile) {
   return call('initAdmin', profile);
 }
 
+// ---------- 公开：游客投稿（进入待审核，不直发公开页） ----------
+function submitCat(data) {
+  if (!USE_CLOUD) {
+    const id = 's' + Date.now();
+    MOCK_SUBS.push(Object.assign({ id, status: 'pending', createdAt: Date.now() }, data));
+    return mockOk({ id });
+  }
+  return call('catSubmit', { data });
+}
+function listSubmissions() {
+  if (!USE_CLOUD) {
+    const list = MOCK_SUBS.filter(s => s.status === 'pending').map(s => ({
+      id: s.id, name: s.name, coatColor: s.coatColor, lifeStatus: s.lifeStatus, latestNote: s.latestNote || ''
+    }));
+    return Promise.resolve(list);
+  }
+  return call('submissionManage', { action: 'list' }).then(r => (r && r.list) || []);
+}
+function approveSubmission(id) {
+  if (!USE_CLOUD) {
+    const i = MOCK_SUBS.findIndex(s => s.id === id && s.status === 'pending');
+    if (i < 0) return Promise.resolve({ ok: false, msg: '未找到投稿' });
+    const d = MOCK_SUBS[i];
+    const cat = {
+      id: 'c' + Date.now(), name: d.name, lifeStatus: d.lifeStatus || '在校', isAdoptable: !!d.isAdoptable && (d.lifeStatus || '在校') === '在校',
+      coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
+      sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
+      aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
+      photos: d.photos || [], voice: d.voice || '', published: true,
+      bg: pickBg(d.coatColor), photoText: (d.name || '猫')[0] || '猫',
+      sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),
+      timeline: d.latestNote ? [ { t: '投稿审核通过', c: d.latestNote } ] : []
+    };
+    MOCK_CATS.push(cat);
+    MOCK_SUBS.splice(i, 1);
+    return mockOk();
+  }
+  return call('submissionManage', { action: 'approve', id });
+}
+function rejectSubmission(id) {
+  if (!USE_CLOUD) {
+    const i = MOCK_SUBS.findIndex(s => s.id === id && s.status === 'pending');
+    if (i >= 0) MOCK_SUBS.splice(i, 1);
+    return mockOk();
+  }
+  return call('submissionManage', { action: 'reject', id });
+}
+
 module.exports = {
-  getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin
+  getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin,
+  submitCat, listSubmissions, approveSubmission, rejectSubmission
 };

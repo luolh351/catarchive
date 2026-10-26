@@ -7,6 +7,7 @@ Page({
     stats: { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 },
     cats: [],
     admins: [],
+    subs: [],
     myRole: '',
     ready: false
   },
@@ -30,6 +31,7 @@ Page({
       });
       this.setData({ stats: s, cats });
     });
+    service.listSubmissions().then(list => this.setData({ subs: list || [] }));
     service.listAdmins().then(r => {
       const me = this.data.myRole;
       const admins = (r.list || []).map(a => ({
@@ -101,6 +103,29 @@ Page({
           });
         }
       }
+    });
+  },
+  approveSub(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '采纳投稿', content: '采纳后该猫咪将公开收录？',
+      success: res => {
+        if (!res.confirm) return;
+        wx.showLoading({ title: '处理中' });
+        service.approveSubmission(id).then(r => {
+          wx.hideLoading();
+          if (r && r.ok === false) { wx.showToast({ title: r.msg || '失败', icon: 'none' }); return; }
+          wx.showToast({ title: '已采纳', icon: 'success' });
+          this.loadData();
+        }).catch(() => { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); });
+      }
+    });
+  },
+  rejectSub(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '忽略投稿', content: '确定忽略该投稿？',
+      success: res => { if (res.confirm) service.rejectSubmission(id).then(() => this.loadData()); }
     });
   }
 });

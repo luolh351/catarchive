@@ -11,6 +11,21 @@
 
 <view class="fab" bindtap="goForm">＋ 新增猫咪档案</view>
 
+<view class="panel" wx:if="{{subs.length}}">
+  <view class="h">待审投稿（{{subs.length}}）</view>
+  <view class="mrow" wx:for="{{subs}}" wx:key="id">
+    <view class="l">
+      <view class="n">{{item.name}}</view>
+      <view class="s">{{item.coatColor}} · {{item.lifeStatus}}</view>
+      <view class="s2" wx:if="{{item.latestNote}}">{{item.latestNote}}</view>
+    </view>
+    <view>
+      <text class="mini primary" bindtap="approveSub" data-id="{{item.id}}">采纳</text>
+      <text class="mini" bindtap="rejectSub" data-id="{{item.id}}" style="margin-left:12rpx">忽略</text>
+    </view>
+  </view>
+</view>
+
 <view class="panel">
   <view class="h">猫咪管理</view>
   <view class="mrow" wx:for="{{cats}}" wx:key="id">

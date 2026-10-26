@@ -1,0 +1,2 @@
+/* 投稿表单复用 app.wxss 公共类 */
+.custom { margin-top: 16rpx; }

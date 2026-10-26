@@ -8,5 +8,9 @@
   <view class="h">信息纠错</view>
   <view class="p">发现信息有误或猫咪情况变化，请联系管理员更新。（联系方式由负责人确认后填写）</view>
 
+  <view class="h">参与共建</view>
+  <view class="p">发现校园里还没收录的猫咪？欢迎填写资料投稿，管理员审核通过后会收录进档案馆。</view>
+
+  <view class="btn" bindtap="goSubmit">我要提供猫咪数据</view>
   <view class="btn" bindtap="goAdmin">进入管理（管理员）</view>
 </view>
