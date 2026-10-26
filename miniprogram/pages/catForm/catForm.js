@@ -1,6 +1,5 @@
 // 新增/编辑档案表单：保存走 service.catManage（本地模拟真写入；连云走云函数，服务端校验）
 const service = require('../../utils/service');
-const COATS = ['橘白', '黑白', '狸花', '白', '其他', '未知'];
 const GENDERS = ['公', '母', '未知'];
 const STERS = ['已绝育', '未绝育', '未知'];
 const LIFES = ['在校', '毕业', '休学', '喵星'];
@@ -46,6 +45,12 @@ Page({
     form[e.currentTarget.dataset.field] = e.detail.value;
     this.setData({ form });
   },
+  // 自定义毛色：直接写入 form.coatColor，覆盖预设选项
+  onCoatInput(e) {
+    const form = this.data.form;
+    form.coatColor = e.detail.value;
+    this.setData({ form });
+  },
   selectOpt(e) {
     const form = this.data.form;
     form[e.currentTarget.dataset.group] = e.currentTarget.dataset.val;
@@ -80,7 +85,7 @@ Page({
     const f = this.data.form;
     if (!f.name || !f.name.trim()) { wx.showToast({ title: '请填写名字', icon: 'none' }); return; }
     const data = {
-      name: f.name.trim(), aliases: f.aliases, coatColor: COATS.includes(f.coatColor) ? f.coatColor : '未知',
+      name: f.name.trim(), aliases: f.aliases, coatColor: (f.coatColor && f.coatColor.trim()) ? f.coatColor.trim() : '未知',
       gender: GENDERS.includes(f.gender) ? f.gender : '未知',
       sterilizationStatus: STERS.includes(f.sterilizationStatus) ? f.sterilizationStatus : '未知',
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,

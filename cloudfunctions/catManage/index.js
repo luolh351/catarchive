@@ -6,7 +6,6 @@ const cats = db.collection('cats');
 const admins = db.collection('admin_users');
 const logs = db.collection('admin_audit_logs');
 
-const COAT = ['橘白', '黑白', '狸花', '白', '其他', '未知'];
 const GENDER = ['公', '母', '未知'];
 const STER = ['已绝育', '未绝育', '未知'];
 const LIFE = ['在校', '毕业', '休学', '喵星'];
@@ -35,7 +34,7 @@ exports.main = async (event) => {
   if (action === 'create') {
     const d = event.data || {};
     if (!d.name || !d.name.trim() || d.name.length > 20) return { ok: false, msg: '名字必填且≤20字' };
-    if (d.coatColor && !COAT.includes(d.coatColor)) return { ok: false, msg: '毛色枚举错误' };
+    if (d.coatColor !== undefined && (typeof d.coatColor !== 'string' || d.coatColor.length > 20)) return { ok: false, msg: '毛色格式错误' };
     if (d.gender && !GENDER.includes(d.gender)) return { ok: false, msg: '性别枚举错误' };
     if (d.sterilizationStatus && !STER.includes(d.sterilizationStatus)) return { ok: false, msg: '绝育枚举错误' };
     if (d.lifeStatus && !LIFE.includes(d.lifeStatus)) return { ok: false, msg: '状态枚举错误' };
@@ -62,7 +61,7 @@ exports.main = async (event) => {
     if (!id) return { ok: false, msg: 'missing id' };
     const d = event.data || {};
     if (d.name !== undefined && (!d.name || d.name.length > 20)) return { ok: false, msg: '名字必填且≤20字' };
-    if (d.coatColor !== undefined && !COAT.includes(d.coatColor)) return { ok: false, msg: '毛色枚举错误' };
+    if (d.coatColor !== undefined && (typeof d.coatColor !== 'string' || d.coatColor.length > 20)) return { ok: false, msg: '毛色格式错误' };
     if (d.gender !== undefined && !GENDER.includes(d.gender)) return { ok: false, msg: '性别枚举错误' };
     if (d.sterilizationStatus !== undefined && !STER.includes(d.sterilizationStatus)) return { ok: false, msg: '绝育枚举错误' };
     if (d.lifeStatus !== undefined && !LIFE.includes(d.lifeStatus)) return { ok: false, msg: '状态枚举错误' };

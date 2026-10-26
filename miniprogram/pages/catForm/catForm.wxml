@@ -16,6 +16,7 @@
     <view class="opt {{form.coatColor==='其他'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="其他">其他</view>
     <view class="opt {{form.coatColor==='未知'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="未知">未知</view>
   </view>
+  <input class="custom" placeholder="或输入自定义毛色" value="{{form.coatColor}}" bindinput="onCoatInput" />
 </view>
 <view class="field">
   <view class="lab">性别</view>

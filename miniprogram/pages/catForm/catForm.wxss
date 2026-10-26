@@ -1,1 +1,2 @@
 /* 表单样式复用 app.wxss 公共类 */
+.custom { margin-top: 16rpx; }
