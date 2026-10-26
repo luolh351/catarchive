@@ -16,9 +16,18 @@ Page({
   },
   onLoad(options) {
     const id = options && options.id;
+    this.setData({ id });
+    // 表单属管理操作：非管理员（含游客）禁止进入，必须从管理台鉴权后进入
+    service.checkAdmin().then(r => {
+      if (!r || !r.isAdmin) { wx.redirectTo({ url: '/pages/denied/denied' }); return; }
+      this.initForm(id);
+    }).catch(() => { wx.redirectTo({ url: '/pages/denied/denied' }); });
+  },
+  initForm(id) {
     if (id) {
-      this.setData({ id });
+      wx.showLoading({ title: '加载中' });
       service.getCat(id).then(res => {
+        wx.hideLoading();
         if (!res.cat) { wx.showToast({ title: '未找到', icon: 'none' }); return; }
         const c = res.cat;
         this.setData({
@@ -29,7 +38,7 @@ Page({
             photos: c.photos || [], voice: c.voice || '', isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
           }
         });
-      });
+      }).catch(() => { wx.hideLoading(); wx.showToast({ title: '加载失败', icon: 'none' }); });
     }
   },
   onInput(e) {

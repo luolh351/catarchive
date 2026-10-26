@@ -34,9 +34,4 @@
       <view class="c">{{item.c}}</view>
     </view>
   </view>
-
-  <view wx:if="{{isAdmin}}" class="d-actions">
-    <view class="btn" bindtap="editCat">编辑档案</view>
-    <view class="btn" bindtap="addUpdate">补充近况</view>
-  </view>
 </block>
