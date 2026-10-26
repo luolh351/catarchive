@@ -12,7 +12,7 @@
 
 <view wx:for="{{list}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
   <view class="avatar" style="background:{{item.bg}}">{{item.photoText}}</view>
-  <view>
+  <view class="info">
     <view class="nm">{{item.name}}<text wx:if="{{item.isAdoptable}}" class="badge">待领养</text></view>
     <view class="sub">{{item.sub}}</view>
   </view>
