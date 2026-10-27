@@ -187,40 +187,80 @@ Page({
       resolve(path); // 本地临时路径或包内文件路径
     });
   },
-  // 投稿照片：多张依次保存到系统相册
+  // 保存文件到本地：多渠道依次降级——真机相册 / PC(开发者工具)存盘 / 转发到微信会话
+  saveToLocal(localPath, isImage) {
+    return new Promise(resolve => {
+      const ways = isImage ? ['album', 'disk', 'chat'] : ['disk', 'chat'];
+      const has = name => (wx.canIUse ? wx.canIUse(name) : !!wx[name]);
+      let i = 0;
+      const attempt = () => {
+        if (i >= ways.length) { resolve({ ok: false, way: '' }); return; }
+        const way = ways[i++];
+        if (way === 'album') {
+          if (!has('saveImageToPhotosAlbum')) { attempt(); return; }
+          wx.saveImageToPhotosAlbum({ filePath: localPath, success: () => resolve({ ok: true, way: '相册' }), fail: attempt });
+        } else if (way === 'disk') {
+          if (!has('saveFileToDisk')) { attempt(); return; }
+          wx.saveFileToDisk({ filePath: localPath, success: () => resolve({ ok: true, way: '本地磁盘' }), fail: attempt });
+        } else {
+          if (!has('shareFileMessage')) { attempt(); return; }
+          wx.shareFileMessage({ filePath: localPath, success: () => resolve({ ok: true, way: '微信会话' }), fail: attempt });
+        }
+      };
+      attempt();
+    });
+  },
+  // 全部渠道失败时，按环境给出准确原因（开发者工具本身不支持保存 API）
+  saveFailTip(isImage) {
+    let env = '';
+    try { env = (wx.getSystemInfoSync() || {}).platform || ''; } catch (e) { env = ''; }
+    if (env === 'devtools') {
+      wx.showModal({
+        title: '当前环境不支持保存',
+        content: '微信开发者工具（模拟器）不支持直接保存文件到相册/磁盘。请用工具栏「预览」在手机端，或在 PC 微信客户端打开后再试。',
+        showCancel: false, confirmText: '知道了'
+      });
+      return;
+    }
+    wx.showModal({
+      title: isImage ? '无法保存照片' : '无法保存音频',
+      content: isImage ? '可能未授权「保存到相册」。可在小程序设置中开启权限后重试。' : '请在手机端确认已允许小程序保存/转发文件。',
+      confirmText: '去设置', cancelText: '关闭',
+      success: res => { if (res.confirm) wx.openSetting({}); }
+    });
+  },
+  // 投稿照片：多张依次保存，每张走多渠道降级
   saveSubPhotos() {
     const photos = this.data.detail.photos || [];
     if (!photos.length) return;
     wx.showLoading({ title: '保存中' });
     let chain = Promise.resolve();
-    let ok = 0, fail = 0;
+    let ok = 0, fail = 0, way = '';
     photos.forEach(p => {
-      chain = chain.then(() => this.resolveLocal(p).then(local => new Promise(done => {
-        wx.saveImageToPhotosAlbum({ filePath: local, success: () => { ok++; done(); }, fail: () => { fail++; done(); } });
-      })).catch(() => { fail++; }));
+      chain = chain.then(() => this.resolveLocal(p)
+        .then(local => this.saveToLocal(local, true).then(r => { if (r.ok) { ok++; way = r.way; } else fail++; }))
+        .catch(() => { fail++; }));
     });
     chain.then(() => {
       wx.hideLoading();
-      if (ok && !fail) wx.showToast({ title: '已保存到相册', icon: 'success' });
-      else if (ok) wx.showToast({ title: '成功' + ok + '张，失败' + fail + '张', icon: 'none' });
-      else wx.showToast({ title: '保存失败，请检查相册权限', icon: 'none' });
+      if (ok && !fail) wx.showToast({ title: '已保存到' + way, icon: 'success' });
+      else if (ok) wx.showToast({ title: ok + '张成功，' + fail + '张失败', icon: 'none' });
+      else this.saveFailTip(true);
     });
   },
-  // 投稿音频：优先保存到本地磁盘(PC)，移动端则转发到聊天会话保存
+  // 投稿音频：同样多渠道降级保存
   downloadSubVoice() {
     const voice = this.data.detail.voice;
     if (!voice) return;
     wx.showLoading({ title: '准备中' });
-    this.resolveLocal(voice).then(local => {
-      wx.hideLoading();
-      if (wx.saveFileToDisk) {
-        wx.saveFileToDisk({ filePath: local, fail: () => wx.showToast({ title: '已取消', icon: 'none' }) });
-      } else if (wx.shareFileMessage) {
-        wx.shareFileMessage({ filePath: local, fail: () => wx.showToast({ title: '已取消', icon: 'none' }) });
-      } else {
-        wx.showToast({ title: '当前环境不支持保存', icon: 'none' });
-      }
-    }).catch(() => { wx.hideLoading(); wx.showToast({ title: '下载失败', icon: 'none' }); });
+    this.resolveLocal(voice)
+      .then(local => this.saveToLocal(local, false))
+      .then(r => {
+        wx.hideLoading();
+        if (r.ok) wx.showToast({ title: '已保存到' + r.way, icon: 'success' });
+        else this.saveFailTip(false);
+      })
+      .catch(() => { wx.hideLoading(); wx.showToast({ title: '下载失败', icon: 'none' }); });
   },
   rejectSub(e) {
     const id = e.currentTarget.dataset.id;
