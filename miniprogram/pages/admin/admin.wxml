@@ -39,8 +39,8 @@
     <view class="kv"><text>健康</text><text>{{detail.healthNotes}}</text></view>
     <view class="kv"><text>待领养</text><text>{{detail.isAdoptable ? '是' : '否'}}</text></view>
     <view class="kv"><text>去向</text><text>{{detail.lifeStatus}}</text></view>
-    <view class="kv" wx:if="{{detail.photos.length}}"><text>照片</text><text>{{detail.photos.length}} 张</text></view>
-    <view class="kv"><text>录音</text><text>{{detail.voice ? '已附' : '无'}}</text></view>
+    <view class="kv" wx:if="{{detail.photos.length}}"><text>照片</text><view class="thumbs"><image wx:for="{{detail.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" catchtap="previewSubPhoto" /></view></view>
+    <view class="kv"><text>叫声</text><text wx:if="{{detail.voice}}" class="pl" bindtap="playSubVoice">{{subPlaying ? '播放中 · 点击停止' : '▶ 试听'}}</text><text wx:else>无</text></view>
     <view class="kv"><text>提交人</text><text>{{detail.submitter}}</text></view>
     <view class="kv"><text>提交时间</text><text>{{detail.createdAtText}}</text></view>
     <view class="btns">

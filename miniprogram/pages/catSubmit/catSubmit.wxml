@@ -1,4 +1,4 @@
-<view class="muted" style="padding:0 4rpx 16rpx;">你提交的数据将进入审核，管理员采纳后才会公开。</view>
+<view class="muted" style="padding:0 4rpx 16rpx;">只有「名字」必填，其余资料、照片和叫声都可选填。提交后进入审核，采纳后才会公开。</view>
 
 <view class="field">
   <view class="lab"><text class="req">*</text> 名字</view>
@@ -49,10 +49,10 @@
   <input placeholder="当前近况摘要" value="{{form.latestNote}}" bindinput="onInput" data-field="latestNote" />
 </view>
 <view class="field">
-  <view class="lab">照片 / 声音上传</view>
+  <view class="lab">照片 / 叫声（可选）</view>
   <view class="opts">
-    <view class="opt" bindtap="chooseImage">＋ 上传照片</view>
-    <view class="opt" bindtap="chooseVoice">＋ 上传声音</view>
+    <view class="opt" bindtap="chooseImage">＋ 拍照 / 选照片</view>
+    <view class="opt" bindtap="chooseVoice">＋ 上传叫声</view>
   </view>
   <view class="imgs" wx:if="{{form.photos.length}}">
     <view class="img" wx:for="{{form.photos}}" wx:key="*this">
@@ -60,7 +60,10 @@
       <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
     </view>
   </view>
-  <view wx:if="{{form.voice}}" class="voice">已选录音 <text class="x" catchtap="clearVoice">×</text></view>
+  <view wx:if="{{form.voice}}" class="voice">
+    <text class="play" bindtap="previewVoice">{{voicePlaying ? '播放中 ♪' : '▶ 试听'}}</text>
+    <text class="x" catchtap="clearVoice">×</text>
+  </view>
 </view>
 <view class="field">
   <view class="row2">

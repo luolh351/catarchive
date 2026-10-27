@@ -120,6 +120,23 @@ page {
 .save { background: var(--primary); color: #fff; text-align: center; padding: 26rpx; border-radius: 24rpx; font-size: 30rpx; margin-top: 8rpx; }
 .cancel { text-align: center; color: #8B96A3; font-size: 28rpx; padding: 24rpx; }
 
+/* 表单上传：照片九宫格与音频条（catForm / catSubmit 共用） */
+.imgs { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 20rpx; }
+.img { position: relative; width: 192rpx; height: 192rpx; }
+.img image { width: 100%; height: 100%; border-radius: 16rpx; display: block; }
+.img .x {
+  position: absolute; right: -8rpx; top: -8rpx;
+  width: 44rpx; height: 44rpx; line-height: 42rpx; text-align: center;
+  background: rgba(0,0,0,.6); color: #fff; border-radius: 50%; font-size: 30rpx;
+}
+.voice {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 20rpx; background: var(--tagBg); border-radius: 16rpx;
+  padding: 18rpx 24rpx; font-size: 26rpx;
+}
+.voice .play { color: var(--tagFg); }
+.voice .x { color: #97A0AA; font-size: 32rpx; padding: 0 8rpx; }
+
 /* 状态页（加载/空/错误/无权限） */
 .state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--sub); gap: 20rpx; padding: 0 60rpx; text-align: center; }
 .state .big { font-size: 30rpx; color: #34465C; }
@@ -137,3 +154,7 @@ page {
 .sheet .kv text:last-child { flex: 1; color: var(--fg); word-break: break-all; }
 .sheet .btns { display: flex; gap: 20rpx; margin-top: 28rpx; }
 .sheet .btns .mini { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 20rpx; }
+/* 投稿详情内的照片缩略图与试听 */
+.sheet .thumbs { display: flex; flex-wrap: wrap; gap: 12rpx; flex: 1; }
+.sheet .thumb { width: 120rpx; height: 120rpx; border-radius: 12rpx; }
+.sheet .kv .pl { color: var(--primary); }

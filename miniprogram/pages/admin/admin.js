@@ -9,9 +9,13 @@ Page({
     admins: [],
     subs: [],
     detail: null,
+    subPlaying: false,
     myRole: '',
     noEditor: false,
     ready: false
+  },
+  onUnload() {
+    if (this.subAudio) { this.subAudio.destroy(); this.subAudio = null; }
   },
   onLoad() {
     service.checkAdmin().then(r => {
@@ -137,8 +141,30 @@ Page({
       }
     });
   },
-  closeSub() { this.setData({ detail: null }); },
+  closeSub() {
+    if (this.subAudio) { this.subAudio.stop(); this.subAudio.destroy(); this.subAudio = null; }
+    this.setData({ detail: null, subPlaying: false });
+  },
   stop() {},
+  // 投稿详情：点缩略图全屏预览照片
+  previewSubPhoto(e) {
+    const photos = this.data.detail.photos || [];
+    if (!photos.length) return;
+    wx.previewImage({ urls: photos, current: e.currentTarget.dataset.src });
+  },
+  // 投稿详情：试听投稿音频
+  playSubVoice() {
+    if (this.subAudio) { this.subAudio.stop(); this.subAudio.destroy(); this.subAudio = null; }
+    if (this.data.subPlaying) { this.setData({ subPlaying: false }); return; }
+    const a = wx.createInnerAudioContext();
+    a.src = this.data.detail.voice;
+    a.onEnded(() => this.setData({ subPlaying: false }));
+    a.onStop(() => this.setData({ subPlaying: false }));
+    a.onError(() => { this.setData({ subPlaying: false }); wx.showToast({ title: '播放失败', icon: 'none' }); });
+    a.play();
+    this.setData({ subPlaying: true });
+    this.subAudio = a;
+  },
   rejectSub(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({

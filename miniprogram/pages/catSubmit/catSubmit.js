@@ -6,11 +6,15 @@ const LIFES = ['在校', '毕业', '休学', '喵星'];
 
 Page({
   data: {
+    voicePlaying: false,
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', latestNote: '',
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校'
     }
+  },
+  onUnload() {
+    if (this.audio) { this.audio.destroy(); this.audio = null; }
   },
   onInput(e) {
     const form = this.data.form;
@@ -33,10 +37,19 @@ Page({
     form.isAdoptable = !form.isAdoptable;
     this.setData({ form });
   },
+  // 照片可选填：支持拍照或从相册选，最多 9 张
   chooseImage() {
-    wx.chooseImage({
-      count: 9,
-      success: res => this.setData({ 'form.photos': this.data.form.photos.concat(res.tempFilePaths) })
+    const remain = 9 - this.data.form.photos.length;
+    if (remain <= 0) { wx.showToast({ title: '最多 9 张', icon: 'none' }); return; }
+    wx.chooseMedia({
+      count: remain,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: res => {
+        const paths = (res.tempFiles || []).map(f => f.tempFilePath).filter(Boolean);
+        this.setData({ 'form.photos': this.data.form.photos.concat(paths) });
+      },
+      fail: () => {}
     });
   },
   removeImage(e) {
@@ -45,14 +58,31 @@ Page({
     photos.splice(i, 1);
     this.setData({ 'form.photos': photos });
   },
+  // 音频可选填：从微信聊天记录选音频文件（mp3/wav 等）
   chooseVoice() {
     wx.chooseMessageFile({
       count: 1, type: 'file', extension: ['mp3', 'wav', 'm4a', 'silk'],
       success: res => this.setData({ 'form.voice': res.tempFiles[0].path }),
-      fail: () => {}
+      fail: () => { wx.showToast({ title: '未选择音频', icon: 'none' }); }
     });
   },
-  clearVoice() { this.setData({ 'form.voice': '' }); },
+  clearVoice() {
+    if (this.audio) { this.audio.stop(); this.audio.destroy(); this.audio = null; }
+    this.setData({ 'form.voice': '', voicePlaying: false });
+  },
+  // 投稿前试听已选音频
+  previewVoice() {
+    if (this.audio) { this.audio.stop(); this.audio.destroy(); this.audio = null; }
+    if (this.data.voicePlaying) { this.setData({ voicePlaying: false }); return; }
+    const a = wx.createInnerAudioContext();
+    a.src = this.data.form.voice;
+    a.onEnded(() => this.setData({ voicePlaying: false }));
+    a.onStop(() => this.setData({ voicePlaying: false }));
+    a.onError(() => { this.setData({ voicePlaying: false }); wx.showToast({ title: '播放失败', icon: 'none' }); });
+    a.play();
+    this.setData({ voicePlaying: true });
+    this.audio = a;
+  },
   submit() {
     const f = this.data.form;
     if (!f.name || !f.name.trim()) { wx.showToast({ title: '请填写名字', icon: 'none' }); return; }
