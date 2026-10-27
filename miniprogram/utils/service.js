@@ -30,6 +30,8 @@ MOCK_CATS.forEach((c, i) => {
   c.photos = [DEMO_PHOTOS[i % DEMO_PHOTOS.length]];
   c.voice = DEMO_VOICE[i % DEMO_VOICE.length];
 });
+// 演示“无叫声”的展示效果：煤球(c2)不分配音频（照片保留，复用现有图）
+MOCK_CATS[1].voice = '';
 
 let MOCK_ADMINS = [
   { openid: 'o_super', realName: '我（超级管理员）', role: 'superadmin', major: '计算机', className: '计科1班', dorm: '3栋', note: '本地演示' },
