@@ -20,6 +20,10 @@
     <view class="mlab">叫声</view>
     <view class="vbtn" bindtap="playVoice">{{playing ? '播放中 · 点击停止' : '▶ 播放猫叫'}}</view>
   </view>
+  <view wx:else class="media">
+    <view class="mlab">叫声</view>
+    <view class="vempty">叫声暂缺 · 若有它的录音欢迎投稿补充</view>
+  </view>
 
   <view class="attrs">
     <view class="attr" wx:for="{{attrs}}" wx:key="k">

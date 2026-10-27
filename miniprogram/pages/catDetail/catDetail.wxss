@@ -8,3 +8,8 @@
   background: var(--primary); color: #fff; text-align: center;
   padding: 20rpx 0; border-radius: 24rpx; font-size: 28rpx;
 }
+.vempty {
+  background: #F4F6FA; color: #97A0AA; text-align: center;
+  padding: 20rpx 0; border-radius: 24rpx; font-size: 26rpx;
+  border: 1rpx dashed #C9D4E4;
+}
