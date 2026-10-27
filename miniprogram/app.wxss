@@ -149,9 +149,14 @@ page {
 .mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; z-index: 100; }
 .sheet { width: 100%; background: #fff; border-radius: 32rpx 32rpx 0 0; padding: 32rpx 32rpx 48rpx; max-height: 82vh; overflow-y: auto; }
 .sheet .sh { font-size: 32rpx; font-weight: 700; margin-bottom: 16rpx; }
-.sheet .kv { display: flex; gap: 20rpx; padding: 14rpx 0; border-bottom: 1px solid var(--line); font-size: 28rpx; }
-.sheet .kv text:first-child { color: var(--sub); flex: 0 0 150rpx; }
-.sheet .kv text:last-child { flex: 1; color: var(--fg); word-break: break-all; }
+.sheet .kv { display: flex; align-items: flex-start; gap: 20rpx; padding: 14rpx 0; border-bottom: 1px solid var(--line); font-size: 28rpx; }
+.sheet .kv > text:first-child { color: var(--sub); flex: 0 0 150rpx; }
+.sheet .kv.col { display: block; }
+.sheet .vhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14rpx; font-size: 28rpx; }
+.sheet .vhead > text:first-child { color: var(--sub); }
+.sheet .vw { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.sheet .vw .val { flex: 1; color: var(--fg); word-break: break-all; }
+.sheet .copy { flex: none; color: var(--primary); font-size: 22rpx; border: 1rpx solid var(--primary); border-radius: 14rpx; padding: 4rpx 16rpx; }
 .sheet .btns { display: flex; gap: 20rpx; margin-top: 28rpx; }
 .sheet .btns .mini { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 20rpx; }
 /* 投稿详情内的照片缩略图与试听 */

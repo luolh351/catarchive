@@ -165,6 +165,63 @@ Page({
     this.setData({ subPlaying: true });
     this.subAudio = a;
   },
+  copySub(e) {
+    const text = e.currentTarget.dataset.copy;
+    if (!text || text === '—') { wx.showToast({ title: '无可复制内容', icon: 'none' }); return; }
+    wx.setClipboardData({ data: text, success: () => wx.showToast({ title: '已复制', icon: 'success' }) });
+  },
+  // 将路径转为本地临时文件：支持 cloud://（云存储 fileID）、http(s) 网络地址、本地路径
+  resolveLocal(path) {
+    return new Promise((resolve, reject) => {
+      if (!path) return reject();
+      if (path.indexOf('cloud://') === 0) {
+        wx.cloud.downloadFile({ fileID: path }).then(r => resolve(r.tempFilePath)).catch(reject);
+        return;
+      }
+      if (/^https?:\/\//.test(path)) {
+        wx.downloadFile({ url: path }).then(r => {
+          if (r.statusCode === 200) resolve(r.tempFilePath); else reject();
+        }).catch(reject);
+        return;
+      }
+      resolve(path); // 本地临时路径或包内文件路径
+    });
+  },
+  // 投稿照片：多张依次保存到系统相册
+  saveSubPhotos() {
+    const photos = this.data.detail.photos || [];
+    if (!photos.length) return;
+    wx.showLoading({ title: '保存中' });
+    let chain = Promise.resolve();
+    let ok = 0, fail = 0;
+    photos.forEach(p => {
+      chain = chain.then(() => this.resolveLocal(p).then(local => new Promise(done => {
+        wx.saveImageToPhotosAlbum({ filePath: local, success: () => { ok++; done(); }, fail: () => { fail++; done(); } });
+      })).catch(() => { fail++; }));
+    });
+    chain.then(() => {
+      wx.hideLoading();
+      if (ok && !fail) wx.showToast({ title: '已保存到相册', icon: 'success' });
+      else if (ok) wx.showToast({ title: '成功' + ok + '张，失败' + fail + '张', icon: 'none' });
+      else wx.showToast({ title: '保存失败，请检查相册权限', icon: 'none' });
+    });
+  },
+  // 投稿音频：优先保存到本地磁盘(PC)，移动端则转发到聊天会话保存
+  downloadSubVoice() {
+    const voice = this.data.detail.voice;
+    if (!voice) return;
+    wx.showLoading({ title: '准备中' });
+    this.resolveLocal(voice).then(local => {
+      wx.hideLoading();
+      if (wx.saveFileToDisk) {
+        wx.saveFileToDisk({ filePath: local, fail: () => wx.showToast({ title: '已取消', icon: 'none' }) });
+      } else if (wx.shareFileMessage) {
+        wx.shareFileMessage({ filePath: local, fail: () => wx.showToast({ title: '已取消', icon: 'none' }) });
+      } else {
+        wx.showToast({ title: '当前环境不支持保存', icon: 'none' });
+      }
+    }).catch(() => { wx.hideLoading(); wx.showToast({ title: '下载失败', icon: 'none' }); });
+  },
   rejectSub(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({

@@ -29,20 +29,27 @@
 <view wx:if="{{detail}}" class="mask" bindtap="closeSub">
   <view class="sheet" catchtap="stop">
     <view class="sh">投稿详情</view>
-    <view class="kv"><text>名字</text><text>{{detail.name}}</text></view>
-    <view class="kv"><text>昵称</text><text>{{detail.aliasesText}}</text></view>
-    <view class="kv"><text>毛色</text><text>{{detail.coatColor}}</text></view>
-    <view class="kv"><text>性别</text><text>{{detail.gender}}</text></view>
-    <view class="kv"><text>绝育</text><text>{{detail.sterilizationStatus}}{{detail.sterilizedAt ? ' · ' + detail.sterilizedAt : ''}}</text></view>
-    <view class="kv"><text>常出没</text><text>{{detail.usualText}}</text></view>
-    <view class="kv"><text>最近情况</text><text>{{detail.latestNote}}</text></view>
-    <view class="kv"><text>健康</text><text>{{detail.healthNotes}}</text></view>
-    <view class="kv"><text>待领养</text><text>{{detail.isAdoptable ? '是' : '否'}}</text></view>
-    <view class="kv"><text>去向</text><text>{{detail.lifeStatus}}</text></view>
-    <view class="kv" wx:if="{{detail.photos.length}}"><text>照片</text><view class="thumbs"><image wx:for="{{detail.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" catchtap="previewSubPhoto" /></view></view>
-    <view class="kv"><text>叫声</text><text wx:if="{{detail.voice}}" class="pl" bindtap="playSubVoice">{{subPlaying ? '播放中 · 点击停止' : '▶ 试听'}}</text><text wx:else>无</text></view>
-    <view class="kv"><text>提交人</text><text>{{detail.submitter}}</text></view>
-    <view class="kv"><text>提交时间</text><text>{{detail.createdAtText}}</text></view>
+    <view class="kv"><text>名字</text><view class="vw"><text class="val">{{detail.name}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.name}}">复制</text></view></view>
+    <view class="kv"><text>昵称</text><view class="vw"><text class="val">{{detail.aliasesText}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.aliasesText}}">复制</text></view></view>
+    <view class="kv"><text>毛色</text><view class="vw"><text class="val">{{detail.coatColor}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.coatColor}}">复制</text></view></view>
+    <view class="kv"><text>性别</text><view class="vw"><text class="val">{{detail.gender}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.gender}}">复制</text></view></view>
+    <view class="kv"><text>绝育</text><view class="vw"><text class="val">{{detail.sterilizationStatus}}{{detail.sterilizedAt ? ' · ' + detail.sterilizedAt : ''}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.sterilizationStatus}}{{detail.sterilizedAt ? ' · ' + detail.sterilizedAt : ''}}">复制</text></view></view>
+    <view class="kv"><text>常出没</text><view class="vw"><text class="val">{{detail.usualText}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.usualText}}">复制</text></view></view>
+    <view class="kv"><text>最近情况</text><view class="vw"><text class="val">{{detail.latestNote}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.latestNote}}">复制</text></view></view>
+    <view class="kv"><text>健康</text><view class="vw"><text class="val">{{detail.healthNotes}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.healthNotes}}">复制</text></view></view>
+    <view class="kv"><text>待领养</text><view class="vw"><text class="val">{{detail.isAdoptable ? '是' : '否'}}</text></view></view>
+    <view class="kv"><text>去向</text><view class="vw"><text class="val">{{detail.lifeStatus}}</text></view></view>
+    <view class="kv col" wx:if="{{detail.photos.length}}">
+      <view class="vhead"><text>照片（{{detail.photos.length}}）</text><text class="copy" catchtap="saveSubPhotos">保存到相册</text></view>
+      <view class="thumbs"><image wx:for="{{detail.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" catchtap="previewSubPhoto" /></view>
+    </view>
+    <view class="kv"><text>叫声</text><view class="vw">
+      <text wx:if="{{detail.voice}}" class="val pl" bindtap="playSubVoice">{{subPlaying ? '播放中 · 点击停止' : '▶ 试听'}}</text>
+      <text wx:else class="val">无</text>
+      <text wx:if="{{detail.voice}}" class="copy" catchtap="downloadSubVoice">下载</text>
+    </view></view>
+    <view class="kv"><text>提交人</text><view class="vw"><text class="val">{{detail.submitter}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.submitter}}">复制</text></view></view>
+    <view class="kv"><text>提交时间</text><view class="vw"><text class="val">{{detail.createdAtText}}</text></view></view>
     <view class="btns">
       <view class="mini" bindtap="rejectSub" data-id="{{detail.id}}">忽略</view>
       <view class="mini primary" bindtap="closeSub">关闭</view>
