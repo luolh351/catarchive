@@ -11,7 +11,10 @@
 <view wx:if="{{list.length===0}}" class="muted" style="text-align:center;padding:40rpx 0;">{{q ? '没有匹配的猫咪' : '该分类下还没有猫咪'}}</view>
 
 <view wx:for="{{list}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
-  <view class="avatar" style="background:{{item.bg}}">{{item.photoText}}</view>
+  <view class="avatar" style="background:{{item.bg}}">
+    <image wx:if="{{item.photo}}" class="aimg" src="{{item.photo}}" mode="aspectFill" />
+    <block wx:else>{{item.photoText}}</block>
+  </view>
   <view class="info">
     <view class="nm">{{item.name}}<text wx:if="{{item.isAdoptable}}" class="badge">待领养</text></view>
     <view class="sub">{{item.sub}}</view>

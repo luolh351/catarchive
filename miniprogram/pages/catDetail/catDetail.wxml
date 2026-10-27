@@ -1,7 +1,8 @@
 <view wx:if="{{notFound}}" class="muted" style="text-align:center;padding:80rpx 0;">猫咪不存在或已归档</view>
 
 <block wx:else>
-  <view class="hero" style="background:{{cat.photos.length ? 'url(' + cat.photos[0] + ') center/cover no-repeat' : 'linear-gradient(135deg,#FFB46B,#FF8A3D)'}}">
+  <view class="hero">
+    <image wx:if="{{cat.photos.length}}" class="heroimg" src="{{cat.photos[0]}}" mode="aspectFill" />
     <block wx:if="{{!cat.photos.length}}">猫咪照片</block>
   </view>
 
@@ -16,8 +17,8 @@
   </view>
 
   <view wx:if="{{cat.voice}}" class="media">
-    <view class="mlab">叫声录音</view>
-    <audio src="{{cat.voice}}" controls></audio>
+    <view class="mlab">叫声</view>
+    <view class="vbtn" bindtap="playVoice">{{playing ? '播放中 · 点击停止' : '▶ 播放猫叫'}}</view>
   </view>
 
   <view class="attrs">

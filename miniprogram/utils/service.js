@@ -23,6 +23,14 @@ const MOCK_CATS = [
     timeline: [ { t: '2025-12-01', c: '安详离世，感谢陪伴' } ] }
 ];
 
+// 本地演示素材：给 mock 猫轮询分配照片与叫声（包内文件，真机/模拟器可直接显示与播放）
+const DEMO_PHOTOS = ['/assets/photos/cat1.jpg', '/assets/photos/cat2.jpg', '/assets/photos/cat3.jpg', '/assets/photos/cat4.jpg', '/assets/photos/cat5.jpg', '/assets/photos/cat6.jpg'];
+const DEMO_VOICE = ['/assets/sounds/meow1.wav', '/assets/sounds/meow2.wav', '/assets/sounds/meow3.wav', '/assets/sounds/meow4.mp3'];
+MOCK_CATS.forEach((c, i) => {
+  c.photos = [DEMO_PHOTOS[i % DEMO_PHOTOS.length]];
+  c.voice = DEMO_VOICE[i % DEMO_VOICE.length];
+});
+
 let MOCK_ADMINS = [
   { openid: 'o_super', realName: '我（超级管理员）', role: 'superadmin', major: '计算机', className: '计科1班', dorm: '3栋', note: '本地演示' },
   { openid: 'o_editor', realName: '李四', role: 'editor', major: '生科', className: '生科2班', dorm: '5栋', note: '' }
@@ -56,6 +64,7 @@ function cardOf(c) {
     name: c.name,
     isAdoptable: !!c.isAdoptable,
     lifeStatus: c.lifeStatus,
+    photo: (c.photos && c.photos[0]) || '',
     bg: c.bg || pickBg(c.coatColor),
     photoText: c.photoText || (c.name ? c.name[0] : '猫'),
     sub: c.sub || [ (c.coatColor || ''), (Array.isArray(c.usualLocations) ? c.usualLocations[0] : (c.usualLocations || '')) ].filter(Boolean).join(' · ') || '校园流浪猫'
