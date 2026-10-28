@@ -41,21 +41,35 @@ exports.main = async (event) => {
     const { openid } = event;
     if (!openid) return { ok: false, msg: '缺少 openid' };
     if (openid === OPENID) return { ok: false, msg: '不能转让给自己' };
-    const tx = await db.startTransaction();
+
+    // 事务外先做校验（事务只支持 doc().get/update 与 add，不支持 where().get()）
+    const t = await admins.where({ openid }).get().catch(() => null);
+    if (!t || !t.data || !t.data.length) return { ok: false, msg: '目标不存在' };
+    if (t.data[0].role !== 'editor') return { ok: false, msg: '只能转让给普通管理员' };
+    const myDoc = me.data[0];
+    const targetId = t.data[0]._id;
+    const myId = myDoc._id;
+
+    let reason = '';
     try {
-      const t = await tx.collection('admin_users').where({ openid }).get();
-      if (!t.data || !t.data.length) { await tx.rollback(); return { ok: false, msg: '目标不存在' }; }
-      if (t.data[0].role !== 'editor') { await tx.rollback(); return { ok: false, msg: '只能转让给管理员' }; }
-      const m = await tx.collection('admin_users').where({ openid: OPENID }).get();
-      if (!m.data || !m.data.length || m.data[0].role !== 'superadmin') { await tx.rollback(); return { ok: false, msg: '仅超级管理员可操作' }; }
-      await tx.collection('admin_users').doc(t.data[0]._id).update({ data: { role: 'superadmin' } });
-      await tx.collection('admin_users').doc(m.data[0]._id).update({ data: { role: 'editor' } });
-      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'adminTransfer', target: openid, createdAt: now } });
-      await tx.commit();
+      await db.runTransaction(async tx => {
+        // 事务内用受支持的 doc().get() 重新校验，防止事务外校验后被并发改动
+        const [cur, tgt] = await Promise.all([
+          tx.collection('admin_users').doc(myId).get(),
+          tx.collection('admin_users').doc(targetId).get()
+        ]);
+        if (!cur.data || cur.data.role !== 'superadmin') { reason = 'NOT_SUPER'; throw new Error('tx_abort'); }
+        if (!tgt.data || tgt.data.role !== 'editor') { reason = 'NOT_EDITOR'; throw new Error('tx_abort'); }
+        await tx.collection('admin_users').doc(targetId).update({ data: { role: 'superadmin' } });
+        await tx.collection('admin_users').doc(myId).update({ data: { role: 'editor' } });
+        await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'adminTransfer', target: openid, createdAt: now } });
+      });
       return { ok: true };
     } catch (e) {
-      await tx.rollback();
-      return { ok: false, msg: '转让失败' };
+      // runTransaction 抛错会自动回滚；按 reason 给出明确原因
+      if (reason === 'NOT_SUPER') return { ok: false, msg: '仅超级管理员可操作' };
+      if (reason === 'NOT_EDITOR') return { ok: false, msg: '目标不是普通管理员' };
+      return { ok: false, msg: '转让失败：' + ((e && e.message) || '未知错误') };
     }
   }
 

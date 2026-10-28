@@ -1,8 +1,12 @@
 // 客户端服务层：统一封装数据读写。USE_CLOUD=false 时用本地模拟(支持真实写入演示)，true 时走云函数。
 // 云函数文档见 docs/miniapp/cloud-design.md。
-const app = getApp();
-
-const USE_CLOUD = (app && app.globalData && app.globalData.USE_CLOUD) || false;
+// 运行时读取云端开关：不能写成模块级常量快照——
+// 模块加载时 getApp() 可能尚未就绪（返回 undefined），会把开关永久固化成 false，
+// 导致 app.js 里 USE_CLOUD 已改为 true、前端却仍走本地模拟数据（看似“缓存了模拟模式”）。
+function useCloud() {
+  const a = (typeof getApp === 'function') ? getApp() : null;
+  return !!(a && a.globalData && a.globalData.USE_CLOUD);
+}
 
 // ---------- mock 持久化：模拟数据写入本地 Storage，跨“重新编译/切换身份”保留 ----------
 // 目的：本地验证流程需要重新编译切换身份，若只存内存，新增的猫/投稿会丢失，流程走不通
@@ -129,7 +133,7 @@ function timelineOf(container) {
 
 // ---------- 公开：列表 ----------
 function getCats(status) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     let list = MOCK_CATS.filter(c => c.published !== false);
     if (status) list = list.filter(c => c.lifeStatus === status);
     return Promise.resolve(list.map(cardOf));
@@ -142,7 +146,7 @@ function getCats(status) {
 
 // ---------- 公开：详情（统一返回 { cat, attrs, timeline }；归档/不存在返回 cat:null） ----------
 function getCat(id) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const c = MOCK_CATS.find(x => x.id === id);
     if (!c || c.published === false) return Promise.resolve({ cat: null, attrs: [], timeline: [] });
     const cat = {
@@ -170,7 +174,7 @@ function getCat(id) {
 
 // ---------- 公开：校验管理员身份 ----------
 function checkAdmin() {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const me = MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID);
     if (!me) return Promise.resolve({ isAdmin: false });
     return Promise.resolve({ isAdmin: true, role: me.role, profile: { realName: me.realName, note: me.note || '' } });
@@ -191,7 +195,7 @@ function uploadList(list) { return Promise.all((list || []).map(uploadOne)); }
 // 提交前统一处理媒体；非云端或云能力不可用时原样返回
 function prepareMedia(data) {
   const d = Object.assign({}, data || {});
-  if (!USE_CLOUD || !wx.cloud || !wx.cloud.uploadFile) return Promise.resolve(d);
+  if (!useCloud() || !wx.cloud || !wx.cloud.uploadFile) return Promise.resolve(d);
   return Promise.all([ uploadList(d.photos), uploadOne(d.voice) ]).then(r => {
     d.photos = r[0] || [];
     d.voice = r[1] || '';
@@ -201,7 +205,7 @@ function prepareMedia(data) {
 
 // ---------- 管理员：增改归档（mock 真写入，cloud 走云函数） ----------
 function catManage(action, payload) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     if (action === 'create') {
       const d = payload.data || {};
       const id = 'c' + Date.now();
@@ -264,7 +268,7 @@ function catManage(action, payload) {
 
 // ---------- 管理员：新增近况 ----------
 function addUpdate(catId, content) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const cat = MOCK_CATS.find(x => x.id === catId);
     if (cat) {
       cat.latestNote = content;
@@ -279,13 +283,13 @@ function addUpdate(catId, content) {
 
 // ---------- 管理员：名单（mock） ----------
 function listAdmins() {
-  if (!USE_CLOUD) return Promise.resolve({ ok: true, list: MOCK_ADMINS.map(a => ({ openid: a.openid, role: a.role, realName: a.realName, major: a.major, className: a.className, dorm: a.dorm, note: a.note || '' })) });
+  if (!useCloud()) return Promise.resolve({ ok: true, list: MOCK_ADMINS.map(a => ({ openid: a.openid, role: a.role, realName: a.realName, major: a.major, className: a.className, dorm: a.dorm, note: a.note || '' })) });
   return call('adminList', {});
 }
 
 // ---------- 管理员：增删/转让（mock） ----------
 function adminManage(action, payload) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     if (action === 'add') {
       if (MOCK_ADMINS.find(a => a.openid === payload.openid)) return Promise.resolve({ ok: false, msg: '已是管理员' });
       MOCK_ADMINS.push({ openid: payload.openid, realName: payload.realName || '新管理员', role: 'editor', major: payload.major || '', className: payload.className || '', dorm: payload.dorm || '', note: '' });
@@ -314,7 +318,7 @@ function adminManage(action, payload) {
 
 // ---------- 首次：初始化超级管理员（mock 直接成功） ----------
 function initAdmin(profile) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     // 与云端一致：只有尚未存在 superadmin 时才允许初始化（否则拒绝，防重复/防篡权）
     if (MOCK_ADMINS.some(a => a.role === 'superadmin')) {
       return Promise.resolve({ ok: false, msg: '已初始化，禁止重复初始化' });
@@ -335,7 +339,7 @@ function initAdmin(profile) {
 
 // ---------- 公开：游客投稿（进入待审核，不直发公开页） ----------
 function submitCat(data) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const id = 's' + Date.now();
     MOCK_SUBS.push(Object.assign({ id, status: 'pending', createdAt: Date.now() }, data));
     saveStore(STORE_SUBS, MOCK_SUBS);
@@ -345,7 +349,7 @@ function submitCat(data) {
   return prepareMedia(data).then(d => call('catSubmit', { data: d }));
 }
 function listSubmissions() {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     // 返回完整字段，便于管理台“查看”直接展示详情（无需再请求）
     const list = MOCK_SUBS.filter(s => s.status === 'pending').map(s => ({
       id: s.id, name: s.name, aliases: s.aliases || [], coatColor: s.coatColor, gender: s.gender,
@@ -360,7 +364,7 @@ function listSubmissions() {
   return call('submissionManage', { action: 'list' }).then(r => (r && r.list) || []);
 }
 function approveSubmission(id) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const i = MOCK_SUBS.findIndex(s => s.id === id && s.status === 'pending');
     if (i < 0) return Promise.resolve({ ok: false, msg: '未找到投稿' });
     const d = MOCK_SUBS[i];
@@ -384,7 +388,7 @@ function approveSubmission(id) {
   return call('submissionManage', { action: 'approve', id });
 }
 function rejectSubmission(id) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const i = MOCK_SUBS.findIndex(s => s.id === id && s.status === 'pending');
     if (i >= 0) { MOCK_SUBS.splice(i, 1); saveStore(STORE_SUBS, MOCK_SUBS); }
     return mockOk();
@@ -394,7 +398,7 @@ function rejectSubmission(id) {
 
 // ---------- 公开：申请成为管理员（无需手抄 openid，云端自动取本人 openid） ----------
 function applyAdmin(profile) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const p0 = profile || {};
     // 与云端一致的必填校验：姓名/专业/班级/宿舍
     if (!p0.realName) return Promise.resolve({ ok: false, msg: '请填写姓名' });
@@ -417,7 +421,7 @@ function applyAdmin(profile) {
 }
 // 查询自己当前的申请状态（用于入口分流：已在审核中则提示等待）
 function myApplication() {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const a = MOCK_APPS.find(x => x.openid === MOCK_ME_OPENID && x.status === 'pending');
     return Promise.resolve(a ? { status: 'pending', createdAt: a.createdAt } : null);
   }
@@ -425,7 +429,7 @@ function myApplication() {
 }
 // ---------- 超级管理员：待认领申请列表与审批 ----------
 function listApplications() {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     return Promise.resolve(MOCK_APPS.filter(a => a.status === 'pending').map(a => ({
       id: a.id, realName: a.realName || '', major: a.major || '', className: a.className || '',
       dorm: a.dorm || '', note: a.note || '', createdAt: a.createdAt
@@ -434,7 +438,7 @@ function listApplications() {
   return call('adminManage', { action: 'listApply' }).then(r => (r && r.list) || []);
 }
 function approveApplication(id) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const i = MOCK_APPS.findIndex(a => a.id === id && a.status === 'pending');
     if (i < 0) return Promise.resolve({ ok: false, msg: '未找到申请' });
     const a = MOCK_APPS[i];
@@ -449,7 +453,7 @@ function approveApplication(id) {
   return call('adminManage', { action: 'approveApply', id });
 }
 function rejectApplication(id) {
-  if (!USE_CLOUD) {
+  if (!useCloud()) {
     const i = MOCK_APPS.findIndex(a => a.id === id && a.status === 'pending');
     if (i >= 0) { MOCK_APPS.splice(i, 1); saveStore(STORE_APPS, MOCK_APPS); }
     return mockOk();

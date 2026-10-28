@@ -66,7 +66,7 @@ USE_CLOUD: true
 - `cats`：`lifeStatus`、`published`、`name`
 - `cat_updates`：`catId`
 - `cat_submissions`：`status`
-- `admin_users`：`openid`（建议唯一）
+- `admin_users`：`openid`（**必须勾选「唯一」**——它是并发重复初始化/重复添加的兜底约束）
 - `admin_applications`：`openid`、`status`
 
 ---
