@@ -159,10 +159,15 @@ Page({
       this.clearDirty();
       wx.showToast({ title: '已提交，待审核', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 700);
-    }).catch(() => {
+    }).catch(err => {
       wx.hideLoading();
       this.setData({ saving: false });
-      wx.showModal({ title: '提交失败', content: '网络或数据异常，请重试', showCancel: false });
+      const media = err && err.message === 'MEDIA_UPLOAD_FAILED';
+      wx.showModal({
+        title: '提交失败',
+        content: media ? '照片或音频上传失败，投稿未提交，请检查网络后重试' : '网络或数据异常，请重试',
+        showCancel: false
+      });
     });
   },
   cancel() {

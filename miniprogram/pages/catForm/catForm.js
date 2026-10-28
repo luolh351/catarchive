@@ -189,10 +189,15 @@ Page({
       this.clearDirty();
       wx.showToast({ title: '已保存', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 600);
-    }).catch(() => {
+    }).catch(err => {
       wx.hideLoading();
       this.setData({ saving: false });
-      wx.showModal({ title: '保存失败', content: '网络或数据异常，请重试', showCancel: false });
+      const media = err && err.message === 'MEDIA_UPLOAD_FAILED';
+      wx.showModal({
+        title: '保存失败',
+        content: media ? '照片或音频上传失败，档案未保存，请检查网络后重试' : '网络或数据异常，请重试',
+        showCancel: false
+      });
     });
   },
   cancel() {

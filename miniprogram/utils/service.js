@@ -189,7 +189,13 @@ function uploadOne(p) {
   if (!p || isRemotePath(p)) return Promise.resolve(p || '');
   const ext = (String(p).split('.').pop() || 'jpg').toLowerCase().slice(0, 8);
   const cloudPath = 'cats/' + Date.now() + '-' + Math.floor(Math.random() * 1e6) + '.' + ext;
-  return wx.cloud.uploadFile({ cloudPath, filePath: p }).then(r => r.fileID).catch(() => p);
+  // 上传失败必须让整次提交失败：否则会把 wxfile:// 临时路径写进数据库，跨设备/次日即失效且无感知
+  return wx.cloud.uploadFile({ cloudPath, filePath: p }).then(r => r.fileID).catch(err => {
+    console.warn('[cloud] 媒体上传失败:', p, err);
+    const e = new Error('MEDIA_UPLOAD_FAILED');
+    e.detail = err;
+    return Promise.reject(e);
+  });
 }
 function uploadList(list) { return Promise.all((list || []).map(uploadOne)); }
 // 提交前统一处理媒体；非云端或云能力不可用时原样返回
