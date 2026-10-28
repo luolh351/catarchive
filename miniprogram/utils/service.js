@@ -328,6 +328,12 @@ function rejectSubmission(id) {
 // ---------- 公开：申请成为管理员（无需手抄 openid，云端自动取本人 openid） ----------
 function applyAdmin(profile) {
   if (!USE_CLOUD) {
+    const p0 = profile || {};
+    // 与云端一致的必填校验：姓名/专业/班级/宿舍
+    if (!p0.realName) return Promise.resolve({ ok: false, msg: '请填写姓名' });
+    if (!p0.major) return Promise.resolve({ ok: false, msg: '请填写专业' });
+    if (!p0.className) return Promise.resolve({ ok: false, msg: '请填写班级' });
+    if (!p0.dorm) return Promise.resolve({ ok: false, msg: '请填写宿舍' });
     if (MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID)) {
       return Promise.resolve({ ok: false, msg: '你已是管理员' }); // 与云端 adminApply 校验保持一致
     }

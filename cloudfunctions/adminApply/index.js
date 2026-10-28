@@ -13,7 +13,11 @@ exports.main = async (event) => {
 
   if (action === 'submit') {
     const p = (event && event.profile) || {};
+    // 必填校验（与前端一致；云端必须独立校验，不能只信前端）
     if (!p.realName) return { ok: false, msg: '请填写姓名' };
+    if (!p.major) return { ok: false, msg: '请填写专业' };
+    if (!p.className) return { ok: false, msg: '请填写班级' };
+    if (!p.dorm) return { ok: false, msg: '请填写宿舍' };
     const isAdmin = await admins.where({ openid: OPENID }).get();
     if (isAdmin.data && isAdmin.data.length) return { ok: false, msg: '你已是管理员' };
     const dup = await apps.where({ openid: OPENID, status: 'pending' }).get();

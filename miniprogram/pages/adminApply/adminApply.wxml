@@ -5,15 +5,15 @@
   <input placeholder="如：张三" value="{{form.realName}}" bindinput="onInput" data-field="realName" />
 </view>
 <view class="field">
-  <view class="lab">专业</view>
+  <view class="lab"><text class="req">*</text> 专业</view>
   <input placeholder="如 计算机" value="{{form.major}}" bindinput="onInput" data-field="major" />
 </view>
 <view class="field">
-  <view class="lab">班级</view>
+  <view class="lab"><text class="req">*</text> 班级</view>
   <input placeholder="如 计科1班" value="{{form.className}}" bindinput="onInput" data-field="className" />
 </view>
 <view class="field">
-  <view class="lab">宿舍</view>
+  <view class="lab"><text class="req">*</text> 宿舍</view>
   <input placeholder="如 3栋" value="{{form.dorm}}" bindinput="onInput" data-field="dorm" />
 </view>
 <view class="field">

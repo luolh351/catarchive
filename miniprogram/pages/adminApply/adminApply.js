@@ -12,7 +12,13 @@ Page({
   },
   submit() {
     const f = this.data.form;
-    if (!f.realName || !f.realName.trim()) { wx.showToast({ title: '请填写姓名', icon: 'none' }); return; }
+    // 姓名/专业/班级/宿舍为必填，申请理由可选
+    const required = [['realName', '姓名'], ['major', '专业'], ['className', '班级'], ['dorm', '宿舍']];
+    for (let i = 0; i < required.length; i++) {
+      const key = required[i][0];
+      const label = required[i][1];
+      if (!f[key] || !String(f[key]).trim()) { wx.showToast({ title: '请填写' + label, icon: 'none' }); return; }
+    }
     wx.showLoading({ title: '提交中' });
     service.applyAdmin({
       realName: f.realName.trim(), major: f.major.trim(), className: f.className.trim(),
