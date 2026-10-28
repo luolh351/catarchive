@@ -3,8 +3,26 @@
 const app = getApp();
 
 const USE_CLOUD = (app && app.globalData && app.globalData.USE_CLOUD) || false;
+
+// ---------- mock 持久化：模拟数据写入本地 Storage，跨“重新编译/切换身份”保留 ----------
+// 目的：本地验证流程需要重新编译切换身份，若只存内存，新增的猫/投稿会丢失，流程走不通
+const STORE_CATS = 'mock_cats';
+const STORE_SUBS = 'mock_cat_submissions';
+const STORE_ADMINS = 'mock_admin_users';
+const STORE_APPS = 'mock_admin_applications';
+function loadStore(key, def) {
+  try { const v = wx.getStorageSync(key); return Array.isArray(v) ? v : def; } catch (e) { return def; }
+}
+function saveStore(key, val) { try { wx.setStorageSync(key, val); } catch (e) {} }
+
+// 本地演示素材：给 mock 猫轮询分配照片与叫声（包内文件，真机/模拟器可直接显示与播放）
+const DEMO_PHOTOS = ['/assets/photos/cat1.jpg', '/assets/photos/cat2.jpg', '/assets/photos/cat3.jpg', '/assets/photos/cat4.jpg', '/assets/photos/cat5.jpg', '/assets/photos/cat6.jpg'];
+const DEMO_VOICE = ['/assets/sounds/meow1.wav', '/assets/sounds/meow2.wav', '/assets/sounds/meow3.wav', '/assets/sounds/meow4.mp3'];
+
 // ---------- 本地模拟数据（结构与 cats 集合一致；每只猫带完整属性与近况） ----------
-const MOCK_CATS = [
+// 首次启动用默认数据并写入 Storage；之后从 Storage 读取，保证新增/编辑/投稿跨重编译不丢
+function defaultCats() {
+  const list = [
   { id: 'c1', name: '小橘', lifeStatus: '在校', isAdoptable: true, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2024-05', personalityTags: ['亲人', '粘人'], usualLocations: ['食堂', '宿舍区'], healthNotes: '健康', latestNote: '近期食堂出没，状态良好', photos: [], voice: '', bg: 'linear-gradient(135deg,#FFB46B,#FF8A3D)', photoText: '橘', sub: '橘白 · 食堂附近',
     timeline: [ { t: '2026-10-22 · 食堂附近', c: '投喂正常，体型偏胖' }, { t: '2026-09-10 · 宿舍区', c: '换季掉毛，精神好' } ] },
   { id: 'c2', name: '煤球', lifeStatus: '在校', isAdoptable: false, coatColor: '黑白', gender: '母', sterilizationStatus: '已绝育', sterilizedAt: '2023-11', personalityTags: ['高冷', '怕生'], usualLocations: ['操场', '体育馆'], healthNotes: '健康', latestNote: '常在操场晒太阳', photos: [], voice: '', bg: 'linear-gradient(135deg,#5B6470,#2F3640)', photoText: '煤', sub: '黑白 · 操场',
@@ -21,26 +39,20 @@ const MOCK_CATS = [
     timeline: [ { t: '2026-07-01', c: '最后一次出现在宿舍区' } ] },
   { id: 'c8', name: '老橘', lifeStatus: '喵星', isAdoptable: false, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2018-01', personalityTags: ['校园元老'], usualLocations: ['全校'], healthNotes: '享年约9岁', latestNote: '已回喵星，铭记', photos: [], voice: '', bg: 'linear-gradient(135deg,#B8C0CC,#8C96A3)', photoText: '老', sub: '已回喵星 · 享年约9岁',
     timeline: [ { t: '2025-12-01', c: '安详离世，感谢陪伴' } ] }
-];
-
-// 本地演示素材：给 mock 猫轮询分配照片与叫声（包内文件，真机/模拟器可直接显示与播放）
-const DEMO_PHOTOS = ['/assets/photos/cat1.jpg', '/assets/photos/cat2.jpg', '/assets/photos/cat3.jpg', '/assets/photos/cat4.jpg', '/assets/photos/cat5.jpg', '/assets/photos/cat6.jpg'];
-const DEMO_VOICE = ['/assets/sounds/meow1.wav', '/assets/sounds/meow2.wav', '/assets/sounds/meow3.wav', '/assets/sounds/meow4.mp3'];
-MOCK_CATS.forEach((c, i) => {
-  c.photos = [DEMO_PHOTOS[i % DEMO_PHOTOS.length]];
-  c.voice = DEMO_VOICE[i % DEMO_VOICE.length];
-});
-// 演示“无叫声”的展示效果：煤球(c2)不分配音频（照片保留，复用现有图）
-MOCK_CATS[1].voice = '';
-
-// ---------- mock 持久化：管理员名单与申请写入本地 Storage ----------
-// 目的：切换身份需要改代码并重新编译，若只存内存，重编译后申请会丢失、闭环走不通
-const STORE_ADMINS = 'mock_admin_users';
-const STORE_APPS = 'mock_admin_applications';
-function loadStore(key, def) {
-  try { const v = wx.getStorageSync(key); return Array.isArray(v) ? v : def; } catch (e) { return def; }
+  ];
+  // 给 mock 猫轮询分配照片与叫声
+  list.forEach((c, i) => {
+    c.photos = [DEMO_PHOTOS[i % DEMO_PHOTOS.length]];
+    c.voice = DEMO_VOICE[i % DEMO_VOICE.length];
+  });
+  // 演示“无叫声”的展示效果：煤球(c2)不分配音频（照片保留，复用现有图）
+  list[1].voice = '';
+  return list;
 }
-function saveStore(key, val) { try { wx.setStorageSync(key, val); } catch (e) {} }
+
+let MOCK_CATS = loadStore(STORE_CATS, null) || defaultCats();
+
+// ---------- 管理员名单默认数据 ----------
 const DEFAULT_ADMINS = [
   { openid: 'o_super', realName: '我（超级管理员）', role: 'superadmin', major: '计算机', className: '计科1班', dorm: '3栋', note: '本地演示' },
   { openid: 'o_editor', realName: '李四', role: 'editor', major: '生科', className: '生科2班', dorm: '5栋', note: '' }
@@ -48,8 +60,8 @@ const DEFAULT_ADMINS = [
 
 let MOCK_ADMINS = loadStore(STORE_ADMINS, DEFAULT_ADMINS);
 
-// 游客投稿（待审核，不直发公开页）
-let MOCK_SUBS = [];
+// 游客投稿（待审核，不直发公开页，持久化）
+let MOCK_SUBS = loadStore(STORE_SUBS, []);
 // 本地“当前登录”的 openid —— 身份只由这一行决定，无需其它开关：
 //   'o_super'   → 超级管理员（默认，可进管理台、管理其他管理员）
 //   'o_editor'  → 普通管理员（李四）
@@ -85,6 +97,11 @@ function cardOf(c) {
     photo: (c.photos && c.photos[0]) || '',
     bg: c.bg || pickBg(c.coatColor),
     photoText: c.photoText || (c.name ? c.name[0] : '猫'),
+    // 搜索用：昵称（全部）、常出没（全部区域，而非仅第一个）、最新近况
+    latestNote: c.latestNote || '',
+    aliasesText: Array.isArray(c.aliases) ? c.aliases.join('、') : (c.aliases || ''),
+    locationsText: Array.isArray(c.usualLocations) ? c.usualLocations.join('、') : (c.usualLocations || ''),
+    healthNotes: c.healthNotes || '',
     sub: c.sub || [ (c.coatColor || ''), (Array.isArray(c.usualLocations) ? c.usualLocations[0] : (c.usualLocations || '')) ].filter(Boolean).join(' · ') || '校园流浪猫'
   };
 }
@@ -164,8 +181,9 @@ function catManage(action, payload) {
     if (action === 'create') {
       const d = payload.data || {};
       const id = 'c' + Date.now();
+      const life = d.lifeStatus || '在校'; // 业务规则：不在“在校”状态不允许标记待领养
       const cat = {
-        id, name: d.name, lifeStatus: d.lifeStatus || '在校', isAdoptable: !!d.isAdoptable && d.lifeStatus === '在校',
+        id, name: d.name, lifeStatus: life, isAdoptable: !!d.isAdoptable && life === '在校',
         coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
         sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
         aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
@@ -175,6 +193,7 @@ function catManage(action, payload) {
         timeline: d.latestNote ? [ { t: '刚刚', c: d.latestNote } ] : []
       };
       MOCK_CATS.push(cat);
+      saveStore(STORE_CATS, MOCK_CATS);
       return mockOk({ id });
     }
     if (action === 'update') {
@@ -191,18 +210,22 @@ function catManage(action, payload) {
       if (d.aliases !== undefined) cat.aliases = toArr(d.aliases) || [];
       if (d.healthNotes !== undefined) cat.healthNotes = d.healthNotes;
       if (d.latestNote !== undefined) cat.latestNote = d.latestNote;
+      // 业务规则：去向一旦不是“在校”，自动取消待领养（与云端 update 一致）
+      const nextLife = d.lifeStatus !== undefined ? d.lifeStatus : cat.lifeStatus;
       if (d.lifeStatus !== undefined) cat.lifeStatus = d.lifeStatus;
-      if (d.isAdoptable !== undefined) cat.isAdoptable = !!d.isAdoptable && cat.lifeStatus === '在校';
+      if (d.isAdoptable !== undefined) cat.isAdoptable = !!d.isAdoptable && nextLife === '在校';
+      else if (nextLife !== '在校') cat.isAdoptable = false;
       if (d.photos !== undefined) cat.photos = d.photos;
       if (d.voice !== undefined) cat.voice = d.voice;
       cat.bg = pickBg(cat.coatColor); cat.photoText = (cat.name || '猫')[0];
       cat.sub = [ (cat.coatColor || ''), (cat.usualLocations[0] || '') ].filter(Boolean).join(' · ');
-      if (d.latestNote) { cat.timeline = cat.timeline || []; cat.timeline.unshift({ t: '刚刚', c: d.latestNote }); }
+      // 近况摘要只更新字段，不在此追加时间线（追加时间线由 addUpdate 负责，与云端行为一致）
+      saveStore(STORE_CATS, MOCK_CATS);
       return mockOk();
     }
     if (action === 'archive') {
       const cat = MOCK_CATS.find(x => x.id === payload.id);
-      if (cat) cat.published = false;
+      if (cat) { cat.published = false; saveStore(STORE_CATS, MOCK_CATS); }
       return mockOk();
     }
     return Promise.resolve({ ok: false, msg: '未知 action' });
@@ -214,7 +237,12 @@ function catManage(action, payload) {
 function addUpdate(catId, content) {
   if (!USE_CLOUD) {
     const cat = MOCK_CATS.find(x => x.id === catId);
-    if (cat) { cat.latestNote = content; cat.timeline = cat.timeline || []; cat.timeline.unshift({ t: '刚刚', c: content }); }
+    if (cat) {
+      cat.latestNote = content;
+      cat.timeline = cat.timeline || [];
+      cat.timeline.unshift({ t: '刚刚', c: content }); // 补充近况＝新增时间线条目
+      saveStore(STORE_CATS, MOCK_CATS);
+    }
     return mockOk();
   }
   return call('updateCreate', { catId, content });
@@ -281,6 +309,7 @@ function submitCat(data) {
   if (!USE_CLOUD) {
     const id = 's' + Date.now();
     MOCK_SUBS.push(Object.assign({ id, status: 'pending', createdAt: Date.now() }, data));
+    saveStore(STORE_SUBS, MOCK_SUBS);
     return mockOk({ id });
   }
   return call('catSubmit', { data });
@@ -292,6 +321,7 @@ function listSubmissions() {
       id: s.id, name: s.name, aliases: s.aliases || [], coatColor: s.coatColor, gender: s.gender,
       sterilizationStatus: s.sterilizationStatus, sterilizedAt: s.sterilizedAt || '', usualLocations: s.usualLocations || [],
       healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
+      personalityTags: s.personalityTags || [],
       isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
       submitterOpenid: s.submitterOpenid || '', createdAt: s.createdAt
     }));
@@ -314,8 +344,11 @@ function approveSubmission(id) {
       sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),
       timeline: d.latestNote ? [ { t: '投稿审核通过', c: d.latestNote } ] : []
     };
+    // 采纳投稿：写入公开档案（待领养按“在校”规则），移除待审记录
     MOCK_CATS.push(cat);
     MOCK_SUBS.splice(i, 1);
+    saveStore(STORE_CATS, MOCK_CATS);
+    saveStore(STORE_SUBS, MOCK_SUBS);
     return mockOk();
   }
   return call('submissionManage', { action: 'approve', id });
@@ -323,7 +356,7 @@ function approveSubmission(id) {
 function rejectSubmission(id) {
   if (!USE_CLOUD) {
     const i = MOCK_SUBS.findIndex(s => s.id === id && s.status === 'pending');
-    if (i >= 0) MOCK_SUBS.splice(i, 1);
+    if (i >= 0) { MOCK_SUBS.splice(i, 1); saveStore(STORE_SUBS, MOCK_SUBS); }
     return mockOk();
   }
   return call('submissionManage', { action: 'reject', id });

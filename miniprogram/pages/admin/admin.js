@@ -43,11 +43,13 @@ Page({
     service.listAdmins().then(r => {
       const me = this.data.myRole;
       const admins = (r.list || []).map(a => ({
-        openid: a.openid, realName: a.realName, roleText: a.role === 'superadmin' ? '超级管理员' : '管理员',
+        openid: a.openid, realName: a.realName, role: a.role,
+        roleText: a.role === 'superadmin' ? '超级管理员' : '管理员',
         major: a.major, className: a.className, dorm: a.dorm,
         canTransfer: me === 'superadmin' && a.role === 'editor',
         canRemove: me === 'superadmin' && a.role === 'editor'
       }));
+      // 修复：映射里曾丢失 role，导致 noEditor 恒为 true、提示一直显示
       this.setData({ admins, noEditor: admins.filter(a => a.role === 'editor').length === 0 });
     });
   },
@@ -161,6 +163,7 @@ Page({
         id: s.id, name: s.name, aliasesText: arr2str(s.aliases) || '—', coatColor: s.coatColor || '—',
         gender: s.gender || '—', sterilizationStatus: s.sterilizationStatus || '—', sterilizedAt: s.sterilizedAt || '',
         usualText: arr2str(s.usualLocations) || '—', latestNote: s.latestNote || '—', healthNotes: s.healthNotes || '—',
+        personalityText: arr2str(s.personalityTags) || '—',
         isAdoptable: !!s.isAdoptable, lifeStatus: s.lifeStatus || '—',
         photos: Array.isArray(s.photos) ? s.photos : [], voice: s.voice || '',
         submitter: s.submitterOpenid || '游客投稿', createdAtText

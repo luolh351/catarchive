@@ -43,22 +43,35 @@
   <input placeholder="如 食堂、宿舍区" value="{{form.usualLocations}}" bindinput="onInput" data-field="usualLocations" />
 </view>
 <view class="field">
-  <view class="lab">最近情况</view>
-  <input placeholder="当前近况摘要" value="{{form.latestNote}}" bindinput="onInput" data-field="latestNote" />
+  <view class="lab">性格</view>
+  <input placeholder="如 亲人、怕生（多个用逗号分隔）" value="{{form.personalityTags}}" bindinput="onInput" data-field="personalityTags" />
 </view>
 <view class="field">
-  <view class="lab">照片 / 声音上传</view>
+  <view class="lab">健康状况</view>
+  <input placeholder="如 已驱虫、偏瘦，建议复查" value="{{form.healthNotes}}" bindinput="onInput" data-field="healthNotes" />
+</view>
+<view class="field">
+  <view class="lab">最近情况</view>
+  <input placeholder="当前近况摘要（改这里不会重复追加时间线）" value="{{form.latestNote}}" bindinput="onInput" data-field="latestNote" />
+</view>
+<view class="field">
+  <view class="lab">照片 / 叫声上传</view>
   <view class="opts">
-    <view class="opt" bindtap="chooseImage">＋ 上传照片</view>
-    <view class="opt" bindtap="chooseVoice">＋ 上传声音</view>
+    <view class="opt" bindtap="chooseImage">＋ 拍照 / 选照片</view>
+    <view class="opt" bindtap="chooseVoice">＋ 上传叫声</view>
   </view>
   <view class="imgs" wx:if="{{form.photos.length}}">
     <view class="img" wx:for="{{form.photos}}" wx:key="*this">
-      <image src="{{item}}" mode="aspectFill" />
+      <image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
       <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
+      <text wx:if="{{index===0}}" class="cover">封面</text>
+      <text wx:else class="setcover" catchtap="setCover" data-i="{{index}}">设为封面</text>
     </view>
   </view>
-  <view wx:if="{{form.voice}}" class="voice">已选录音 <text class="x" catchtap="clearVoice">×</text></view>
+  <view wx:if="{{form.voice}}" class="voice">
+    <text class="play" bindtap="previewVoice">{{voicePlaying ? '播放中 ♪' : '▶ 试听'}}</text>
+    <text class="x" catchtap="clearVoice">×</text>
+  </view>
 </view>
 <view class="field">
   <view class="row2">
@@ -76,5 +89,5 @@
   </view>
 </view>
 
-<view class="save" bindtap="save">保存</view>
+<view class="save {{saving?'disabled':''}}" bindtap="save">{{saving ? '保存中…' : '保存'}}</view>
 <view class="cancel" bindtap="cancel">取消</view>

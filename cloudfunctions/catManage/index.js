@@ -80,6 +80,8 @@ exports.main = async (event) => {
     if (d.latestNote !== undefined) patch.latestNote = d.latestNote;
     if (d.lifeStatus !== undefined) patch.lifeStatus = d.lifeStatus;
     if (d.isAdoptable !== undefined) patch.isAdoptable = !!d.isAdoptable && (d.lifeStatus ? d.lifeStatus === '在校' : exLife === '在校');
+    // 统一业务规则：去向一旦不是“在校”，无论是否传 isAdoptable 都取消待领养
+    if (d.lifeStatus !== undefined && d.lifeStatus !== '在校') patch.isAdoptable = false;
     if (d.photos !== undefined) patch.photos = d.photos;
     if (d.voice !== undefined) patch.voice = d.voice;
     await cats.doc(id).update({ data: patch });

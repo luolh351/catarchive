@@ -17,17 +17,22 @@ Page({
   },
   setTab(e) { this.setData({ active: e.currentTarget.dataset.s }); this.applyView(); },
   onSearch(e) { this.setData({ q: e.detail.value }); this.applyView(); },
-  // 搜索中：跨全部状态匹配；非搜索：按当前状态标签过滤
+  // 搜索中：跨全部状态匹配（名字/昵称/毛色/全部出没区域/最近情况）；非搜索：按当前状态标签过滤
   applyView() {
     const q = (this.data.q || '').trim().toLowerCase();
     let list;
     if (q) {
-      list = this.data.all.filter(c =>
-        (c.name || '').toLowerCase().indexOf(q) >= 0 || (c.sub || '').toLowerCase().indexOf(q) >= 0);
+      list = this.data.all.filter(c => this.match(c, q));
     } else {
       list = this.data.all.filter(c => c.lifeStatus === this.data.active);
     }
     this.setData({ list });
+  },
+  // 命中任一字段即算匹配：名字、昵称、毛色、常出没（全部）、最近情况
+  match(c, q) {
+    const hit = v => (v || '').toLowerCase().indexOf(q) >= 0;
+    return hit(c.name) || hit(c.aliasesText) || hit(c.coatColor) ||
+      hit(c.locationsText) || hit(c.latestNote) || hit(c.sub);
   },
   goDetail(e) {
     wx.navigateTo({ url: '/pages/catDetail/catDetail?id=' + e.currentTarget.dataset.id });
