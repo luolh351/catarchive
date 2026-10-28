@@ -51,10 +51,10 @@ let MOCK_ADMINS = loadStore(STORE_ADMINS, DEFAULT_ADMINS);
 // 游客投稿（待审核，不直发公开页）
 let MOCK_SUBS = [];
 // 本地“当前登录”的管理员 openid（mock 无真实登录，固定为 o_super 以模拟身份与转让效果）
-// 当前身份＝超级管理员（在 MOCK_ADMINS 名单内，可进管理台、管理其他管理员）
-let MOCK_ME_OPENID = 'o_super';
-// 本地演示开关：false 表示按 MOCK_ME_OPENID 的真实角色鉴权；设 true 则强制以游客视角运行
-const MOCK_AS_VISITOR = false;
+// 当前身份＝游客（不在 MOCK_ADMINS 名单内，用于体验游客视角与申请流程）
+let MOCK_ME_OPENID = 'o_visitor';
+// 本地演示开关：true 表示把当前登录当作游客；改回 false 并把上面改回 o_super 即恢复超级管理员
+const MOCK_AS_VISITOR = true;
 // 管理员申请（待认领，持久化）
 let MOCK_APPS = loadStore(STORE_APPS, []);
 
