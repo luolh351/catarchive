@@ -31,7 +31,14 @@ function takeArr(v, itemMax, countMax) {
   }
   return out;
 }
-function isRemote(p) { return isStr(p) && (p.indexOf('cloud://') === 0 || /^https?:\/\//.test(p)); }
+// 只接受 cloud:// 或真实域名；拒绝本地临时文件（http://tmp/、wxfile://）
+function isRemote(p) {
+  if (!isStr(p) || !p) return false;
+  if (p.indexOf('cloud://') === 0) return true;
+  if (/^https?:\/\/tmp\//i.test(p)) return false;
+  if (p.indexOf('wxfile://') === 0) return false;
+  return /^https?:\/\//.test(p);
+}
 function takePhotos(v) {
   if (v === undefined || v === null) return [];
   if (!Array.isArray(v)) return null;

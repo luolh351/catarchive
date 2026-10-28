@@ -184,10 +184,22 @@ function checkAdmin() {
 
 // ---------- 云端媒体上传：把本地临时文件转成云存储 fileID ----------
 // 原因：表单选到的是本地临时路径，直接写库会在会话结束后失效；必须先上传到云存储
-function isRemotePath(p) { return !!p && (p.indexOf('cloud://') === 0 || /^https?:\/\//.test(p)); }
-function uploadOne(p) {
+// 判断是否已是可长期使用的网络地址。
+// 注意：开发者工具选图/选文件返回的是 http://tmp/xxx（本地临时文件协议），
+// 真机是 wxfile://tmp_xxx；两者都不是远程地址，必须走上传，否则写库后会失效。
+function isRemotePath(p) {
+  if (!p) return false;
+  if (p.indexOf('cloud://') === 0) return true;
+  if (/^https?:\/\/tmp\//i.test(p)) return false; // 开发者工具临时文件
+  if (p.indexOf('wxfile://') === 0) return false; // 真机临时文件
+  return /^https?:\/\//.test(p);
+}
+function uploadOne(p, fallbackExt) {
   if (!p || isRemotePath(p)) return Promise.resolve(p || '');
-  const ext = (String(p).split('.').pop() || 'jpg').toLowerCase().slice(0, 8);
+  // 开发者工具的临时路径可能完全没有扩展名（http://tmp/BH3rucy...），
+  // 用最后一个点后缀兜底，否则会把整段 URL 当扩展名拼进 cloudPath 导致上传失败
+  const m = String(p).split('?')[0].match(/\.([a-z0-9]{1,5})$/i);
+  const ext = (m ? m[1] : (fallbackExt || 'jpg')).toLowerCase();
   const cloudPath = 'cats/' + Date.now() + '-' + Math.floor(Math.random() * 1e6) + '.' + ext;
   // 上传失败必须让整次提交失败：否则会把 wxfile:// 临时路径写进数据库，跨设备/次日即失效且无感知
   return wx.cloud.uploadFile({ cloudPath, filePath: p }).then(r => r.fileID).catch(err => {
@@ -197,12 +209,12 @@ function uploadOne(p) {
     return Promise.reject(e);
   });
 }
-function uploadList(list) { return Promise.all((list || []).map(uploadOne)); }
+function uploadList(list) { return Promise.all((list || []).map(p => uploadOne(p, 'jpg'))); }
 // 提交前统一处理媒体；非云端或云能力不可用时原样返回
 function prepareMedia(data) {
   const d = Object.assign({}, data || {});
   if (!useCloud() || !wx.cloud || !wx.cloud.uploadFile) return Promise.resolve(d);
-  return Promise.all([ uploadList(d.photos), uploadOne(d.voice) ]).then(r => {
+  return Promise.all([ uploadList(d.photos), uploadOne(d.voice, 'mp3') ]).then(r => {
     d.photos = r[0] || [];
     d.voice = r[1] || '';
     return d;

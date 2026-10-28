@@ -44,19 +44,35 @@ Page({
           usualLocations: (c.usualLocations || []).join('、'),
           personalityTags: (c.personalityTags || []).join('、'), healthNotes: c.healthNotes || '',
           latestNote: c.latestNote || '',
-          photos: c.photos || [], voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
+          photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
         }
       });
     }).catch(() => { wx.hideLoading(); wx.showToast({ title: '加载失败', icon: 'none' }); });
   },
   // 有改动时标记未保存，并开启“离开提醒”
-  // 兼容性：历史数据里可能存了非 mp3/wav 的文件（旧版无格式限制），
-  // 加载时直接剔除，否则保存会被云端格式校验拒绝、管理员无法改任何字段
+  // 是否是可长期使用的媒体地址：cloud:// 或真实域名；包内 /assets 演示资源也算可用
+  mediaOk(p) {
+    if (typeof p !== 'string' || !p) return false;
+    if (p.indexOf('cloud://') === 0) return true;
+    if (p.charAt(0) === '/') return true;               // 包内演示资源
+    if (/^https?:\/\/tmp\//i.test(p)) return false;     // 开发者工具临时文件（重启失效）
+    if (p.indexOf('wxfile://') === 0) return false;     // 真机临时文件（跨设备失效）
+    return /^https?:\/\//.test(p);
+  },
+  // 历史脏数据（本地临时路径）加载时剔除，否则保存会被云端校验拒绝 / 图片显示不出来
+  safePhotos(list) {
+    const src = list || [];
+    const out = src.filter(p => this.mediaOk(p));
+    if (out.length !== src.length) wx.showToast({ title: '已清除失效图片', icon: 'none' });
+    return out;
+  },
   safeVoice(v) {
     if (!v) return '';
-    if (/\.(mp3|wav)$/i.test(v)) return v;
-    wx.showToast({ title: '已清除无效的叫声文件', icon: 'none' });
-    return '';
+    if (!this.mediaOk(v) || !/\.(mp3|wav)$/i.test(v)) {
+      wx.showToast({ title: '已清除失效的叫声文件', icon: 'none' });
+      return '';
+    }
+    return v;
   },
   markDirty() {
     if (this.data.dirty) return;
