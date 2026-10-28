@@ -33,10 +33,20 @@ MOCK_CATS.forEach((c, i) => {
 // 演示“无叫声”的展示效果：煤球(c2)不分配音频（照片保留，复用现有图）
 MOCK_CATS[1].voice = '';
 
-let MOCK_ADMINS = [
+// ---------- mock 持久化：管理员名单与申请写入本地 Storage ----------
+// 目的：切换身份需要改代码并重新编译，若只存内存，重编译后申请会丢失、闭环走不通
+const STORE_ADMINS = 'mock_admin_users';
+const STORE_APPS = 'mock_admin_applications';
+function loadStore(key, def) {
+  try { const v = wx.getStorageSync(key); return Array.isArray(v) ? v : def; } catch (e) { return def; }
+}
+function saveStore(key, val) { try { wx.setStorageSync(key, val); } catch (e) {} }
+const DEFAULT_ADMINS = [
   { openid: 'o_super', realName: '我（超级管理员）', role: 'superadmin', major: '计算机', className: '计科1班', dorm: '3栋', note: '本地演示' },
   { openid: 'o_editor', realName: '李四', role: 'editor', major: '生科', className: '生科2班', dorm: '5栋', note: '' }
 ];
+
+let MOCK_ADMINS = loadStore(STORE_ADMINS, DEFAULT_ADMINS);
 
 // 游客投稿（待审核，不直发公开页）
 let MOCK_SUBS = [];
@@ -45,8 +55,8 @@ let MOCK_SUBS = [];
 let MOCK_ME_OPENID = 'o_visitor';
 // 本地演示开关：true 表示把“当前登录”当作游客；改回 false 并把上面改回 'o_super' 即恢复超级管理员
 const MOCK_AS_VISITOR = true;
-// 管理员申请（待认领）
-let MOCK_APPS = [];
+// 管理员申请（待认领，持久化）
+let MOCK_APPS = loadStore(STORE_APPS, []);
 
 function call(name, data) {
   return new Promise((resolve, reject) => {
@@ -222,10 +232,12 @@ function adminManage(action, payload) {
     if (action === 'add') {
       if (MOCK_ADMINS.find(a => a.openid === payload.openid)) return Promise.resolve({ ok: false, msg: '已是管理员' });
       MOCK_ADMINS.push({ openid: payload.openid, realName: payload.realName || '新管理员', role: 'editor', major: payload.major || '', className: payload.className || '', dorm: payload.dorm || '', note: '' });
+      saveStore(STORE_ADMINS, MOCK_ADMINS);
       return mockOk();
     }
     if (action === 'remove') {
       MOCK_ADMINS = MOCK_ADMINS.filter(a => a.openid !== payload.openid);
+      saveStore(STORE_ADMINS, MOCK_ADMINS);
       return mockOk();
     }
     if (action === 'transfer') {
@@ -234,6 +246,7 @@ function adminManage(action, payload) {
         t.role = 'superadmin';
         const me = MOCK_ADMINS.find(a => a.role === 'superadmin' && a !== t);
         if (me) me.role = 'editor';
+        saveStore(STORE_ADMINS, MOCK_ADMINS);
       }
       return mockOk();
     }
@@ -252,6 +265,7 @@ function initAdmin(profile) {
         role: 'superadmin', major: (profile && profile.major) || '', className: (profile && profile.className) || '',
         dorm: (profile && profile.dorm) || '', note: '本地演示'
       });
+      saveStore(STORE_ADMINS, MOCK_ADMINS);
     }
     return mockOk();
   }
@@ -323,6 +337,7 @@ function applyAdmin(profile) {
     MOCK_APPS.push(Object.assign({
       id: 'a' + Date.now(), openid: MOCK_ME_OPENID, status: 'pending', createdAt: Date.now()
     }, profile || {}));
+    saveStore(STORE_APPS, MOCK_APPS);
     return mockOk();
   }
   return call('adminApply', { action: 'submit', profile });
@@ -352,8 +367,10 @@ function approveApplication(id) {
     const a = MOCK_APPS[i];
     if (!MOCK_ADMINS.find(x => x.openid === a.openid)) {
       MOCK_ADMINS.push({ openid: a.openid, realName: a.realName || '新管理员', role: 'editor', major: a.major || '', className: a.className || '', dorm: a.dorm || '', note: a.note || '' });
+      saveStore(STORE_ADMINS, MOCK_ADMINS);
     }
     MOCK_APPS.splice(i, 1);
+    saveStore(STORE_APPS, MOCK_APPS);
     return mockOk();
   }
   return call('adminManage', { action: 'approveApply', id });
@@ -361,7 +378,7 @@ function approveApplication(id) {
 function rejectApplication(id) {
   if (!USE_CLOUD) {
     const i = MOCK_APPS.findIndex(a => a.id === id && a.status === 'pending');
-    if (i >= 0) MOCK_APPS.splice(i, 1);
+    if (i >= 0) { MOCK_APPS.splice(i, 1); saveStore(STORE_APPS, MOCK_APPS); }
     return mockOk();
   }
   return call('adminManage', { action: 'rejectApply', id });
