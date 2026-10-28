@@ -1,0 +1,9 @@
+{
+  "name": "adminApply",
+  "version": "1.0.0",
+  "description": "公开：提交/查询管理员申请",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

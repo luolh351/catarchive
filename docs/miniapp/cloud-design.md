@@ -19,14 +19,15 @@
 | `cat_updates` | catId, content, createdAt, operatorOpenid | **否（仅经云函数）** | 否 | 近况时间线 |
 | `admin_users` | openid(唯一), role, realName, major, className, dorm, note, createdAt, createdBy | 否（仅管理员经云函数读） | 否（仅 super 经云函数写） | 管理员名单；realName/major/className/dorm/note 仅管理员间可见 |
 | `admin_audit_logs` | operatorOpenid, action, target, detail, createdAt | 否（仅管理员经云函数读） | 否 | 审计日志 |
+| `admin_applications` | openid, realName, major, className, dorm, note, status(pending/approved/rejected), createdAt | 否（仅 super 经云函数读） | 否（仅 adminApply 写、adminManage 改） | 管理员申请待审池；通过后写 `admin_users`(editor) 并标记 approved |
 | `cat_submissions` | name, aliases[], coatColor, gender, sterilizationStatus, sterilizedAt, personalityTags[], usualLocations[], healthNotes, latestNote, lifeStatus, isAdoptable, photos[], voice, status(pending/approved/rejected), submitterOpenid, createdAt | **否** | 否（仅 catSubmit 写、submissionManage 读/改） | 游客投稿待审池；采纳后写入 `cats` 并标记 approved |
 
-集合权限（CloudBase 安全规则）：五张表统一设为 **“所有用户不可读写”**（即 `read:false`、`write:false`）。
+集合权限（CloudBase 安全规则）：六张表统一设为 **“所有用户不可读写”**（即 `read:false`、`write:false`）。
 - 原因：所有数据访问都走云函数（catList/catDetail/checkAdmin/adminList 等），云函数以**环境管理员身份**运行，自动绕过集合权限规则完成读写；而客户端（含潜在恶意用户）因此**无法直接读取原始文档**，杜绝绕过云函数拿到 `operatorOpenid` 等敏感字段。
 - `cats` / `cat_updates`：客户端读=否、写=否（仅云函数读/写，且函数内对返回结果剔除 `operatorOpenid`）。
 - `admin_users` / `admin_audit_logs`：读=否、写=否（一律经云函数，且函数内校验角色）。
 
-索引建议：`cats.lifeStatus`、`cats.published`、`cats.name`（查询用）；`admin_users.openid`（唯一）。
+索引建议：`cats.lifeStatus`、`cats.published`、`cats.name`（查询用）；`admin_users.openid`（唯一）；`admin_applications.openid` 与 `admin_applications.status`（查重与列表用）。
 
 ## 云函数清单
 
@@ -39,7 +40,8 @@
 | `catManage` | 管理台 | admin | action: `create`/`update`/`archive`；校验字段、写 operatorOpenid、记审计 |
 | `updateCreate` | 管理台 | admin | 向 `cat_updates` 追加时间线并更新 `latestNote`/`updatedAt` |
 | `adminList` | 管理台 | super | 返回管理员名单（不含 openid 原文，仅管理员间可见备注） |
-| `adminManage` | 管理台 | super | action: `add`/`remove`/`transfer`；校验后写 `admin_users` 并审计 |
+| `adminManage` | 管理台 | super | action: `add`/`remove`/`transfer`/`listApply`/`approveApply`/`rejectApply`；校验后写 `admin_users` 并审计 |
+| `adminApply` | 申请页 / 关于页（公开） | 公开 | action: `submit`（写入 `admin_applications`，openid 由云端 getWXContext 取）、`mine`（查自己待审申请）；任何人可申请，无需提供 openid |
 | `catSubmit` | 投稿页（公开） | 公开 | 游客提交猫咪资料，写入 `cat_submissions`（status=pending），不直发公开页 |
 | `submissionManage` | 管理台 | admin | action: `list`/`approve`/`reject`；list 返回待审投稿，approve 将其转为 `cats` 并标记 approved，reject 标记 rejected |
 
@@ -59,4 +61,4 @@
 
 - `app.js`：`globalData.cloudEnv` 填完整 EnvId，`USE_CLOUD=true` 后启用 `wx.cloud.init`。
 - `utils/service.js`：`USE_CLOUD` 开关；为 false 时返回本地模拟数据，为 true 时 `wx.cloud.callFunction`。
-- 切换云端后需：部署 10 个云函数、在目标环境创建 5 个集合并设置上述权限/索引、上传首个 superadmin（`initAdmin`）。
+- 切换云端后需：部署 11 个云函数、在目标环境创建 6 个集合并设置上述权限/索引、上传首个 superadmin（`initAdmin`）。

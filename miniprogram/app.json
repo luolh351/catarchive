@@ -6,6 +6,7 @@
     "pages/admin/admin",
     "pages/catForm/catForm",
     "pages/catSubmit/catSubmit",
+    "pages/adminApply/adminApply",
     "pages/denied/denied"
   ],
   "window": {

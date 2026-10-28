@@ -73,6 +73,21 @@
   </view>
 </view>
 
+<view class="panel" wx:if="{{apps.length}}">
+  <view class="h">待认领申请（{{apps.length}}）</view>
+  <view class="mrow" wx:for="{{apps}}" wx:key="id">
+    <view class="l">
+      <view class="n">{{item.realName}}</view>
+      <view class="s">{{item.major}} · {{item.className}} · {{item.dorm}}</view>
+      <view class="s2" wx:if="{{item.note}}">{{item.note}}</view>
+    </view>
+    <view>
+      <text class="mini primary" bindtap="approveApp" data-id="{{item.id}}">通过</text>
+      <text class="mini" bindtap="rejectApp" data-id="{{item.id}}" style="margin-left:12rpx">忽略</text>
+    </view>
+  </view>
+</view>
+
 <view class="panel">
   <view class="h">管理员名单（super 专属）</view>
   <view class="mrow" wx:for="{{admins}}" wx:key="openid">

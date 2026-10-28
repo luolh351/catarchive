@@ -42,6 +42,10 @@ let MOCK_ADMINS = [
 let MOCK_SUBS = [];
 // 本地“当前登录”的管理员 openid（mock 无真实登录，固定为 o_super 以模拟身份与转让效果）
 let MOCK_ME_OPENID = 'o_super';
+// 本地演示开关：设为 true 时把“当前登录”当作游客，便于在本地体验「申请→审核→成为管理员」全流程
+const MOCK_AS_VISITOR = false;
+// 管理员申请（待认领）
+let MOCK_APPS = [];
 
 function call(name, data) {
   return new Promise((resolve, reject) => {
@@ -135,6 +139,7 @@ function getCat(id) {
 // ---------- 公开：校验管理员身份 ----------
 function checkAdmin() {
   if (!USE_CLOUD) {
+    if (MOCK_AS_VISITOR) return Promise.resolve({ isAdmin: false }); // 本地演示“游客”视角
     const me = MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID);
     if (!me) return Promise.resolve({ isAdmin: false });
     return Promise.resolve({ isAdmin: true, role: me.role, profile: { realName: me.realName, note: me.note || '' } });
@@ -305,7 +310,61 @@ function rejectSubmission(id) {
   return call('submissionManage', { action: 'reject', id });
 }
 
+// ---------- 公开：申请成为管理员（无需手抄 openid，云端自动取本人 openid） ----------
+function applyAdmin(profile) {
+  if (!USE_CLOUD) {
+    if (MOCK_APPS.find(a => a.openid === MOCK_ME_OPENID && a.status === 'pending')) {
+      return Promise.resolve({ ok: false, msg: '你已有待审核的申请' });
+    }
+    MOCK_APPS.push(Object.assign({
+      id: 'a' + Date.now(), openid: MOCK_ME_OPENID, status: 'pending', createdAt: Date.now()
+    }, profile || {}));
+    return mockOk();
+  }
+  return call('adminApply', { action: 'submit', profile });
+}
+// 查询自己当前的申请状态（用于入口分流：已在审核中则提示等待）
+function myApplication() {
+  if (!USE_CLOUD) {
+    const a = MOCK_APPS.find(x => x.openid === MOCK_ME_OPENID && x.status === 'pending');
+    return Promise.resolve(a ? { status: 'pending', createdAt: a.createdAt } : null);
+  }
+  return call('adminApply', { action: 'mine' }).then(r => (r && r.app) || null);
+}
+// ---------- 超级管理员：待认领申请列表与审批 ----------
+function listApplications() {
+  if (!USE_CLOUD) {
+    return Promise.resolve(MOCK_APPS.filter(a => a.status === 'pending').map(a => ({
+      id: a.id, realName: a.realName || '', major: a.major || '', className: a.className || '',
+      dorm: a.dorm || '', note: a.note || '', createdAt: a.createdAt
+    })));
+  }
+  return call('adminManage', { action: 'listApply' }).then(r => (r && r.list) || []);
+}
+function approveApplication(id) {
+  if (!USE_CLOUD) {
+    const i = MOCK_APPS.findIndex(a => a.id === id && a.status === 'pending');
+    if (i < 0) return Promise.resolve({ ok: false, msg: '未找到申请' });
+    const a = MOCK_APPS[i];
+    if (!MOCK_ADMINS.find(x => x.openid === a.openid)) {
+      MOCK_ADMINS.push({ openid: a.openid, realName: a.realName || '新管理员', role: 'editor', major: a.major || '', className: a.className || '', dorm: a.dorm || '', note: a.note || '' });
+    }
+    MOCK_APPS.splice(i, 1);
+    return mockOk();
+  }
+  return call('adminManage', { action: 'approveApply', id });
+}
+function rejectApplication(id) {
+  if (!USE_CLOUD) {
+    const i = MOCK_APPS.findIndex(a => a.id === id && a.status === 'pending');
+    if (i >= 0) MOCK_APPS.splice(i, 1);
+    return mockOk();
+  }
+  return call('adminManage', { action: 'rejectApply', id });
+}
+
 module.exports = {
   getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin,
-  submitCat, listSubmissions, approveSubmission, rejectSubmission
+  submitCat, listSubmissions, approveSubmission, rejectSubmission,
+  applyAdmin, myApplication, listApplications, approveApplication, rejectApplication
 };

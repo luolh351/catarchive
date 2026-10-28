@@ -8,6 +8,7 @@ Page({
     cats: [],
     admins: [],
     subs: [],
+    apps: [],
     detail: null,
     subPlaying: false,
     myRole: '',
@@ -38,6 +39,7 @@ Page({
       this.setData({ stats: s, cats });
     });
     service.listSubmissions().then(list => this.setData({ subs: list || [] }));
+    service.listApplications().then(list => this.setData({ apps: list || [] }));
     service.listAdmins().then(r => {
       const me = this.data.myRole;
       const admins = (r.list || []).map(a => ({
@@ -107,6 +109,30 @@ Page({
       if (r && r.isAdmin) this.setData({ myRole: r.role });
       this.loadData();
     }).catch(() => this.loadData());
+  },
+  // 待认领申请：通过后该用户直接成为管理员（无需手抄 openid）
+  approveApp(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '通过申请', content: '通过后该用户将成为管理员（普通），可编辑档案与处理投稿。',
+      success: res => {
+        if (!res.confirm) return;
+        wx.showLoading({ title: '处理中' });
+        service.approveApplication(id).then(r => {
+          wx.hideLoading();
+          if (r && r.ok === false) { wx.showToast({ title: r.msg || '失败', icon: 'none' }); return; }
+          wx.showToast({ title: '已通过', icon: 'success' });
+          this.loadData();
+        }).catch(() => { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); });
+      }
+    });
+  },
+  rejectApp(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '忽略申请', content: '确定忽略该申请？',
+      success: res => { if (res.confirm) service.rejectApplication(id).then(() => this.loadData()); }
+    });
   },
   addAdmin() {
     wx.showModal({

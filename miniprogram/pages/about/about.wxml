@@ -12,5 +12,5 @@
   <view class="p">发现校园里还没收录的猫咪？欢迎填写资料投稿，管理员审核通过后会收录进档案馆。</view>
 
   <view class="btn" bindtap="goSubmit">我要提供猫咪数据</view>
-  <view class="btn" bindtap="goAdmin">进入管理（管理员）</view>
+  <view class="btn" bindtap="goAdmin">管理员入口</view>
 </view>
