@@ -41,9 +41,10 @@ let MOCK_ADMINS = [
 // 游客投稿（待审核，不直发公开页）
 let MOCK_SUBS = [];
 // 本地“当前登录”的管理员 openid（mock 无真实登录，固定为 o_super 以模拟身份与转让效果）
-let MOCK_ME_OPENID = 'o_super';
-// 本地演示开关：设为 true 时把“当前登录”当作游客，便于在本地体验「申请→审核→成为管理员」全流程
-const MOCK_AS_VISITOR = false;
+// 当前身份＝游客（不在 MOCK_ADMINS 名单内，用于体验游客视角与申请流程）
+let MOCK_ME_OPENID = 'o_visitor';
+// 本地演示开关：true 表示把“当前登录”当作游客；改回 false 并把上面改回 'o_super' 即恢复超级管理员
+const MOCK_AS_VISITOR = true;
 // 管理员申请（待认领）
 let MOCK_APPS = [];
 
@@ -313,6 +314,9 @@ function rejectSubmission(id) {
 // ---------- 公开：申请成为管理员（无需手抄 openid，云端自动取本人 openid） ----------
 function applyAdmin(profile) {
   if (!USE_CLOUD) {
+    if (MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID)) {
+      return Promise.resolve({ ok: false, msg: '你已是管理员' }); // 与云端 adminApply 校验保持一致
+    }
     if (MOCK_APPS.find(a => a.openid === MOCK_ME_OPENID && a.status === 'pending')) {
       return Promise.resolve({ ok: false, msg: '你已有待审核的申请' });
     }
