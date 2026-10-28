@@ -19,6 +19,8 @@ Page({
     if (this.subAudio) { this.subAudio.destroy(); this.subAudio = null; }
   },
   onLoad() {
+    // 诊断用：页面栈上限 10 层，达到上限后 navigateTo 会失败（历史“编辑点不开”的常见原因）
+    console.log('[admin] 页面栈层数:', (typeof getCurrentPages === 'function' ? getCurrentPages().length : -1));
     service.checkAdmin().then(r => {
       if (!r.isAdmin) { wx.redirectTo({ url: '/pages/denied/denied' }); return; }
       this.setData({ myRole: r.role, ready: true });
@@ -26,7 +28,12 @@ Page({
     }).catch(() => { wx.redirectTo({ url: '/pages/denied/denied' }); });
   },
   // 从编辑/新增页返回时刷新，保证名字/毛色等修改即时可见（修复“保存无反应”的错觉）
-  onShow() { if (this.data.ready) this.loadData(); },
+  // 同时重置跳转锁：若上次跳转的释放定时器因页面卸载/热重载没跑完，锁会残留 true，
+  // 之后所有点击都会被 if (this._jumping) return 静默吞掉（表现为“按钮点了没反应，刷新后就好”）
+  onShow() {
+    this._jumping = false;
+    if (this.data.ready) this.loadData();
+  },
   loadData() {
     service.getCats('').then(list => {
       const s = { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 };
@@ -55,7 +62,26 @@ Page({
   },
   goForm(e) {
     const id = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: '/pages/catForm/catForm' + (id ? '?id=' + id : '') });
+    const url = '/pages/catForm/catForm' + (id ? '?id=' + id : '');
+    // 防重入：跳转动画未结束时重复点击会被微信丢弃（表现为“点了没反应”）
+    if (this._jumping) return;
+    this._jumping = true;
+    const release = () => setTimeout(() => { this._jumping = false; }, 400);
+    wx.navigateTo({
+      url,
+      success: release,
+      fail: err => {
+        const msg = (err && err.errMsg) || '';
+        console.warn('[nav] 打开表单失败:', msg, url);
+        // 页面栈已满（最多 10 层）时静默失败，降级为 redirectTo
+        if (msg.indexOf('page limit') >= 0) {
+          wx.redirectTo({ url, complete: () => { this._jumping = false; } });
+          return;
+        }
+        this._jumping = false;
+        wx.showToast({ title: '打开失败：' + (msg || '未知原因'), icon: 'none' });
+      }
+    });
   },
   archive(e) {
     const id = e.currentTarget.dataset.id;
