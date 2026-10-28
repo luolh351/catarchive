@@ -258,7 +258,11 @@ function adminManage(action, payload) {
 // ---------- 首次：初始化超级管理员（mock 直接成功） ----------
 function initAdmin(profile) {
   if (!USE_CLOUD) {
-    // 本地：若列表为空，则把“当前登录”身份置为首位超级管理员
+    // 与云端一致：只有尚未存在 superadmin 时才允许初始化（否则拒绝，防重复/防篡权）
+    if (MOCK_ADMINS.some(a => a.role === 'superadmin')) {
+      return Promise.resolve({ ok: false, msg: '已初始化，禁止重复初始化' });
+    }
+    // 本地：把“当前登录”身份置为首位超级管理员
     if (!MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID)) {
       MOCK_ADMINS.push({
         openid: MOCK_ME_OPENID, realName: (profile && profile.realName) || '我（本地管理员）',
