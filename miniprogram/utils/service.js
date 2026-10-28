@@ -55,7 +55,7 @@ let MOCK_SUBS = [];
 //   'o_editor'  → 普通管理员（李四）
 //   'o_visitor' → 游客；一旦其申请被审批通过，会自动进入名单，再以此身份登录即为普通管理员
 //   想体验“全新游客”申请流程：改成一个不在名单里的值（如 'o_new'），或清空 Storage 后重编译
-let MOCK_ME_OPENID = 'o_visitor';
+let MOCK_ME_OPENID = 'o_super';
 // 管理员申请（待认领，持久化）
 let MOCK_APPS = loadStore(STORE_APPS, []);
 
