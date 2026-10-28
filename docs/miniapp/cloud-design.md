@@ -39,7 +39,7 @@
 | `catDetail` | 详情（公开） | 公开 | 按 id 查，排除 operatorOpenid |
 | `catManage` | 管理台 | admin | action: `create`/`update`/`archive`；校验字段、写 operatorOpenid、记审计 |
 | `updateCreate` | 管理台 | admin | 向 `cat_updates` 追加时间线并更新 `latestNote`/`updatedAt` |
-| `adminList` | 管理台 | super | 返回管理员名单（不含 openid 原文，仅管理员间可见备注） |
+| `adminList` | 管理台 | super | 返回管理员名单（含 openid，供转让/撤权定位目标；服务端仍以调用者身份重校验，非 super 调用直接拒绝） |
 | `adminManage` | 管理台 | super | action: `add`/`remove`/`transfer`/`listApply`/`approveApply`/`rejectApply`；校验后写 `admin_users` 并审计 |
 | `adminApply` | 申请页 / 关于页（公开） | 公开 | action: `submit`（写入 `admin_applications`，openid 由云端 getWXContext 取）、`mine`（查自己待审申请）；任何人可申请，无需提供 openid；服务端独立校验必填项：姓名/专业/班级/宿舍 |
 | `catSubmit` | 投稿页（公开） | 公开 | 游客提交猫咪资料，写入 `cat_submissions`（status=pending），不直发公开页 |

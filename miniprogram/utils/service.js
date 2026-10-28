@@ -73,7 +73,10 @@ let MOCK_APPS = loadStore(STORE_APPS, []);
 
 function call(name, data) {
   return new Promise((resolve, reject) => {
-    wx.cloud.callFunction({ name, data }).then(res => resolve(res.result)).catch(reject);
+    wx.cloud.callFunction({ name, data }).then(res => resolve(res.result)).catch(err => {
+      console.warn('[cloud] 调用失败:', name, err); // 便于在控制台定位是未部署还是参数问题
+      reject(err);
+    });
   });
 }
 function mockOk(extra) { return Promise.resolve(Object.assign({ ok: true, mock: true }, extra || {})); }
@@ -175,6 +178,27 @@ function checkAdmin() {
   return call('checkAdmin', {});
 }
 
+// ---------- 云端媒体上传：把本地临时文件转成云存储 fileID ----------
+// 原因：表单选到的是本地临时路径，直接写库会在会话结束后失效；必须先上传到云存储
+function isRemotePath(p) { return !!p && (p.indexOf('cloud://') === 0 || /^https?:\/\//.test(p)); }
+function uploadOne(p) {
+  if (!p || isRemotePath(p)) return Promise.resolve(p || '');
+  const ext = (String(p).split('.').pop() || 'jpg').toLowerCase().slice(0, 8);
+  const cloudPath = 'cats/' + Date.now() + '-' + Math.floor(Math.random() * 1e6) + '.' + ext;
+  return wx.cloud.uploadFile({ cloudPath, filePath: p }).then(r => r.fileID).catch(() => p);
+}
+function uploadList(list) { return Promise.all((list || []).map(uploadOne)); }
+// 提交前统一处理媒体；非云端或云能力不可用时原样返回
+function prepareMedia(data) {
+  const d = Object.assign({}, data || {});
+  if (!USE_CLOUD || !wx.cloud || !wx.cloud.uploadFile) return Promise.resolve(d);
+  return Promise.all([ uploadList(d.photos), uploadOne(d.voice) ]).then(r => {
+    d.photos = r[0] || [];
+    d.voice = r[1] || '';
+    return d;
+  });
+}
+
 // ---------- 管理员：增改归档（mock 真写入，cloud 走云函数） ----------
 function catManage(action, payload) {
   if (!USE_CLOUD) {
@@ -229,6 +253,11 @@ function catManage(action, payload) {
       return mockOk();
     }
     return Promise.resolve({ ok: false, msg: '未知 action' });
+  }
+  // 云端：先把照片/音频上传到云存储拿到 fileID，再写入数据库
+  const d0 = (payload && payload.data) || {};
+  if (d0.photos || d0.voice) {
+    return prepareMedia(d0).then(d => call('catManage', Object.assign({ action }, payload, { data: d })));
   }
   return call('catManage', Object.assign({ action }, payload));
 }
@@ -312,7 +341,8 @@ function submitCat(data) {
     saveStore(STORE_SUBS, MOCK_SUBS);
     return mockOk({ id });
   }
-  return call('catSubmit', { data });
+  // 投稿的照片/音频同样先上传云存储，保证管理员审核时能正常预览与播放
+  return prepareMedia(data).then(d => call('catSubmit', { data: d }));
 }
 function listSubmissions() {
   if (!USE_CLOUD) {

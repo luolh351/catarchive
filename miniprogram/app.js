@@ -1,10 +1,10 @@
 // 校园猫咪档案馆 V1.0 应用入口
 App({
   globalData: {
-    // 完整 EnvId（形如 prod-xxxxxxxx），在云开发控制台创建环境后填入
-    cloudEnv: '',
-    // 设为 true 并填入 cloudEnv 后启用云端；此前使用 utils/service.js 的本地模拟数据
-    USE_CLOUD: false,
+    // 云开发环境 ID（已创建环境：cloud1-d0gowrero76a516dd）
+    cloudEnv: 'cloud1-d0gowrero76a516dd',
+    // true：走云函数与云数据库；false：用 utils/service.js 的本地模拟数据（本地预览 UI 用）
+    USE_CLOUD: true,
     // 管理员身份（由 checkAdmin 云函数校验，前端不持有 openid/角色）
     isAdmin: false,
     adminRole: ''
