@@ -15,7 +15,7 @@
 
 | 集合 | 字段 | 客户端读 | 客户端写 | 说明 |
 | --- | --- | --- | --- | --- |
-| `cats` | name, aliases[], coatColor, gender, sterilizationStatus, sterilizedAt, personalityTags[], usualLocations[], healthNotes, latestNote, lifeStatus, isAdoptable, photos[], voice, published, createdAt, updatedAt, operatorOpenid | **否（仅经云函数，函数内剔除 operatorOpenid 后返回）** | 否（仅云函数 admin SDK 写） | 档案主表；`published=false` 表示归档；**客户端不得直读，否则可绕过函数拿到 operatorOpenid** |
+| `cats` | name, aliases[], coatColor, gender, sterilizationStatus, sterilizedAt, personalityTags[], usualLocations[], healthNotes, latestNote, lifeStatus, isAdoptable, photos[](云存储地址，最多9张), voice(**仅 mp3/wav** 云存储地址), published, createdAt, updatedAt, operatorOpenid | **否（仅经云函数，函数内剔除 operatorOpenid 后返回）** | 否（仅云函数 admin SDK 写） | 档案主表；`published=false` 表示归档；**客户端不得直读，否则可绕过函数拿到 operatorOpenid** |
 | `cat_updates` | catId, content, createdAt, operatorOpenid | **否（仅经云函数）** | 否 | 近况时间线 |
 | `admin_users` | openid(唯一), role, realName, major, className, dorm, note, createdAt, createdBy | 否（仅管理员经云函数读） | 否（仅 super 经云函数写） | 管理员名单；realName/major/className/dorm/note 仅管理员间可见 |
 | `admin_audit_logs` | operatorOpenid, action, target, detail, createdAt | 否（仅管理员经云函数读） | 否 | 审计日志 |

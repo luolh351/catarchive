@@ -106,10 +106,16 @@ Page({
     wx.showToast({ title: '已设为封面', icon: 'none' });
   },
   // 音频可选填：从微信聊天记录选音频文件（mp3/wav 等）
+  // 叫声仅支持 mp3 / wav
   chooseVoice() {
     wx.chooseMessageFile({
-      count: 1, type: 'file', extension: ['mp3', 'wav', 'm4a', 'silk'],
-      success: res => { this.setData({ 'form.voice': res.tempFiles[0].path }); this.markDirty(); },
+      count: 1, type: 'file', extension: ['mp3', 'wav'],
+      success: res => {
+        const p = res.tempFiles[0].path;
+        if (!/\.(mp3|wav)$/i.test(p)) { wx.showToast({ title: '仅支持 mp3 / wav', icon: 'none' }); return; }
+        this.setData({ 'form.voice': p });
+        this.markDirty();
+      },
       fail: () => { wx.showToast({ title: '未选择音频', icon: 'none' }); }
     });
   },

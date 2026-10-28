@@ -42,11 +42,19 @@ function takePhotos(v) {
   for (let i = 0; i < v.length; i++) if (!isRemote(v[i])) return null; // 本地临时路径 → 拒绝
   return v.slice();
 }
+// 叫声仅允许 mp3 / wav
+const AUDIO_EXT = ['mp3', 'wav'];
+function voiceExt(v) {
+  const m = String(v).toLowerCase().split('?')[0].match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : '';
+}
 function takeVoice(v) {
   if (v === undefined || v === null) return '';
   if (!isStr(v)) return null;                       // 对象形式的音频 → 拒绝
   if (!v) return '';
-  return isRemote(v) ? v : null;
+  if (!isRemote(v)) return null;
+  if (AUDIO_EXT.indexOf(voiceExt(v)) < 0) return null; // 非 mp3/wav → 拒绝
+  return v;
 }
 function normalize(d, requireName) {
   d = d || {};
@@ -77,7 +85,7 @@ function normalize(d, requireName) {
   if (d.lifeStatus !== undefined) { if (!LIFE.includes(d.lifeStatus)) return { err: '状态枚举错误' }; out.lifeStatus = d.lifeStatus; }
   if (d.isAdoptable !== undefined) out.isAdoptable = !!d.isAdoptable;
   if (d.photos !== undefined) { const v = takePhotos(d.photos); if (v === null) return { err: '照片须为最多9项的云存储地址数组（不接受本地临时路径）' }; out.photos = v; }
-  if (d.voice !== undefined) { const v = takeVoice(d.voice); if (v === null) return { err: '音频须为云存储地址字符串' }; out.voice = v; }
+  if (d.voice !== undefined) { const v = takeVoice(d.voice); if (v === null) return { err: '音频须为 mp3 / wav 格式的云存储地址' }; out.voice = v; }
   return { data: out };
 }
 

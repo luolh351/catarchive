@@ -39,11 +39,19 @@ function takePhotos(v) {
   for (let i = 0; i < v.length; i++) if (!isRemote(v[i])) return null;
   return v.slice();
 }
+// 叫声仅允许 mp3 / wav
+const AUDIO_EXT = ['mp3', 'wav'];
+function voiceExt(v) {
+  const m = String(v).toLowerCase().split('?')[0].match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : '';
+}
 function takeVoice(v) {
   if (v === undefined || v === null) return '';
   if (!isStr(v)) return null;
   if (!v) return '';
-  return isRemote(v) ? v : null;
+  if (!isRemote(v)) return null;
+  if (AUDIO_EXT.indexOf(voiceExt(v)) < 0) return null; // 非 mp3/wav → 拒绝
+  return v;
 }
 
 // 公开：游客投稿。任何人可提交，落 cat_submissions（status=pending），不直发公开页
@@ -76,7 +84,7 @@ exports.main = async (event) => {
   const photos = takePhotos(d.photos);
   if (photos === null) return { ok: false, msg: '照片须为最多9项的云存储地址数组' };
   const voice = takeVoice(d.voice);
-  if (voice === null) return { ok: false, msg: '音频须为云存储地址字符串' };
+  if (voice === null) return { ok: false, msg: '音频须为 mp3 / wav 格式的云存储地址' };
 
   const life = d.lifeStatus || '在校';
   const data = {

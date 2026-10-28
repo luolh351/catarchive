@@ -44,12 +44,20 @@ Page({
           usualLocations: (c.usualLocations || []).join('、'),
           personalityTags: (c.personalityTags || []).join('、'), healthNotes: c.healthNotes || '',
           latestNote: c.latestNote || '',
-          photos: c.photos || [], voice: c.voice || '', isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
+          photos: c.photos || [], voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
         }
       });
     }).catch(() => { wx.hideLoading(); wx.showToast({ title: '加载失败', icon: 'none' }); });
   },
   // 有改动时标记未保存，并开启“离开提醒”
+  // 兼容性：历史数据里可能存了非 mp3/wav 的文件（旧版无格式限制），
+  // 加载时直接剔除，否则保存会被云端格式校验拒绝、管理员无法改任何字段
+  safeVoice(v) {
+    if (!v) return '';
+    if (/\.(mp3|wav)$/i.test(v)) return v;
+    wx.showToast({ title: '已清除无效的叫声文件', icon: 'none' });
+    return '';
+  },
   markDirty() {
     if (this.data.dirty) return;
     this.setData({ dirty: true });
@@ -134,10 +142,16 @@ Page({
     this.markDirty();
     wx.showToast({ title: '已设为封面', icon: 'none' });
   },
+  // 叫声仅支持 mp3 / wav（与 InnerAudioContext 支持的格式一致，也避免把图片等文件当音频存入）
   chooseVoice() {
     wx.chooseMessageFile({
-      count: 1, type: 'file', extension: ['mp3', 'wav', 'm4a', 'silk'],
-      success: res => { this.setData({ 'form.voice': res.tempFiles[0].path }); this.markDirty(); },
+      count: 1, type: 'file', extension: ['mp3', 'wav'],
+      success: res => {
+        const p = res.tempFiles[0].path;
+        if (!/\.(mp3|wav)$/i.test(p)) { wx.showToast({ title: '仅支持 mp3 / wav', icon: 'none' }); return; }
+        this.setData({ 'form.voice': p });
+        this.markDirty();
+      },
       fail: () => wx.showToast({ title: '未选择音频', icon: 'none' })
     });
   },
