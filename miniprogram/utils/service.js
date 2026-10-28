@@ -405,21 +405,25 @@ function rejectSubmission(id) {
 // ---------- 公开：申请成为管理员（无需手抄 openid，云端自动取本人 openid） ----------
 function applyAdmin(profile) {
   if (!useCloud()) {
+    // 与云端一致：trim 后再校验，纯空格视为未填写
     const p0 = profile || {};
-    // 与云端一致的必填校验：姓名/专业/班级/宿舍
-    if (!p0.realName) return Promise.resolve({ ok: false, msg: '请填写姓名' });
-    if (!p0.major) return Promise.resolve({ ok: false, msg: '请填写专业' });
-    if (!p0.className) return Promise.resolve({ ok: false, msg: '请填写班级' });
-    if (!p0.dorm) return Promise.resolve({ ok: false, msg: '请填写宿舍' });
+    const t = v => (typeof v === 'string' ? v.trim() : '');
+    const realName = t(p0.realName), major = t(p0.major), className = t(p0.className), dorm = t(p0.dorm);
+    if (!realName) return Promise.resolve({ ok: false, msg: '请填写姓名' });
+    if (!major) return Promise.resolve({ ok: false, msg: '请填写专业' });
+    if (!className) return Promise.resolve({ ok: false, msg: '请填写班级' });
+    if (!dorm) return Promise.resolve({ ok: false, msg: '请填写宿舍' });
     if (MOCK_ADMINS.find(a => a.openid === MOCK_ME_OPENID)) {
       return Promise.resolve({ ok: false, msg: '你已是管理员' }); // 与云端 adminApply 校验保持一致
     }
     if (MOCK_APPS.find(a => a.openid === MOCK_ME_OPENID && a.status === 'pending')) {
       return Promise.resolve({ ok: false, msg: '你已有待审核的申请' });
     }
-    MOCK_APPS.push(Object.assign({
-      id: 'a' + Date.now(), openid: MOCK_ME_OPENID, status: 'pending', createdAt: Date.now()
-    }, profile || {}));
+    // 与云端一致：只保存 trim 后的值
+    MOCK_APPS.push({
+      id: 'a' + Date.now(), openid: MOCK_ME_OPENID, status: 'pending', createdAt: Date.now(),
+      realName, major, className, dorm, note: t(p0.note)
+    });
     saveStore(STORE_APPS, MOCK_APPS);
     return mockOk();
   }

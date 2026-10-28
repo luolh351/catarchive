@@ -3,27 +3,51 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const admins = db.collection('admin_users');
 
-// 仅在无人时为调用者初始化首位超级管理员。
-// 事务写法要点：云开发事务的 collection 只支持 doc().get()/update()/remove()/set() 与 add()，
-// 不支持 where().get() 或 count()。因此：校验放事务外（普通查询），事务内只做写入。
-// 并发兜底：建议把 admin_users.openid 建为“唯一”索引，并发时第二条写入会被数据库拒绝。
+// 并发安全：用固定 _id 的“座位”文档做互斥。
+// 原因：云开发事务不支持 where().get()/count()，无法在事务内统计是否已有 superadmin；
+// 而 openid 唯一索引只能挡住“同一用户重复初始化”，挡不住两个不同用户同时初始化。
+// 解法：竞争同一个 _id 的座位文档——_id 天然唯一，并发时第二个事务的 add 必然冲突并回滚，
+// 保证全局只可能产生一个 superadmin。座位文档 role='seat'，adminList 会过滤，不影响名单。
+const SEAT_ID = '__super_seat__';
+
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
 
-  // 事务外预检（覆盖绝大多数情况，失败即快速返回）
-  const pre = await admins.where({ role: 'superadmin' }).get().catch(() => null);
-  if (pre && pre.data && pre.data.length) {
+  // 事务外预检：查询必须成功，失败一律中止（不能静默继续初始化）
+  let pre;
+  try {
+    pre = await admins.where({ role: 'superadmin' }).get();
+  } catch (e) {
+    return { ok: false, msg: '校验失败，未执行初始化：' + ((e && e.message) || '数据库查询异常') };
+  }
+  if (pre.data && pre.data.length) {
     return { ok: false, msg: '已初始化，禁止重复初始化' };
   }
-  const mine = await admins.where({ openid: OPENID }).get().catch(() => null);
-  if (mine && mine.data && mine.data.length) {
+  let mine;
+  try {
+    mine = await admins.where({ openid: OPENID }).get();
+  } catch (e) {
+    return { ok: false, msg: '校验失败，未执行初始化：' + ((e && e.message) || '数据库查询异常') };
+  }
+  if (mine.data && mine.data.length) {
     return { ok: false, msg: '你已在管理员名单中' };
   }
 
   const profile = event || {};
+  let reason = '';
   try {
     await db.runTransaction(async tx => {
-      // 事务内仅执行受支持的写操作
+      // 占座：座位已存在说明已有（或正在初始化）超级管理员
+      let seat = null;
+      try {
+        seat = await tx.collection('admin_users').doc(SEAT_ID).get();
+      } catch (e) {
+        seat = null; // 文档不存在时事务内 get 会抛错，视为未占座
+      }
+      if (seat && seat.data) { reason = 'TAKEN'; throw new Error('tx_abort'); }
+      await tx.collection('admin_users').add({
+        data: { _id: SEAT_ID, openid: '__seat__', role: 'seat', createdAt: db.serverDate(), createdBy: OPENID }
+      });
       await tx.collection('admin_users').add({
         data: {
           openid: OPENID, role: 'superadmin',
@@ -36,11 +60,12 @@ exports.main = async (event) => {
     });
     return { ok: true, role: 'superadmin' };
   } catch (e) {
-    // 唯一索引冲突（并发重复初始化）时给出明确提示，其他错误回传原因便于排查
-    const msg = (e && e.message) ? String(e.message) : '';
-    if (msg.indexOf('duplicate') >= 0 || msg.indexOf('E11000') >= 0) {
-      return { ok: false, msg: '你已在管理员名单中（并发重复提交已被拦截）' };
+    if (reason === 'TAKEN') return { ok: false, msg: '已有超级管理员，禁止重复初始化' };
+    const m = (e && e.message) ? String(e.message) : '';
+    // 并发占座冲突（_id 重复 / 唯一索引冲突）
+    if (m.indexOf('duplicate') >= 0 || m.indexOf('E11000') >= 0 || m.indexOf('_id') >= 0) {
+      return { ok: false, msg: '已有超级管理员（并发冲突已拦截）' };
     }
-    return { ok: false, msg: '初始化失败：' + (msg || '未知错误') };
+    return { ok: false, msg: '初始化失败：' + (m || '未知错误') };
   }
 };

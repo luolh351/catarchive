@@ -12,7 +12,13 @@ exports.main = async (event) => {
   const now = db.serverDate();
 
   if (action === 'submit') {
-    const p = (event && event.profile) || {};
+    const raw = (event && event.profile) || {};
+    // 统一 trim 并限制长度：纯空格必须视为未填写（否则“   ”能绕过必填校验）
+    const p = {};
+    ['realName', 'major', 'className', 'dorm', 'note'].forEach(k => {
+      const v = raw[k];
+      p[k] = (typeof v === 'string') ? v.trim().slice(0, 50) : '';
+    });
     // 必填校验（与前端一致；云端必须独立校验，不能只信前端）
     if (!p.realName) return { ok: false, msg: '请填写姓名' };
     if (!p.major) return { ok: false, msg: '请填写专业' };
