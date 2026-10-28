@@ -1,8 +1,8 @@
 <view class="about">
   <view class="notice">
     <view class="nt">数据共建 · 广海动物协会</view>
-    <view class="nb">档案馆里的每一份猫咪资料，都由广海动物协会的成员走遍校园、逐一记录与维护。如果你也想为这些毛孩子出一份力——喂食、观察、救助、记录，都欢迎加入我们，一起守护它们的生活。</view>
-    <view class="nf">协会联系方式与招新信息，将在负责人确认后公布</view>
+    <view class="nb">档案由广海动物协会共同记录与维护，欢迎加入我们，一起守护校园里的毛孩子。</view>
+    <view class="nf">协会联系方式将在负责人确认后公布</view>
   </view>
 
   <view class="h">项目介绍</view>
