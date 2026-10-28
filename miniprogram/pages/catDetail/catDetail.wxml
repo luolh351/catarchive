@@ -19,6 +19,7 @@
   <view wx:if="{{cat.voice}}" class="media">
     <view class="mlab">叫声</view>
     <view class="vbtn" bindtap="playVoice">{{playing ? '播放中 · 点击停止' : '▶ 播放猫叫'}}</view>
+    <view class="vbtn ghost" bindtap="saveVoice">⇩ 另存到电脑</view>
   </view>
   <view wx:else class="media">
     <view class="mlab">叫声</view>
