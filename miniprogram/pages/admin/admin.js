@@ -242,7 +242,11 @@ Page({
   // 全部渠道失败时，按环境给出准确原因（开发者工具本身不支持保存 API）
   saveFailTip(isImage) {
     let env = '';
-    try { env = (wx.getSystemInfoSync() || {}).platform || ''; } catch (e) { env = ''; }
+    try {
+      // wx.getSystemInfoSync 已废弃（控制台会报 deprecated），改用 wx.getDeviceInfo
+      const d = wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync();
+      env = (d || {}).platform || '';
+    } catch (e) { env = ''; }
     if (env === 'devtools') {
       wx.showModal({
         title: '当前环境不支持保存',

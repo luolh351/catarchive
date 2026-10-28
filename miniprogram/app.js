@@ -11,14 +11,19 @@ App({
   },
   onLaunch() {
     if (this.globalData.USE_CLOUD && this.globalData.cloudEnv) {
+      // wx.cloud.init 必须同步执行：后续任何页面调用 wx.cloud 前都要已初始化
       wx.cloud.init({ env: this.globalData.cloudEnv, traceUser: true });
-      // 启动时校验管理员身份（公开接口，失败不影响普通浏览）
-      require('./utils/service').checkAdmin().then(r => {
-        if (r && r.isAdmin) {
-          this.globalData.isAdmin = true;
-          this.globalData.adminRole = r.role;
-        }
-      }).catch(() => {});
+      // 管理员身份校验延后到下一轮事件循环：require 整个 service 模块（含模拟数据）
+      // 会拖长 onLaunch，触发控制台 [Perf] App.onLaunch 耗时提示。
+      // 各页面（关于/管理台）进入时都会自行 checkAdmin，不依赖这里的抢先结果。
+      setTimeout(() => {
+        require('./utils/service').checkAdmin().then(r => {
+          if (r && r.isAdmin) {
+            this.globalData.isAdmin = true;
+            this.globalData.adminRole = r.role;
+          }
+        }).catch(() => {});
+      }, 0);
     }
   }
 });
