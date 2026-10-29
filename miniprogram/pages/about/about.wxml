@@ -15,6 +15,15 @@
 
   <view class="h">参与共建</view>
   <view class="p">发现校园里还没收录的猫咪？欢迎填写资料投稿，管理员审核通过后会收录进档案馆。</view>
+  <view class="p">在校内偶遇流浪猫时，请不要投喂人类的食物。</view>
+
+  <view class="warn">
+    <view class="wt">这些对猫有毒，切勿喂食</view>
+    <view class="wi">巧克力、葡萄制品、大葱、洋葱等，可能引发急性肾衰竭。</view>
+    <view class="wt">这些会引起肠胃不适</view>
+    <view class="wi">火腿肠、牛奶容易导致腹泻；酸性水果、香辛料腌制的肉类、乌贼等海产同样不适合。</view>
+    <view class="wok">适合投喂：猫粮、猫罐头、猫咪专用零食</view>
+  </view>
 
   <view class="btn" bindtap="goSubmit">我要提供猫咪数据</view>
   <view class="btn" bindtap="goAdmin">管理员入口</view>

@@ -9,6 +9,20 @@
 }
 .notice .nt { font-size: 28rpx; font-weight: 600; color: var(--primary); margin-bottom: 14rpx; }
 .notice .nb { font-size: 26rpx; line-height: 1.8; color: #34465C; }
+/* 投喂须知警示卡片 */
+.warn {
+  margin: 20rpx 4rpx 8rpx;
+  background: linear-gradient(135deg, #FFF6EC, #FFFCF8);
+  border-left: 8rpx solid #E8833A;
+  border-radius: 20rpx; padding: 26rpx 26rpx 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(232,131,58,.08);
+}
+.warn .wt { font-size: 26rpx; font-weight: 600; color: #C4632A; margin-bottom: 10rpx; }
+.warn .wi { font-size: 26rpx; line-height: 1.8; color: #34465C; margin-bottom: 18rpx; }
+.warn .wok {
+  font-size: 26rpx; color: #2E8F5B; background: #EDF8F1;
+  border-radius: 14rpx; padding: 16rpx 18rpx;
+}
 .about .h { font-size: 28rpx; font-weight: 600; margin: 28rpx 4rpx 12rpx; color: #182A44; }
 .about .p { font-size: 27rpx; line-height: 1.8; color: #34465C; margin-bottom: 8rpx; }
 .about .btn {
