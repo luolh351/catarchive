@@ -1,5 +1,5 @@
 /* 底部留出固定底栏的空间，避免最后一段文字被遮住 */
-.about { padding: 24rpx 0 200rpx; }
+.about { padding: 24rpx 0 280rpx; }
 /* 顶部共建说明卡片 */
 .notice {
   background: linear-gradient(135deg, #EDF3FF, #F8FAFF);
@@ -29,15 +29,15 @@
 /* 固定底栏：关于页是 tabBar 页，页面视口已排除 tabBar，bottom:0 即贴其上方 */
 .footbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 99;
-  display: flex; gap: 20rpx;
   padding: 18rpx 24rpx;
   padding-bottom: calc(18rpx + env(safe-area-inset-bottom));
   background: #fff;
   box-shadow: 0 -6rpx 24rpx rgba(24,42,68,.08);
 }
 .fbtn {
-  flex: 1; text-align: center; border-radius: 24rpx;
+  text-align: center; border-radius: 24rpx;
   padding: 22rpx 0; font-size: 29rpx;
   background: var(--primary); color: #fff;
 }
+.fbtn + .fbtn { margin-top: 16rpx; }   /* 竖排按钮间距 */
 .fbtn.ghost { background: #EDF3FF; color: var(--primary); }
