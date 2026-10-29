@@ -307,19 +307,28 @@ Page({
       else this.saveFailTip(true);
     });
   },
-  // 投稿音频：同样多渠道降级保存
-  downloadSubVoice() {
+  // 投稿音频：转发给微信好友。
+  // wx.shareFileMessage 只接受本地文件路径，cloud:// 需先下载为临时文件；
+  // 该接口在开发者工具模拟器上不可用，需真机预览。
+  shareSubVoice() {
     const voice = this.data.detail.voice;
     if (!voice) return;
+    if (!wx.shareFileMessage) { wx.showToast({ title: '请用手机端转发', icon: 'none' }); return; }
+    const name = (this.data.detail.name || '猫咪').replace(/[\\/:*?"<>|]/g, '');
+    const m = String(voice).match(/\.(mp3|wav)$/i);
+    const fileName = name + '的叫声.' + (m ? m[1].toLowerCase() : 'mp3');
     wx.showLoading({ title: '准备中' });
-    this.resolveLocal(voice)
-      .then(local => this.saveToLocal(local, false))
-      .then(r => {
-        wx.hideLoading();
-        if (r.ok) wx.showToast({ title: '已保存到' + r.way, icon: 'success' });
-        else this.saveFailTip(false);
-      })
-      .catch(() => { wx.hideLoading(); wx.showToast({ title: '下载失败', icon: 'none' }); });
+    this.resolveLocal(voice).then(local => {
+      wx.hideLoading();
+      wx.shareFileMessage({
+        filePath: local,
+        fileName,
+        fail: e => {
+          console.warn('[share] 转发音频失败:', e);
+          wx.showToast({ title: '转发失败', icon: 'none' });
+        }
+      });
+    }).catch(() => { wx.hideLoading(); wx.showToast({ title: '音频加载失败', icon: 'none' }); });
   },
   rejectSub(e) {
     const id = e.currentTarget.dataset.id;
