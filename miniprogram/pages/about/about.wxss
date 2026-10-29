@@ -9,7 +9,6 @@
 }
 .notice .nt { font-size: 28rpx; font-weight: 600; color: var(--primary); margin-bottom: 14rpx; }
 .notice .nb { font-size: 26rpx; line-height: 1.8; color: #34465C; }
-.notice .nf { margin-top: 16rpx; font-size: 23rpx; color: #8B97A6; }
 .about .h { font-size: 28rpx; font-weight: 600; margin: 28rpx 4rpx 12rpx; color: #182A44; }
 .about .p { font-size: 27rpx; line-height: 1.8; color: #34465C; margin-bottom: 8rpx; }
 .about .btn {
