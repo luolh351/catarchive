@@ -60,34 +60,5 @@ Page({
     });
     a.play();
     this.audio = a;
-  },
-  // 把云端叫声另存到电脑（仅电脑版微信 / 开发者工具支持；手机端微信不允许写本地磁盘）
-  saveVoice() {
-    const src = this.data.cat.voice;
-    if (!src) return;
-    if (src.indexOf('cloud://') !== 0) {
-      wx.showToast({ title: '仅云端上传的音频可另存', icon: 'none' });
-      return;
-    }
-    if (!wx.saveFileToDisk) {
-      wx.showToast({ title: '请在电脑版微信中使用', icon: 'none' });
-      return;
-    }
-    wx.showLoading({ title: '下载中' });
-    wx.cloud.downloadFile({ fileID: src }).then(r => {
-      wx.hideLoading();
-      wx.saveFileToDisk({
-        filePath: r.tempFilePath,
-        success: () => wx.showToast({ title: '已保存到电脑' }),
-        fail: (e) => {
-          console.warn('[audio] 另存失败:', e);
-          wx.showToast({ title: '另存失败', icon: 'none' });
-        }
-      });
-    }).catch(err => {
-      wx.hideLoading();
-      console.warn('[audio] 下载失败:', err);
-      wx.showToast({ title: '下载失败', icon: 'none' });
-    });
-  },
+  }
 });
