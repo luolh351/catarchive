@@ -25,6 +25,10 @@
     <view class="wok">适合投喂：猫粮、猫罐头、猫咪专用零食</view>
   </view>
 
-  <view class="btn" bindtap="goSubmit">我要提供猫咪数据</view>
-  <view class="btn" bindtap="goAdmin">管理员入口</view>
+</view>
+
+<!-- 固定底栏：不随页面滚动，始终贴在 tabBar 上方 -->
+<view class="footbar">
+  <view class="fbtn ghost" bindtap="goSubmit">我要提供猫咪数据</view>
+  <view class="fbtn" bindtap="goAdmin">管理员入口</view>
 </view>
