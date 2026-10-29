@@ -29,8 +29,9 @@
 /* 固定底栏：关于页是 tabBar 页，页面视口已排除 tabBar，bottom:0 即贴其上方 */
 .footbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 99;
-  padding: 18rpx 24rpx;
-  padding-bottom: calc(18rpx + env(safe-area-inset-bottom));
+  /* 不再叠加 env(safe-area-inset-bottom)：底栏下方是原生 tabBar，安全区由它处理，
+     这里再垫高会在按钮下方留出一段空白 */
+  padding: 16rpx 24rpx;
   background: #fff;
   box-shadow: 0 -6rpx 24rpx rgba(24,42,68,.08);
 }
