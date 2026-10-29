@@ -41,4 +41,3 @@
   background: var(--primary); color: #fff;
 }
 .fbtn + .fbtn { margin-top: 16rpx; }   /* 竖排按钮间距 */
-.fbtn.ghost { background: #EDF3FF; color: var(--primary); }
