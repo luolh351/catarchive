@@ -246,7 +246,8 @@ function catManage(action, payload) {
         coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
         sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
         aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
-        photos: d.photos || [], voice: d.voice || '', published: true,
+        photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
+        more: d.more || '',
         bg: pickBg(d.coatColor), photoText: (d.name || '猫')[0] || '猫',
         sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),
         timeline: d.latestNote ? [ { t: '刚刚', c: d.latestNote } ] : []
@@ -269,6 +270,8 @@ function catManage(action, payload) {
       if (d.aliases !== undefined) cat.aliases = toArr(d.aliases) || [];
       if (d.healthNotes !== undefined) cat.healthNotes = d.healthNotes;
       if (d.latestNote !== undefined) cat.latestNote = d.latestNote;
+      if (d.latestPhotos !== undefined) cat.latestPhotos = d.latestPhotos || [];
+      if (d.more !== undefined) cat.more = d.more;
       // 业务规则：去向一旦不是“在校”，自动取消待领养（与云端 update 一致）
       const nextLife = d.lifeStatus !== undefined ? d.lifeStatus : cat.lifeStatus;
       if (d.lifeStatus !== undefined) cat.lifeStatus = d.lifeStatus;

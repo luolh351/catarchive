@@ -116,6 +116,7 @@ exports.main = async (event) => {
     const life = d.lifeStatus || '在校';
     const data = Object.assign({
       aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '',
+      latestPhotos: [], more: '',
       coatColor: '未知', gender: '未知', sterilizationStatus: '未知', photos: [], voice: '', isAdoptable: false
     }, d, {
       lifeStatus: life,
@@ -142,8 +143,10 @@ exports.main = async (event) => {
     }
     const exLife = (ex.data && ex.data.lifeStatus) || '在校';
     const patch = { updatedAt: db.serverDate(), operatorOpenid: OPENID };
+    // 写入字段白名单：新增字段必须在这里登记，否则即便通过 normalize 也会被静默丢弃
     const keys = ['name', 'aliases', 'coatColor', 'gender', 'sterilizationStatus', 'sterilizedAt',
-      'personalityTags', 'usualLocations', 'healthNotes', 'latestNote', 'lifeStatus', 'photos', 'voice'];
+      'personalityTags', 'usualLocations', 'healthNotes', 'latestNote', 'lifeStatus', 'photos', 'voice',
+      'latestPhotos', 'more'];
     for (let i = 0; i < keys.length; i++) {
       if (d[keys[i]] !== undefined) patch[keys[i]] = d[keys[i]];
     }
