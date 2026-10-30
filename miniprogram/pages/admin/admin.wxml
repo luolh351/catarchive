@@ -45,7 +45,7 @@
       <view class="thumbs"><image wx:for="{{detail.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" catchtap="previewSubPhoto" /></view>
     </view>
     <view class="kv col" wx:if="{{detail.latestPhotos.length}}">
-      <view class="vhead"><text>近况配图（{{detail.latestPhotos.length}}）</text></view>
+      <view class="vhead"><text>近况配图（{{detail.latestPhotos.length}}）</text><text class="copy" catchtap="saveNotePhotos">保存到相册</text></view>
       <view class="thumbs"><image wx:for="{{detail.latestPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" data-list="{{detail.latestPhotos}}" catchtap="previewSubPhoto" /></view>
     </view>
     <view class="kv"><text>叫声</text><view class="vw">

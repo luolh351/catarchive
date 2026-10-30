@@ -1,6 +1,8 @@
 // 补充近况：正文 + 配图。管理台点「近况」进入，保存后写入时间线
 const service = require('../../utils/service');
 const MAX_PHOTOS = 3;
+// 常用近况短语：管理台补记录时多为重复场景，点一下即可填入
+const QUICK = ['精神良好', '已喂食', '疑似生病', '受伤待救', '发现生崽', '亲人可撸', '暂未见到'];
 
 Page({
   data: {
@@ -8,7 +10,8 @@ Page({
     content: '',
     photos: [],
     saving: false,
-    maxPhotos: MAX_PHOTOS
+    maxPhotos: MAX_PHOTOS,
+    quick: QUICK
   },
   onLoad(options) {
     const catId = options && options.catId;
@@ -21,6 +24,16 @@ Page({
   },
   onInput(e) {
     this.setData({ content: (e.detail && e.detail.value) || '' });
+  },
+  // 追加快捷短语到正文末尾（重复添加会提示，避免误触堆成一串）
+  addQuick(e) {
+    const t = e.currentTarget.dataset.t;
+    const cur = this.data.content || '';
+    const trimmed = cur.trim();
+    if (trimmed && trimmed.indexOf(t) >= 0) { wx.showToast({ title: '已添加过', icon: 'none' }); return; }
+    const next = (trimmed ? trimmed + '，' : '') + t;
+    if (next.length > 500) { wx.showToast({ title: '已达 500 字上限', icon: 'none' }); return; }
+    this.setData({ content: next });
   },
   chooseImage() {
     const remain = MAX_PHOTOS - this.data.photos.length;

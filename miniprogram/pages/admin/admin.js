@@ -291,8 +291,10 @@ Page({
     });
   },
   // 投稿照片：多张依次保存，每张走多渠道降级
-  saveSubPhotos() {
-    const photos = this.data.detail.photos || [];
+  saveSubPhotos() { return this.savePhotoList(this.data.detail.photos || []); },
+  // 投稿的近况配图同样可保存（与照片区操作一致）
+  saveNotePhotos() { return this.savePhotoList(this.data.detail.latestPhotos || []); },
+  savePhotoList(photos) {
     if (!photos.length) return;
     wx.showLoading({ title: '保存中' });
     let chain = Promise.resolve();

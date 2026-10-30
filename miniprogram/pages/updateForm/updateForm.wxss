@@ -1,6 +1,8 @@
+/* 样式复用 app.wxss 的 .field / .lab / .opts / .opt / .imgs / .img / .save / .cancel，
+   与「编辑猫咪」表单保持一致；这里只补充 textarea 与字数统计 */
 .ta {
-  width: 100%; box-sizing: border-box; min-height: 220rpx;
-  background: #F4F6FA; border-radius: 20rpx; padding: 20rpx;
-  font-size: 28rpx; line-height: 1.7; color: #182A44;
+  width: 100%; box-sizing: border-box; min-height: 200rpx;
+  background: var(--tagBg); border-radius: 20rpx; padding: 20rpx;
+  font-size: 28rpx; line-height: 1.7; color: var(--fg);
 }
-.count { text-align: right; font-size: 24rpx; color: #97A0AA; margin-top: 10rpx; }
+.count { text-align: right; font-size: 24rpx; color: var(--sub); margin-top: 10rpx; }
