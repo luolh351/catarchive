@@ -1,0 +1,24 @@
+<view class="wrap">
+  <view class="field">
+    <view class="lab"><text class="req">*</text> 近况内容</view>
+    <textarea class="ta" placeholder="如：今天在食堂附近见到，精神状态良好，右耳有缺口" value="{{content}}" bindinput="onInput" maxlength="500" />
+    <view class="count">{{content.length}}/500</view>
+  </view>
+
+  <view class="field">
+    <view class="lab">配图（可选，最多 {{maxPhotos}} 张）</view>
+    <view class="opts">
+      <view class="opt" bindtap="chooseImage">＋ 拍照 / 选照片（{{photos.length}}/{{maxPhotos}}）</view>
+    </view>
+    <view class="imgs" wx:if="{{photos.length}}">
+      <view class="img" wx:for="{{photos}}" wx:key="*this">
+        <image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
+        <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
+      </view>
+    </view>
+    <view class="muted" style="font-size:24rpx;margin-top:8rpx">配图会随这条近况一起显示在档案的时间线里。</view>
+  </view>
+
+  <view class="save {{saving?'disabled':''}}" bindtap="save">{{saving ? '提交中…' : '保存近况'}}</view>
+  <view class="cancel" bindtap="cancel">取消</view>
+</view>

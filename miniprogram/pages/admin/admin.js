@@ -91,20 +91,19 @@ Page({
       success: res => { if (res.confirm) service.catManage('archive', { id }).then(() => this.loadData()); }
     });
   },
+  // 补充近况改为独立页面：弹窗输入无法附加配图，跳转后可写正文并上传现场照片
   addUpdate(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showModal({
-      title: '补充近况', editable: true, placeholderText: '输入本次近况',
-      success: res => {
-        if (res.confirm && res.content && res.content.trim()) {
-          wx.showLoading({ title: '提交中' });
-          service.addUpdate(id, res.content.trim()).then(r => {
-            wx.hideLoading();
-            if (r && r.ok === false) { wx.showToast({ title: r.msg || '失败', icon: 'none' }); return; }
-            wx.showToast({ title: '已补充', icon: 'success' });
-            this.loadData();
-          }).catch(() => { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); });
-        }
+    if (this._jumping) return;
+    this._jumping = true;
+    const url = '/pages/updateForm/updateForm?catId=' + id;
+    wx.navigateTo({
+      url,
+      success: () => setTimeout(() => { this._jumping = false; }, 400),
+      fail: err => {
+        this._jumping = false;
+        console.warn('[nav] 打开近况表单失败:', (err && err.errMsg) || '', url);
+        wx.showToast({ title: '打开失败，请重试', icon: 'none' });
       }
     });
   },
@@ -193,6 +192,7 @@ Page({
         personalityText: arr2str(s.personalityTags) || '—',
         isAdoptable: !!s.isAdoptable, lifeStatus: s.lifeStatus || '—',
         photos: Array.isArray(s.photos) ? s.photos : [], voice: s.voice || '',
+        latestPhotos: Array.isArray(s.latestPhotos) ? s.latestPhotos : [],
         submitter: s.submitterOpenid || '游客投稿', createdAtText
       }
     });
@@ -203,10 +203,11 @@ Page({
   },
   stop() {},
   // 投稿详情：点缩略图全屏预览照片
+  // 预览投稿图片：优先用触发元素自带的 list（照片 / 近况配图各不相同），没有再回退到主照片列表
   previewSubPhoto(e) {
-    const photos = this.data.detail.photos || [];
-    if (!photos.length) return;
-    wx.previewImage({ urls: photos, current: e.currentTarget.dataset.src });
+    const list = e.currentTarget.dataset.list || this.data.detail.photos || [];
+    if (!list.length) return;
+    wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
   },
   // 投稿详情：试听投稿音频
   playSubVoice() {

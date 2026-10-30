@@ -6,7 +6,7 @@ const subs = db.collection('cat_submissions');
 const GENDER = ['公', '母', '未知'];
 const STER = ['已绝育', '未绝育', '未知'];
 const LIFE = ['在校', '毕业', '休学', '喵星'];
-const MAX = { name: 20, coat: 20, short: 30, note: 200, latest: 500, photos: 9, tag: 20, tags: 20 };
+const MAX = { name: 20, coat: 20, short: 30, note: 200, latest: 500, photos: 9, tag: 20, tags: 20, notePhotos: 3 };
 
 // ---------- 严格字段校验（公开接口，任何人可调用，必须服务端校验） ----------
 function isStr(v) { return typeof v === 'string'; }
@@ -39,10 +39,10 @@ function isRemote(p) {
   if (p.indexOf('wxfile://') === 0) return false;
   return /^https?:\/\//.test(p);
 }
-function takePhotos(v) {
+function takePhotos(v, max) {
   if (v === undefined || v === null) return [];
   if (!Array.isArray(v)) return null;
-  if (v.length > MAX.photos) return null;
+  if (v.length > (max || MAX.photos)) return null;
   for (let i = 0; i < v.length; i++) if (!isRemote(v[i])) return null;
   return v.slice();
 }
@@ -88,8 +88,11 @@ exports.main = async (event) => {
   if (d.gender !== undefined && !GENDER.includes(d.gender)) return { ok: false, msg: '性别枚举错误' };
   if (d.sterilizationStatus !== undefined && !STER.includes(d.sterilizationStatus)) return { ok: false, msg: '绝育枚举错误' };
   if (d.lifeStatus !== undefined && !LIFE.includes(d.lifeStatus)) return { ok: false, msg: '状态枚举错误' };
-  const photos = takePhotos(d.photos);
+  const photos = takePhotos(d.photos, MAX.photos);
   if (photos === null) return { ok: false, msg: '照片须为最多9项的云存储地址数组' };
+  // 近况配图：最多 3 张，同样必须是云存储地址
+  const latestPhotos = takePhotos(d.latestPhotos, MAX.notePhotos);
+  if (latestPhotos === null) return { ok: false, msg: '近况配图须为最多3项的云存储地址数组' };
   const voice = takeVoice(d.voice);
   if (voice === null) return { ok: false, msg: '音频须为 mp3 / wav 格式的云存储地址' };
 
@@ -105,6 +108,7 @@ exports.main = async (event) => {
     usualLocations: arrays.usualLocations,
     healthNotes,
     latestNote,
+    latestPhotos,
     lifeStatus: life,
     isAdoptable: !!d.isAdoptable && life === '在校',
     photos,

@@ -60,5 +60,11 @@ Page({
     });
     a.play();
     this.audio = a;
+  },
+  // 查看近况配图（时间线条目图 / 档案近况图共用）
+  previewPhotos(e) {
+    const list = e.currentTarget.dataset.list || [];
+    if (!list.length) return;
+    wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
   }
 });

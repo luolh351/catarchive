@@ -8,6 +8,9 @@
   background: var(--primary); color: #fff; text-align: center;
   padding: 20rpx 0; border-radius: 24rpx; font-size: 28rpx;
 }
+/* 近况时间线里的配图 */
+.tlimgs { display: flex; flex-wrap: wrap; margin-top: 14rpx; }
+.tlimg { width: 160rpx; height: 160rpx; border-radius: 16rpx; margin: 0 12rpx 12rpx 0; }
 .vempty {
   background: #F4F6FA; color: #97A0AA; text-align: center;
   padding: 20rpx 0; border-radius: 24rpx; font-size: 26rpx;

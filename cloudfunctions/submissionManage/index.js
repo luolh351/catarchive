@@ -9,7 +9,7 @@ const logs = db.collection('admin_audit_logs');
 const GENDER = ['公', '母', '未知'];
 const STER = ['已绝育', '未绝育', '未知'];
 const LIFE = ['在校', '毕业', '休学', '喵星'];
-const MAX = { name: 20, coat: 20, short: 30, note: 200, latest: 500, photos: 9, tag: 20, tags: 20 };
+const MAX = { name: 20, coat: 20, short: 30, note: 200, latest: 500, photos: 9, tag: 20, tags: 20, notePhotos: 3 };
 
 // ---------- 严格字段校验（云端不信任客户端；与 catManage / catSubmit 一致） ----------
 function isStr(v) { return typeof v === 'string'; }
@@ -42,10 +42,10 @@ function isRemote(p) {
   if (p.indexOf('wxfile://') === 0) return false;
   return /^https?:\/\//.test(p);
 }
-function takePhotos(v) {
+function takePhotos(v, max) {
   if (v === undefined || v === null) return [];
   if (!Array.isArray(v)) return null;               // 字符串形式的照片列表 → 拒绝
-  if (v.length > MAX.photos) return null;
+  if (v.length > (max || MAX.photos)) return null;
   for (let i = 0; i < v.length; i++) if (!isRemote(v[i])) return null; // 本地临时路径 → 拒绝
   return v.slice();
 }
@@ -91,7 +91,8 @@ function normalize(d, requireName) {
   if (d.sterilizationStatus !== undefined) { if (!STER.includes(d.sterilizationStatus)) return { err: '绝育枚举错误' }; out.sterilizationStatus = d.sterilizationStatus; }
   if (d.lifeStatus !== undefined) { if (!LIFE.includes(d.lifeStatus)) return { err: '状态枚举错误' }; out.lifeStatus = d.lifeStatus; }
   if (d.isAdoptable !== undefined) out.isAdoptable = !!d.isAdoptable;
-  if (d.photos !== undefined) { const v = takePhotos(d.photos); if (v === null) return { err: '照片须为最多9项的云存储地址数组（不接受本地临时路径）' }; out.photos = v; }
+  if (d.photos !== undefined) { const v = takePhotos(d.photos, MAX.photos); if (v === null) return { err: '照片须为最多9项的云存储地址数组（不接受本地临时路径）' }; out.photos = v; }
+  if (d.latestPhotos !== undefined) { const v = takePhotos(d.latestPhotos, MAX.notePhotos); if (v === null) return { err: '近况配图须为最多3项的云存储地址数组（不接受本地临时路径）' }; out.latestPhotos = v; }
   if (d.voice !== undefined) { const v = takeVoice(d.voice); if (v === null) return { err: '音频须为 mp3 / wav 格式的云存储地址' }; out.voice = v; }
   return { data: out };
 }
@@ -118,6 +119,7 @@ exports.main = async (event) => {
       healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
       personalityTags: s.personalityTags || [],   // 审核页要展示性格，与 mock 返回字段保持一致
       isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
+      latestPhotos: s.latestPhotos || [],   // 近况配图，管理台“查看”要能看到
       submitterOpenid: s.submitterOpenid || '', createdAt: s.createdAt
     }));
     return { ok: true, list };
@@ -138,7 +140,7 @@ exports.main = async (event) => {
     const life = nd.lifeStatus || '在校';
     const catData = Object.assign({
       aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '',
-      coatColor: '未知', gender: '未知', sterilizationStatus: '未知', photos: [], voice: ''
+      coatColor: '未知', gender: '未知', sterilizationStatus: '未知', photos: [], voice: '', latestPhotos: []
     }, nd, {
       lifeStatus: life,
       isAdoptable: !!nd.isAdoptable && life === '在校',

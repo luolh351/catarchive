@@ -55,6 +55,16 @@
 <view class="field">
   <view class="lab">最近情况</view>
   <input placeholder="当前近况摘要" value="{{form.latestNote}}" bindinput="onInput" data-field="latestNote" />
+  <view class="opts" style="margin-top:16rpx">
+    <view class="opt" bindtap="chooseNoteImage">＋ 近况配图（{{form.latestPhotos.length}}/3）</view>
+  </view>
+  <view class="imgs" wx:if="{{form.latestPhotos.length}}">
+    <view class="img" wx:for="{{form.latestPhotos}}" wx:key="*this">
+      <image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewNotePhoto" />
+      <text class="x" catchtap="removeNoteImage" data-i="{{index}}">×</text>
+    </view>
+  </view>
+  <view class="muted" style="font-size:24rpx;margin-top:8rpx">可附上猫咪近照，如受伤、生病或生崽的现场照片，方便管理员核对。</view>
 </view>
 <view class="field">
   <view class="lab">照片 / 叫声（可选）</view>

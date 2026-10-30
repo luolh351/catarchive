@@ -1,0 +1,6 @@
+.ta {
+  width: 100%; box-sizing: border-box; min-height: 220rpx;
+  background: #F4F6FA; border-radius: 20rpx; padding: 20rpx;
+  font-size: 28rpx; line-height: 1.7; color: #182A44;
+}
+.count { text-align: right; font-size: 24rpx; color: #97A0AA; margin-top: 10rpx; }

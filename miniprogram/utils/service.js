@@ -128,7 +128,11 @@ function attrsOf(c) {
 // 时间线派生（container 含 timeline 数组）
 function timelineOf(container) {
   const tl = (container && container.timeline) || [];
-  return tl.map(u => ({ t: u.t || (u.createdAt ? String(u.createdAt).slice(0, 10) : ''), c: u.c || u.content || '' }));
+  return tl.map(u => ({
+    t: u.t || (u.createdAt ? String(u.createdAt).slice(0, 10) : ''),
+    c: u.c || u.content || '',
+    photos: u.photos || []      // 近况配图（管理员补充近况时可带图）
+  }));
 }
 
 // ---------- 公开：列表 ----------
@@ -154,7 +158,8 @@ function getCat(id) {
       photos: c.photos || [], voice: c.voice || '', lifeStatus: c.lifeStatus,
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
-      healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || ''
+      healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
+      latestPhotos: c.latestPhotos || []
     };
     return Promise.resolve({ cat, attrs: attrsOf(c), timeline: timelineOf(c) });
   }
@@ -166,7 +171,8 @@ function getCat(id) {
       photos: c.photos || [], voice: c.voice || '', lifeStatus: c.lifeStatus,
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
-      healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || ''
+      healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
+      latestPhotos: c.latestPhotos || []
     };
     return { cat, attrs: attrsOf(c), timeline: timelineOf(res) };
   });
@@ -214,9 +220,11 @@ function uploadList(list) { return Promise.all((list || []).map(p => uploadOne(p
 function prepareMedia(data) {
   const d = Object.assign({}, data || {});
   if (!useCloud() || !wx.cloud || !wx.cloud.uploadFile) return Promise.resolve(d);
-  return Promise.all([ uploadList(d.photos), uploadOne(d.voice, 'mp3') ]).then(r => {
+  // latestPhotos（近况配图）同样要上传，否则会把本地临时路径写库
+  return Promise.all([ uploadList(d.photos), uploadOne(d.voice, 'mp3'), uploadList(d.latestPhotos) ]).then(r => {
     d.photos = r[0] || [];
     d.voice = r[1] || '';
+    if (d.latestPhotos !== undefined) d.latestPhotos = r[2] || [];
     return d;
   });
 }
@@ -285,18 +293,20 @@ function catManage(action, payload) {
 }
 
 // ---------- 管理员：新增近况 ----------
-function addUpdate(catId, content) {
+function addUpdate(catId, content, photos) {
   if (!useCloud()) {
     const cat = MOCK_CATS.find(x => x.id === catId);
     if (cat) {
       cat.latestNote = content;
       cat.timeline = cat.timeline || [];
-      cat.timeline.unshift({ t: '刚刚', c: content }); // 补充近况＝新增时间线条目
+      cat.timeline.unshift({ t: '刚刚', c: content, photos: photos || [] }); // 补充近况＝新增时间线条目
       saveStore(STORE_CATS, MOCK_CATS);
     }
     return mockOk();
   }
-  return call('updateCreate', { catId, content });
+  // 云端：近况配图先上传云存储，再连同正文写入
+  return prepareMedia({ photos: photos || [] })
+    .then(m => call('updateCreate', { catId, content, photos: (m && m.photos) || [] }));
 }
 
 // ---------- 管理员：名单（mock） ----------
@@ -375,6 +385,7 @@ function listSubmissions() {
       healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
       personalityTags: s.personalityTags || [],
       isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
+      latestPhotos: s.latestPhotos || [],
       submitterOpenid: s.submitterOpenid || '', createdAt: s.createdAt
     }));
     return Promise.resolve(list);
@@ -391,7 +402,7 @@ function approveSubmission(id) {
       coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
       sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
       aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
-      photos: d.photos || [], voice: d.voice || '', published: true,
+      photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
       bg: pickBg(d.coatColor), photoText: (d.name || '猫')[0] || '猫',
       sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),
       timeline: d.latestNote ? [ { t: '投稿审核通过', c: d.latestNote } ] : []

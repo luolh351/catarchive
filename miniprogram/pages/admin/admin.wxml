@@ -44,6 +44,10 @@
       <view class="vhead"><text>照片（{{detail.photos.length}}）</text><text class="copy" catchtap="saveSubPhotos">保存到相册</text></view>
       <view class="thumbs"><image wx:for="{{detail.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" catchtap="previewSubPhoto" /></view>
     </view>
+    <view class="kv col" wx:if="{{detail.latestPhotos.length}}">
+      <view class="vhead"><text>近况配图（{{detail.latestPhotos.length}}）</text></view>
+      <view class="thumbs"><image wx:for="{{detail.latestPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" data-list="{{detail.latestPhotos}}" catchtap="previewSubPhoto" /></view>
+    </view>
     <view class="kv"><text>叫声</text><view class="vw">
       <text wx:if="{{detail.voice}}" class="val pl" bindtap="playSubVoice">{{subPlaying ? '播放中 · 点击停止' : '▶ 试听'}}</text>
       <text wx:else class="val">无</text>

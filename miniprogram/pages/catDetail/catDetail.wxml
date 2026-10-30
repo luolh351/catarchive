@@ -32,11 +32,23 @@
     </view>
   </view>
 
+  <block wx:if="{{cat.latestPhotos.length}}">
+    <view class="section-t">近况配图</view>
+    <view class="gallery">
+      <image wx:for="{{cat.latestPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="gimg"
+             data-src="{{item}}" data-list="{{cat.latestPhotos}}" bindtap="previewPhotos" />
+    </view>
+  </block>
+
   <view class="section-t">近况时间线</view>
   <view class="tl">
     <view class="it" wx:for="{{timeline}}" wx:key="t">
       <view class="t">{{item.t}}</view>
       <view class="c">{{item.c}}</view>
+      <view class="tlimgs" wx:if="{{item.photos.length}}">
+        <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{p}}" mode="aspectFill" class="tlimg"
+               data-src="{{p}}" data-list="{{item.photos}}" bindtap="previewPhotos" />
+      </view>
     </view>
   </view>
 </block>
