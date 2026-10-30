@@ -15,7 +15,7 @@ Page({
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
-      more: ''      // 「更多」栏目：一整段自由补充资料
+      more: '',      // 「更多」栏目：一整段自由补充资料
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校'
     }
   },
