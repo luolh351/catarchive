@@ -1,5 +1,6 @@
 // 管理工作台：进入即校验身份（非管理员跳 denied）；概览/列表来自服务层；操作接 service 真实执行
 const service = require('../../utils/service');
+const audioFile = require('../../utils/audio-file');
 
 Page({
   data: {
@@ -310,25 +311,73 @@ Page({
   // 投稿音频：转发给微信好友。
   // wx.shareFileMessage 只接受本地文件路径，cloud:// 需先下载为临时文件；
   // 该接口在开发者工具模拟器上不可用，需真机预览。
-  shareSubVoice() {
-    const voice = this.data.detail.voice;
-    if (!voice) return;
-    if (!wx.shareFileMessage) { wx.showToast({ title: '请用手机端转发', icon: 'none' }); return; }
-    const name = (this.data.detail.name || '猫咪').replace(/[\\/:*?"<>|]/g, '');
-    const m = String(voice).match(/\.(mp3|wav)$/i);
-    const fileName = name + '的叫声.' + (m ? m[1].toLowerCase() : 'mp3');
-    wx.showLoading({ title: '准备中' });
-    this.resolveLocal(voice).then(local => {
+  shareSubVoice() { return this.handleVoiceFile('share'); },
+  downloadSubVoice() { return this.handleVoiceFile('save'); },
+  async handleVoiceFile(action) {
+    const detail = this.data.detail;
+    if (!detail || !detail.voice || this.voiceFileBusy) return;
+    this.voiceFileBusy = true;
+    let file;
+    try {
+      wx.showLoading({ title: '准备音频', mask: true });
+      // 同一文件重试时复用，避免重复下载、堆积本地文件。
+      const cached = this.voiceFileCache;
+      if (cached && cached.source === detail.voice && cached.name === detail.name) {
+        try {
+          await audioFile.invoke(wx.getFileSystemManager(), 'access', { path: cached.file.path });
+          file = cached.file;
+        } catch (e) { /* 文件被系统清理后重新准备 */ }
+      }
+      if (!file) {
+        file = await audioFile.prepare(wx, detail.voice, detail.name);
+        this.voiceFileCache = { source: detail.voice, name: detail.name, file };
+      }
       wx.hideLoading();
-      wx.shareFileMessage({
-        filePath: local,
-        fileName,
-        fail: e => {
-          console.warn('[share] 转发音频失败:', e);
-          wx.showToast({ title: '转发失败', icon: 'none' });
-        }
-      });
-    }).catch(() => { wx.hideLoading(); wx.showToast({ title: '音频加载失败', icon: 'none' }); });
+      if (action === 'save') { await this.saveVoiceFile(file); return; }
+      try {
+        await audioFile.invoke(wx, 'shareFileMessage', { filePath: file.path, fileName: file.fileName });
+      } catch (e) {
+        if (audioFile.isCancelled(e)) return;
+        console.warn('[audio] share failed', e);
+        const result = await audioFile.invoke(wx, 'showModal', {
+          title: '暂时无法转发',
+          content: '可先保存音频，稍后重试转发。\n原因：' + this.voiceError(e),
+          confirmText: '保存音频', cancelText: '关闭'
+        });
+        if (result.confirm) await this.saveVoiceFile(file);
+      }
+    } catch (e) {
+      wx.hideLoading();
+      if (!audioFile.isCancelled(e)) {
+        console.warn('[audio] prepare/save failed', e);
+        wx.showModal({ title: '音频操作失败', content: this.voiceError(e), showCancel: false });
+      }
+    } finally { this.voiceFileBusy = false; }
+  },
+  voiceError(e) {
+    return String((e && (e.errMsg || e.message)) || '请检查网络、音频是否仍存在以及云存储读取权限后重试').slice(0, 240);
+  },
+  async saveVoiceFile(file) {
+    const device = wx.getDeviceInfo ? wx.getDeviceInfo() : {};
+    if (['windows', 'mac'].includes(device.platform) && typeof wx.saveFileToDisk === 'function') {
+      try {
+        await audioFile.invoke(wx, 'saveFileToDisk', { filePath: file.path });
+        wx.showToast({ title: '已保存到磁盘', icon: 'success' });
+        return;
+      } catch (e) {
+        if (audioFile.isCancelled(e)) return;
+        console.warn('[audio] disk save failed', e);
+      }
+    }
+    // 手机端沙箱文件不等于系统“下载”目录，不提示不存在的相册/文件授权。
+    const stored = wx.getStorageSync('saved_cat_audio') || [];
+    const list = Array.isArray(stored) ? stored : [];
+    wx.setStorageSync('saved_cat_audio', [file].concat(list.filter(f => f.path !== file.path)));
+    wx.showModal({
+      title: '已保存到小程序本地',
+      content: '音频已缓存在小程序本地，可稍后重试转发。这不是手机文件管理器的下载目录；需要导出时，请重试转发或使用电脑微信保存到磁盘。',
+      showCancel: false
+    });
   },
   rejectSub(e) {
     const id = e.currentTarget.dataset.id;

@@ -48,6 +48,7 @@
       <text wx:if="{{detail.voice}}" class="val pl" bindtap="playSubVoice">{{subPlaying ? '播放中 · 点击停止' : '▶ 试听'}}</text>
       <text wx:else class="val">无</text>
       <text wx:if="{{detail.voice}}" class="copy" catchtap="shareSubVoice">转发好友</text>
+      <text wx:if="{{detail.voice}}" class="copy" catchtap="downloadSubVoice">保存音频</text>
     </view></view>
     <view class="kv"><text>提交人</text><view class="vw"><text class="val">{{detail.submitter}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.submitter}}">复制</text></view></view>
     <view class="kv"><text>提交时间</text><view class="vw"><text class="val">{{detail.createdAtText}}</text></view></view>
