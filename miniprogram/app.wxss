@@ -165,6 +165,7 @@ page {
 .sheet .vhead > text:first-child { color: var(--sub); }
 .sheet .vw { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
 .sheet .vw .val { flex: 1; color: var(--fg); word-break: break-all; }
+.sheet .vw .val.dim { color: var(--sub); }   /* 空值占位，弱化显示 */
 .sheet .copy { flex: none; color: var(--primary); font-size: 22rpx; border: 1rpx solid var(--primary); border-radius: 14rpx; padding: 4rpx 16rpx; }
 .sheet .btns { display: flex; gap: 20rpx; margin-top: 28rpx; }
 .sheet .btns .mini { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 20rpx; }

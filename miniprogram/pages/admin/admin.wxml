@@ -48,6 +48,11 @@
       <view class="vhead"><text>近况配图（{{detail.latestPhotos.length}}）</text><text class="copy" catchtap="saveNotePhotos">保存到相册</text></view>
       <view class="thumbs"><image wx:for="{{detail.latestPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" data-list="{{detail.latestPhotos}}" catchtap="previewSubPhoto" /></view>
     </view>
+    <!-- 明确显示“无”，用于区分：历史投稿本来就没附图 vs 新功能没生效 -->
+    <view class="kv" wx:else>
+      <text>近况配图</text>
+      <view class="vw"><text class="val dim">无（该投稿未附图）</text></view>
+    </view>
     <view class="kv"><text>叫声</text><view class="vw">
       <text wx:if="{{detail.voice}}" class="val pl" bindtap="playSubVoice">{{subPlaying ? '播放中 · 点击停止' : '▶ 试听'}}</text>
       <text wx:else class="val">无</text>
