@@ -142,14 +142,9 @@ exports.main = async (event) => {
       return { ok: false, msg: '档案不存在' };
     }
     const exLife = (ex.data && ex.data.lifeStatus) || '在校';
-    const patch = { updatedAt: db.serverDate(), operatorOpenid: OPENID };
-    // 写入字段白名单：新增字段必须在这里登记，否则即便通过 normalize 也会被静默丢弃
-    const keys = ['name', 'aliases', 'coatColor', 'gender', 'sterilizationStatus', 'sterilizedAt',
-      'personalityTags', 'usualLocations', 'healthNotes', 'latestNote', 'lifeStatus', 'photos', 'voice',
-      'latestPhotos', 'more'];
-    for (let i = 0; i < keys.length; i++) {
-      if (d[keys[i]] !== undefined) patch[keys[i]] = d[keys[i]];
-    }
+    // 直接写入 normalize 校验通过的所有字段：不再额外维护一份字段白名单，
+    // 否则新增字段时容易只改了校验（normalize）却没登记到这里，导致字段被静默丢弃
+    const patch = Object.assign({ updatedAt: db.serverDate(), operatorOpenid: OPENID }, d);
     const nextLife = d.lifeStatus !== undefined ? d.lifeStatus : exLife;
     if (d.isAdoptable !== undefined) patch.isAdoptable = !!d.isAdoptable && nextLife === '在校';
     // 统一业务规则：去向一旦不是“在校”，无论是否传 isAdoptable 都取消待领养
