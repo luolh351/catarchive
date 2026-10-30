@@ -85,13 +85,9 @@ exports.main = async (event) => {
   if (healthNotes === null) return { ok: false, msg: '健康状况≤200字' };
   const latestNote = takeStr(d.latestNote, MAX.latest);
   if (latestNote === null) return { ok: false, msg: '最近情况≤500字' };
-  // 「更多」栏目：父母 / 子女 / 独特特点，≤200 字
-  const parents = takeStr(d.parents, MAX.note);
-  if (parents === null) return { ok: false, msg: '父母≤200字' };
-  const children = takeStr(d.children, MAX.note);
-  if (children === null) return { ok: false, msg: '子女≤200字' };
-  const traits = takeStr(d.traits, MAX.note);
-  if (traits === null) return { ok: false, msg: '独特特点≤200字' };
+  // 「更多」栏目：一整段自由补充资料，≤500 字
+  const more = takeStr(d.more, MAX.latest);
+  if (more === null) return { ok: false, msg: '更多≤500字' };
   if (d.gender !== undefined && !GENDER.includes(d.gender)) return { ok: false, msg: '性别枚举错误' };
   if (d.sterilizationStatus !== undefined && !STER.includes(d.sterilizationStatus)) return { ok: false, msg: '绝育枚举错误' };
   if (d.lifeStatus !== undefined && !LIFE.includes(d.lifeStatus)) return { ok: false, msg: '状态枚举错误' };
@@ -116,7 +112,7 @@ exports.main = async (event) => {
     healthNotes,
     latestNote,
     latestPhotos,
-    parents, children, traits,
+    more,
     lifeStatus: life,
     isAdoptable: !!d.isAdoptable && life === '在校',
     photos,

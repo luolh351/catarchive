@@ -86,10 +86,8 @@ function normalize(d, requireName) {
   if (d.sterilizedAt !== undefined) { const v = takeStr(d.sterilizedAt, MAX.short); if (v === null) return { err: '绝育时间格式错误' }; out.sterilizedAt = v; }
   if (d.healthNotes !== undefined) { const v = takeStr(d.healthNotes, MAX.note); if (v === null) return { err: '健康状况≤200字' }; out.healthNotes = v; }
   if (d.latestNote !== undefined) { const v = takeStr(d.latestNote, MAX.latest); if (v === null) return { err: '最近情况≤500字' }; out.latestNote = v; }
-  // 「更多」栏目：父母 / 子女 / 独特特点
-  if (d.parents !== undefined) { const v = takeStr(d.parents, MAX.note); if (v === null) return { err: '父母≤200字' }; out.parents = v; }
-  if (d.children !== undefined) { const v = takeStr(d.children, MAX.note); if (v === null) return { err: '子女≤200字' }; out.children = v; }
-  if (d.traits !== undefined) { const v = takeStr(d.traits, MAX.note); if (v === null) return { err: '独特特点≤200字' }; out.traits = v; }
+  // 「更多」栏目：一整段自由补充资料，≤500 字
+  if (d.more !== undefined) { const v = takeStr(d.more, MAX.latest); if (v === null) return { err: '更多≤500字' }; out.more = v; }
   if (d.coatColor !== undefined) { const v = takeStr(d.coatColor, MAX.coat); if (v === null) return { err: '毛色格式错误' }; out.coatColor = v || '未知'; }
   if (d.gender !== undefined) { if (!GENDER.includes(d.gender)) return { err: '性别枚举错误' }; out.gender = d.gender; }
   if (d.sterilizationStatus !== undefined) { if (!STER.includes(d.sterilizationStatus)) return { err: '绝育枚举错误' }; out.sterilizationStatus = d.sterilizationStatus; }
@@ -121,7 +119,7 @@ exports.main = async (event) => {
       id: s._id, name: s.name, aliases: s.aliases || [], coatColor: s.coatColor, gender: s.gender,
       sterilizationStatus: s.sterilizationStatus, sterilizedAt: s.sterilizedAt || '', usualLocations: s.usualLocations || [],
       healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
-      parents: s.parents || '', children: s.children || '', traits: s.traits || '',
+      more: s.more || '',
       personalityTags: s.personalityTags || [],   // 审核页要展示性格，与 mock 返回字段保持一致
       isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
       latestPhotos: s.latestPhotos || [],   // 近况配图，管理台“查看”要能看到
@@ -146,7 +144,7 @@ exports.main = async (event) => {
     const catData = Object.assign({
       aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '',
       coatColor: '未知', gender: '未知', sterilizationStatus: '未知', photos: [], voice: '', latestPhotos: [],
-      parents: '', children: '', traits: ''
+      more: ''
     }, nd, {
       lifeStatus: life,
       isAdoptable: !!nd.isAdoptable && life === '在校',

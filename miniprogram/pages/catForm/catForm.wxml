@@ -55,16 +55,8 @@
   <textarea class="ta" auto-height placeholder="当前近况摘要（改这里不会重复追加时间线）" value="{{form.latestNote}}" bindinput="onInput" data-field="latestNote" maxlength="500" />
 </view>
 <view class="field">
-  <view class="lab">父母</view>
-  <textarea class="ta" auto-height placeholder="如：妈妈花花，爸爸未知（可空）" value="{{form.parents}}" bindinput="onInput" data-field="parents" maxlength="200" />
-</view>
-<view class="field">
-  <view class="lab">子女</view>
-  <textarea class="ta" auto-height placeholder="如：2024 年生过一窝，已全部送养（可空）" value="{{form.children}}" bindinput="onInput" data-field="children" maxlength="200" />
-</view>
-<view class="field">
-  <view class="lab">独特特点</view>
-  <textarea class="ta" auto-height placeholder="如：左耳缺一角、尾巴短一截、特别亲人（可空）" value="{{form.traits}}" bindinput="onInput" data-field="traits" maxlength="200" />
+  <view class="lab">更多（可选）</view>
+  <textarea class="ta" auto-height placeholder="补充资料，如：妈妈花花，爸爸未知；2024 年生过一窝；左耳缺一角、特别亲人" value="{{form.more}}" bindinput="onInput" data-field="more" maxlength="500" />
 </view>
 <view class="field">
   <view class="lab">照片 / 叫声上传</view>

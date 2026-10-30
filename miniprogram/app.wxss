@@ -82,9 +82,12 @@ page {
 .attr { background: var(--card); border-radius: 28rpx; padding: 20rpx 24rpx; box-shadow: 0 6rpx 20rpx rgba(47,111,219,.06); }
 .attr .k { font-size: 22rpx; color: var(--sub); }
 .attr .v { font-size: 28rpx; color: var(--fg); margin-top: 4rpx; }
-/* 更多栏目：单列 + 保留换行（父母 / 子女 / 独特特点可能是多行文本） */
-.more-list { display: grid; grid-template-columns: 1fr; gap: 20rpx; margin: 16rpx 0 8rpx; }
-.more-list .attr .v { white-space: pre-wrap; line-height: 1.7; }
+/* 更多栏目：一整段自由文本，保留换行 */
+.morebox {
+  background: var(--card); border-radius: 28rpx; padding: 20rpx 28rpx;
+  font-size: 28rpx; line-height: 1.7; color: var(--fg); white-space: pre-wrap;
+  box-shadow: 0 6rpx 20rpx rgba(47,111,219,.06);
+}
 /* 时间线正文保留换行（补充近况用多行文本框输入） */
 .tl .it .c { white-space: pre-wrap; line-height: 1.7; }
 .section-t { font-size: 28rpx; font-weight: 600; margin: 28rpx 4rpx 16rpx; }

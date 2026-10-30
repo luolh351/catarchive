@@ -81,10 +81,8 @@ function normalize(d, requireName) {
   }
   if (d.sterilizedAt !== undefined) { const v = takeStr(d.sterilizedAt, MAX.short); if (v === null) return { err: '绝育时间格式错误' }; out.sterilizedAt = v; }
   if (d.healthNotes !== undefined) { const v = takeStr(d.healthNotes, MAX.note); if (v === null) return { err: '健康状况≤200字' }; out.healthNotes = v; }
-  // 「更多」栏目：父母 / 子女 / 独特特点，均为 ≤200 字的多行文本
-  if (d.parents !== undefined) { const v = takeStr(d.parents, MAX.note); if (v === null) return { err: '父母≤200字' }; out.parents = v; }
-  if (d.children !== undefined) { const v = takeStr(d.children, MAX.note); if (v === null) return { err: '子女≤200字' }; out.children = v; }
-  if (d.traits !== undefined) { const v = takeStr(d.traits, MAX.note); if (v === null) return { err: '独特特点≤200字' }; out.traits = v; }
+  // 「更多」栏目：一整段自由补充资料（父母 / 子女 / 独特特点等），≤500 字
+  if (d.more !== undefined) { const v = takeStr(d.more, MAX.latest); if (v === null) return { err: '更多≤500字' }; out.more = v; }
   if (d.latestNote !== undefined) { const v = takeStr(d.latestNote, MAX.latest); if (v === null) return { err: '最近情况≤500字' }; out.latestNote = v; }
   if (d.coatColor !== undefined) { const v = takeStr(d.coatColor, MAX.coat); if (v === null) return { err: '毛色格式错误' }; out.coatColor = v || '未知'; }
   if (d.gender !== undefined) { if (!GENDER.includes(d.gender)) return { err: '性别枚举错误' }; out.gender = d.gender; }

@@ -32,15 +32,10 @@
     </view>
   </view>
 
-  <!-- 更多：父母 / 子女 / 独特特点等补充资料（全为空时不显示） -->
-  <block wx:if="{{more.length}}">
+  <!-- 更多：一整段自由补充资料（父母、子女、独特特点等自行组织；为空时不显示） -->
+  <block wx:if="{{more}}">
     <view class="section-t">更多</view>
-    <view class="more-list">
-      <view class="attr" wx:for="{{more}}" wx:key="k">
-        <view class="k">{{item.k}}</view>
-        <view class="v">{{item.v}}</view>
-      </view>
-    </view>
+    <view class="morebox">{{more}}</view>
   </block>
 
   <block wx:if="{{cat.latestPhotos.length}}">
