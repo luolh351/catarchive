@@ -15,6 +15,7 @@ Page({
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
+      parents: '', children: '', traits: '',   // 「更多」栏目：父母 / 子女 / 独特特点
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校'
     }
   },
@@ -44,6 +45,7 @@ Page({
           usualLocations: (c.usualLocations || []).join('、'),
           personalityTags: (c.personalityTags || []).join('、'), healthNotes: c.healthNotes || '',
           latestNote: c.latestNote || '',
+          parents: c.parents || '', children: c.children || '', traits: c.traits || '',
           photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
         }
       });
@@ -201,6 +203,7 @@ Page({
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
       latestNote: f.latestNote, photos: f.photos, voice: f.voice,
+      parents: f.parents || '', children: f.children || '', traits: f.traits || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
       lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校'
     };

@@ -189,6 +189,7 @@ Page({
         id: s.id, name: s.name, aliasesText: arr2str(s.aliases) || '—', coatColor: s.coatColor || '—',
         gender: s.gender || '—', sterilizationStatus: s.sterilizationStatus || '—', sterilizedAt: s.sterilizedAt || '',
         usualText: arr2str(s.usualLocations) || '—', latestNote: s.latestNote || '—', healthNotes: s.healthNotes || '—',
+        parents: s.parents || '', children: s.children || '', traits: s.traits || '',
         personalityText: arr2str(s.personalityTags) || '—',
         isAdoptable: !!s.isAdoptable, lifeStatus: s.lifeStatus || '—',
         photos: Array.isArray(s.photos) ? s.photos : [], voice: s.voice || '',

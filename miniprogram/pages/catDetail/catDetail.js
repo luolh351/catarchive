@@ -22,7 +22,7 @@ Page({
   load(id) {
     service.getCat(id).then(res => {
       if (!res.cat) { this.setData({ notFound: true }); return; }
-      this.setData({ cat: res.cat, attrs: res.attrs || [], timeline: res.timeline || [] });
+      this.setData({ cat: res.cat, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
     }).catch(() => { this.setData({ notFound: true }); wx.showToast({ title: '加载失败', icon: 'none' }); });
   },
   // 播放/停止猫叫声（本地文件直接播；云存储 cloud:// 需先下载为临时文件）

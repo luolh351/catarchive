@@ -53,6 +53,18 @@
       <text>近况配图</text>
       <view class="vw"><text class="val dim">无（该投稿未附图）</text></view>
     </view>
+    <view class="kv col" wx:if="{{detail.parents}}">
+      <view class="vhead"><text>父母</text></view>
+      <view class="vtext">{{detail.parents}}</view>
+    </view>
+    <view class="kv col" wx:if="{{detail.children}}">
+      <view class="vhead"><text>子女</text></view>
+      <view class="vtext">{{detail.children}}</view>
+    </view>
+    <view class="kv col" wx:if="{{detail.traits}}">
+      <view class="vhead"><text>独特特点</text></view>
+      <view class="vtext">{{detail.traits}}</view>
+    </view>
     <view class="kv"><text>叫声</text><view class="vw">
       <text wx:if="{{detail.voice}}" class="val pl" bindtap="playSubVoice">{{subPlaying ? '播放中 · 点击停止' : '▶ 试听'}}</text>
       <text wx:else class="val">无</text>

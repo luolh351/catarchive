@@ -32,6 +32,17 @@
     </view>
   </view>
 
+  <!-- 更多：父母 / 子女 / 独特特点等补充资料（全为空时不显示） -->
+  <block wx:if="{{more.length}}">
+    <view class="section-t">更多</view>
+    <view class="more-list">
+      <view class="attr" wx:for="{{more}}" wx:key="k">
+        <view class="k">{{item.k}}</view>
+        <view class="v">{{item.v}}</view>
+      </view>
+    </view>
+  </block>
+
   <block wx:if="{{cat.latestPhotos.length}}">
     <view class="section-t">近况配图</view>
     <view class="gallery">

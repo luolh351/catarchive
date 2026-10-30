@@ -16,7 +16,8 @@ Page({
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校',
-      latestPhotos: []   // 「最近情况」的配图，最多 MAX_NOTE_PHOTOS 张
+      latestPhotos: [],   // 「最近情况」的配图，最多 MAX_NOTE_PHOTOS 张
+      parents: '', children: '', traits: ''   // 「更多」栏目：父母 / 子女 / 独特特点
     }
   },
   onUnload() {
@@ -179,6 +180,7 @@ Page({
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
       latestNote: f.latestNote, photos: f.photos, voice: f.voice, latestPhotos: f.latestPhotos || [],
+      parents: f.parents || '', children: f.children || '', traits: f.traits || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
       lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校'
     };

@@ -82,6 +82,11 @@ page {
 .attr { background: var(--card); border-radius: 28rpx; padding: 20rpx 24rpx; box-shadow: 0 6rpx 20rpx rgba(47,111,219,.06); }
 .attr .k { font-size: 22rpx; color: var(--sub); }
 .attr .v { font-size: 28rpx; color: var(--fg); margin-top: 4rpx; }
+/* 更多栏目：单列 + 保留换行（父母 / 子女 / 独特特点可能是多行文本） */
+.more-list { display: grid; grid-template-columns: 1fr; gap: 20rpx; margin: 16rpx 0 8rpx; }
+.more-list .attr .v { white-space: pre-wrap; line-height: 1.7; }
+/* 时间线正文保留换行（补充近况用多行文本框输入） */
+.tl .it .c { white-space: pre-wrap; line-height: 1.7; }
 .section-t { font-size: 28rpx; font-weight: 600; margin: 28rpx 4rpx 16rpx; }
 .tl { background: var(--card); border-radius: 28rpx; padding: 20rpx 28rpx; box-shadow: 0 6rpx 20rpx rgba(47,111,219,.06); }
 .tl .it { padding: 16rpx 0; border-bottom: 1px solid var(--line); }
@@ -153,6 +158,14 @@ page {
 .retry { background: var(--primary); color: #fff; padding: 18rpx 36rpx; border-radius: 24rpx; font-size: 26rpx; }
 
 .muted { color: var(--sub); font-size: 24rpx; }
+/* 可伸缩多行文本框：auto-height 随内容自动增高，不设固定高度；
+   min-height 只是初始一行多的高度，输入越多框越高 */
+.ta {
+  width: 100%; box-sizing: border-box; min-height: 88rpx;
+  background: var(--tagBg); border-radius: 20rpx; padding: 20rpx;
+  font-size: 28rpx; line-height: 1.7; color: var(--fg);
+}
+.count { text-align: right; font-size: 24rpx; color: var(--sub); margin-top: 10rpx; }
 
 /* 投稿详情弹层（管理台） */
 .mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; z-index: 100; }
@@ -166,6 +179,7 @@ page {
 .sheet .vw { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
 .sheet .vw .val { flex: 1; color: var(--fg); word-break: break-all; }
 .sheet .vw .val.dim { color: var(--sub); }   /* 空值占位，弱化显示 */
+.sheet .vtext { font-size: 26rpx; color: var(--fg); line-height: 1.7; white-space: pre-wrap; }
 .sheet .copy { flex: none; color: var(--primary); font-size: 22rpx; border: 1rpx solid var(--primary); border-radius: 14rpx; padding: 4rpx 16rpx; }
 .sheet .btns { display: flex; gap: 20rpx; margin-top: 28rpx; }
 .sheet .btns .mini { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 20rpx; }

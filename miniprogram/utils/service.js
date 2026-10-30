@@ -121,9 +121,17 @@ function attrsOf(c) {
     { k: '绝育时间', v: c.sterilizedAt || '—' },
     { k: '性格', v: (Array.isArray(c.personalityTags) ? c.personalityTags.join('、') : (c.personalityTags || '')) || '—' },
     { k: '常出没', v: (Array.isArray(c.usualLocations) ? c.usualLocations.join('、') : (c.usualLocations || '')) || '—' },
-    { k: '状况', v: c.healthNotes || '—' },
-    { k: '最近情况', v: c.latestNote || '—' }
+    { k: '状况', v: c.healthNotes || '—' }
+    // 「最近情况」已移除：与近况时间线重复（补充近况会同时写 latestNote 和时间线）
   ];
+}
+// 「更多」栏目派生：父母 / 子女 / 独特特点；全空时返回空数组，详情页不显示该区块
+function moreOf(c) {
+  return [
+    { k: '父母', v: c.parents || '' },
+    { k: '子女', v: c.children || '' },
+    { k: '独特特点', v: c.traits || '' }
+  ].filter(x => String(x.v || '').trim());
 }
 // 时间线派生（container 含 timeline 数组）
 function timelineOf(container) {
@@ -161,7 +169,7 @@ function getCat(id) {
       healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
       latestPhotos: c.latestPhotos || []
     };
-    return Promise.resolve({ cat, attrs: attrsOf(c), timeline: timelineOf(c) });
+    return Promise.resolve({ cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(c) });
   }
   return call('catDetail', { id }).then(res => {
     if (!res || !res.cat) return { cat: null, attrs: [], timeline: [] };
@@ -174,7 +182,7 @@ function getCat(id) {
       healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
       latestPhotos: c.latestPhotos || []
     };
-    return { cat, attrs: attrsOf(c), timeline: timelineOf(res) };
+    return { cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(res) };
   });
 }
 
@@ -386,6 +394,7 @@ function listSubmissions() {
       personalityTags: s.personalityTags || [],
       isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
       latestPhotos: s.latestPhotos || [],
+      parents: s.parents || '', children: s.children || '', traits: s.traits || '',
       submitterOpenid: s.submitterOpenid || '', createdAt: s.createdAt
     }));
     return Promise.resolve(list);
@@ -403,6 +412,7 @@ function approveSubmission(id) {
       sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
       aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
       photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
+      parents: d.parents || '', children: d.children || '', traits: d.traits || '',
       bg: pickBg(d.coatColor), photoText: (d.name || '猫')[0] || '猫',
       sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),
       timeline: d.latestNote ? [ { t: '投稿审核通过', c: d.latestNote } ] : []

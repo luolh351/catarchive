@@ -1,6 +1,6 @@
 <view class="field">
   <view class="lab"><text class="req">*</text> 近况内容</view>
-  <textarea class="ta" placeholder="如：今天在食堂附近见到，精神状态良好，右耳有缺口" value="{{content}}" bindinput="onInput" maxlength="500" />
+  <textarea class="ta" auto-height placeholder="如：今天在食堂附近见到，精神状态良好，右耳有缺口" value="{{content}}" bindinput="onInput" maxlength="500" />
   <view class="count">{{content.length}}/500</view>
 </view>
 
