@@ -1,4 +1,4 @@
-<view class="muted" style="padding:0 4rpx 16rpx;">只有「名字」必填，其余资料、照片和叫声都可选填。提交后进入审核，采纳后才会公开。</view>
+<view class="muted" style="padding:0 4rpx 16rpx;">只有「名字」必填，其余资料、照片和叫声都可选填。提交后供管理员核对并整理收录。</view>
 
 <view class="field">
   <view class="lab"><text class="req">*</text> 名字</view>

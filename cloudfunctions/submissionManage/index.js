@@ -1,10 +1,8 @@
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
-const cats = db.collection('cats');
 const subs = db.collection('cat_submissions');
 const admins = db.collection('admin_users');
-const logs = db.collection('admin_audit_logs');
 
 const GENDER = ['公', '母', '未知'];
 const STER = ['已绝育', '未绝育', '未知'];
@@ -161,21 +159,27 @@ exports.main = async (event) => {
         if (!cur.data || cur.data.status !== 'pending') { reason = 'DONE'; throw new Error('tx_abort'); }
         await tx.collection('cats').add({ data: Object.assign({ _id: newId }, catData) });
         await tx.collection('cat_submissions').doc(id).update({ data: { status: 'approved', approvedCatId: newId } });
+        await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'subApprove', target: id, detail: catData.name, createdAt: now } });
       });
     } catch (e) {
       if (reason === 'DONE') return { ok: false, msg: '该投稿已被处理，未重复建档' };
       return { ok: false, msg: '采纳失败（已回滚）：' + ((e && e.message) || '未知错误') };
     }
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'subApprove', target: id, detail: catData.name, createdAt: db.serverDate() } });
     return { ok: true, id: newId };
   }
 
   if (action === 'reject') {
     const id = event.id;
     if (!id) return { ok: false, msg: 'missing id' };
-    await subs.doc(id).update({ data: { status: 'rejected' } });
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'subReject', target: id, createdAt: db.serverDate() } });
-    return { ok: true };
+    try {
+      await db.runTransaction(async tx => {
+        const current = await tx.collection('cat_submissions').doc(id).get();
+        if (!current.data || current.data.status !== 'pending') throw new Error('投稿不存在或已处理');
+        await tx.collection('cat_submissions').doc(id).update({ data: { status: 'rejected' } });
+        await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'subReject', target: id, createdAt: db.serverDate() } });
+      });
+      return { ok: true };
+    } catch (e) { return { ok: false, msg: '忽略失败：' + ((e && e.message) || '请重试') }; }
   }
 
   return { ok: false, msg: '未知 action' };

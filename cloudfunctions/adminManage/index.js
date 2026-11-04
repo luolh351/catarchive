@@ -2,7 +2,6 @@ const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const admins = db.collection('admin_users');
-const logs = db.collection('admin_audit_logs');
 const apps = db.collection('admin_applications');
 
 // 仅超级管理员：add / remove / transfer（转让用事务保证原子，避免并发产生多个超级管理员）
@@ -14,15 +13,28 @@ exports.main = async (event) => {
   }
   const action = event && event.action;
   const now = db.serverDate();
+  // 所有超管写操作都与转让竞争同一身份文档，防止撤权后继续使用过期授权。
+  async function manage(work) {
+    try {
+      await db.runTransaction(async tx => {
+        const cur = await tx.collection('admin_users').doc(me.data[0]._id).get();
+        if (!cur.data || cur.data.role !== 'superadmin') throw new Error('仅超级管理员可操作');
+        await tx.collection('admin_users').doc(me.data[0]._id).update({ data: { managedAt: now } });
+        await work(tx);
+      });
+      return { ok: true };
+    } catch (e) { return { ok: false, msg: '操作失败：' + ((e && e.message) || '请重试') }; }
+  }
 
   if (action === 'add') {
     const { openid, realName, major, className, dorm, note } = event;
     if (!openid) return { ok: false, msg: '缺少 openid' };
     const exist = await admins.where({ openid }).get();
     if (exist.data && exist.data.length) return { ok: false, msg: '已是管理员' };
-    await admins.add({ data: { openid, role: 'editor', realName: realName || '', major: major || '', className: className || '', dorm: dorm || '', note: note || '', createdAt: now, createdBy: OPENID } });
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'adminAdd', target: openid, detail: realName || '', createdAt: now } });
-    return { ok: true };
+    return manage(async tx => {
+      await tx.collection('admin_users').add({ data: { openid, role: 'editor', realName: realName || '', major: major || '', className: className || '', dorm: dorm || '', note: note || '', createdAt: now, createdBy: OPENID } });
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'adminAdd', target: openid, detail: realName || '', createdAt: now } });
+    });
   }
 
   if (action === 'remove') {
@@ -32,9 +44,21 @@ exports.main = async (event) => {
     const t = await admins.where({ openid }).get();
     if (!t.data || !t.data.length) return { ok: false, msg: '目标不存在' };
     if (t.data[0].role === 'superadmin') return { ok: false, msg: '不能移除超级管理员' };
-    await admins.doc(t.data[0]._id).remove();
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'adminRemove', target: openid, createdAt: now } });
-    return { ok: true };
+    try {
+      await db.runTransaction(async tx => {
+        const cur = await tx.collection('admin_users').doc(me.data[0]._id).get();
+        const target = await tx.collection('admin_users').doc(t.data[0]._id).get();
+        if (!cur.data || cur.data.role !== 'superadmin') throw new Error('仅超级管理员可操作');
+        if (!target.data || target.data.role !== 'editor') throw new Error('目标不是普通管理员，不能移除');
+        // 与转让操作写同一调用者文档，保证并发时发生写冲突并重新校验权限。
+        await tx.collection('admin_users').doc(me.data[0]._id).update({ data: { managedAt: now } });
+        await tx.collection('admin_users').doc(t.data[0]._id).remove();
+        await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'adminRemove', target: openid, createdAt: now } });
+      });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, msg: '撤权失败：' + ((e && e.message) || '请重试') };
+    }
   }
 
   if (action === 'transfer') {
@@ -92,28 +116,37 @@ exports.main = async (event) => {
     const openid = a.data.openid;
     const exist = await admins.where({ openid }).get();
     if (exist.data && exist.data.length) {
-      await apps.doc(id).update({ data: { status: 'approved' } });
-      return { ok: false, msg: '该用户已是管理员' };
+      return manage(async tx => {
+        const current = await tx.collection('admin_applications').doc(id).get();
+        if (!current.data || current.data.status !== 'pending') throw new Error('申请已处理');
+        await tx.collection('admin_applications').doc(id).update({ data: { status: 'approved' } });
+      });
     }
-    await admins.add({
-      data: {
-        openid, role: 'editor',
-        realName: a.data.realName || '', major: a.data.major || '', className: a.data.className || '',
-        dorm: a.data.dorm || '', note: a.data.note || '', createdAt: now, createdBy: OPENID
-      }
+    return manage(async tx => {
+      const current = await tx.collection('admin_applications').doc(id).get();
+      if (!current.data || current.data.status !== 'pending') throw new Error('申请已处理');
+      await tx.collection('admin_users').add({
+        data: {
+          openid, role: 'editor',
+          realName: a.data.realName || '', major: a.data.major || '', className: a.data.className || '',
+          dorm: a.data.dorm || '', note: a.data.note || '', createdAt: now, createdBy: OPENID
+        }
+      });
+      await tx.collection('admin_applications').doc(id).update({ data: { status: 'approved' } });
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'adminApprove', target: openid, detail: a.data.realName || '', createdAt: now } });
     });
-    await apps.doc(id).update({ data: { status: 'approved' } });
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'adminApprove', target: openid, detail: a.data.realName || '', createdAt: now } });
-    return { ok: true };
   }
 
   // 忽略申请
   if (action === 'rejectApply') {
     const { id } = event;
     if (!id) return { ok: false, msg: '缺少申请 id' };
-    await apps.doc(id).update({ data: { status: 'rejected' } }).catch(() => null);
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'adminRejectApply', target: id, createdAt: now } });
-    return { ok: true };
+    return manage(async tx => {
+      const current = await tx.collection('admin_applications').doc(id).get();
+      if (!current.data || current.data.status !== 'pending') throw new Error('申请不存在或已处理');
+      await tx.collection('admin_applications').doc(id).update({ data: { status: 'rejected' } });
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'adminRejectApply', target: id, createdAt: now } });
+    });
   }
 
   return { ok: false, msg: '未知 action' };

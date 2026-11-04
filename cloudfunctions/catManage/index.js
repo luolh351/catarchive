@@ -3,7 +3,6 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const cats = db.collection('cats');
 const admins = db.collection('admin_users');
-const logs = db.collection('admin_audit_logs');
 
 const GENDER = ['公', '母', '未知'];
 const STER = ['已绝育', '未绝育', '未知'];
@@ -106,6 +105,14 @@ exports.main = async (event) => {
   if (!me) return { ok: false, msg: '无权限' };
 
   const action = event && event.action;
+  async function write(work) {
+    try {
+      await db.runTransaction(work);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, msg: '保存失败（未写入）：' + ((e && e.message) || '请重试') };
+    }
+  }
 
   // 新增
   if (action === 'create') {
@@ -123,9 +130,13 @@ exports.main = async (event) => {
       isAdoptable: !!d.isAdoptable && life === '在校', // 不在“在校”不允许标记待领养
       published: true, createdAt: now, updatedAt: now, operatorOpenid: OPENID
     });
-    const add = await cats.add({ data });
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'catCreate', target: add._id, detail: data.name, createdAt: now } });
-    return { ok: true, id: add._id };
+    let id;
+    const result = await write(async tx => {
+      const add = await tx.collection('cats').add({ data });
+      id = add._id;
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'catCreate', target: id, detail: data.name, createdAt: now } });
+    });
+    return result.ok ? { ok: true, id } : result;
   }
 
   // 更新：仅写入提供的字段
@@ -149,18 +160,25 @@ exports.main = async (event) => {
     if (d.isAdoptable !== undefined) patch.isAdoptable = !!d.isAdoptable && nextLife === '在校';
     // 统一业务规则：去向一旦不是“在校”，无论是否传 isAdoptable 都取消待领养
     if (nextLife !== '在校') patch.isAdoptable = false;
-    await cats.doc(id).update({ data: patch });
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'catUpdate', target: id, detail: d.name || '', createdAt: db.serverDate() } });
-    return { ok: true };
+    return write(async tx => {
+      const current = await tx.collection('cats').doc(id).get();
+      if (!current.data || current.data.published === false) throw new Error('档案不存在或已归档');
+      const life = d.lifeStatus !== undefined ? d.lifeStatus : current.data.lifeStatus;
+      if (life !== '在校') patch.isAdoptable = false;
+      else if (d.isAdoptable !== undefined) patch.isAdoptable = !!d.isAdoptable;
+      await tx.collection('cats').doc(id).update({ data: patch });
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'catUpdate', target: id, detail: d.name || '', createdAt: db.serverDate() } });
+    });
   }
 
   // 归档（软删除，不物理删除）
   if (action === 'archive') {
     const id = event.id;
     if (!id) return { ok: false, msg: 'missing id' };
-    await cats.doc(id).update({ data: { published: false, updatedAt: db.serverDate(), operatorOpenid: OPENID } });
-    await logs.add({ data: { operatorOpenid: OPENID, action: 'catArchive', target: id, createdAt: db.serverDate() } });
-    return { ok: true };
+    return write(async tx => {
+      await tx.collection('cats').doc(id).update({ data: { published: false, updatedAt: db.serverDate(), operatorOpenid: OPENID } });
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'catArchive', target: id, createdAt: db.serverDate() } });
+    });
   }
 
   return { ok: false, msg: '未知 action' };

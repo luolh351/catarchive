@@ -21,7 +21,9 @@ function saveStore(key, val) { try { wx.setStorageSync(key, val); } catch (e) {}
 
 // 本地演示素材：给 mock 猫轮询分配照片与叫声（包内文件，真机/模拟器可直接显示与播放）
 const DEMO_PHOTOS = ['/assets/photos/cat1.jpg', '/assets/photos/cat2.jpg', '/assets/photos/cat3.jpg', '/assets/photos/cat4.jpg', '/assets/photos/cat5.jpg', '/assets/photos/cat6.jpg'];
-const DEMO_VOICE = ['/assets/sounds/meow1.wav', '/assets/sounds/meow2.wav', '/assets/sounds/meow3.wav', '/assets/sounds/meow4.mp3'];
+// meow3.wav（232KB）超过微信体验评分「单资源≤200KB」的检查项，已删除；
+// 演示叫声剩 3 个轮询，云端模式不使用这些包内素材
+const DEMO_VOICE = ['/assets/sounds/meow1.wav', '/assets/sounds/meow2.wav', '/assets/sounds/meow4.mp3'];
 
 // ---------- 本地模拟数据（结构与 cats 集合一致；每只猫带完整属性与近况） ----------
 // 首次启动用默认数据并写入 Storage；之后从 Storage 读取，保证新增/编辑/投稿跨重编译不丢
@@ -399,7 +401,10 @@ function listSubmissions() {
     }));
     return Promise.resolve(list);
   }
-  return call('submissionManage', { action: 'list' }).then(r => (r && r.list) || []);
+  return call('submissionManage', { action: 'list' }).then(r => {
+    if (!r || r.ok === false) throw new Error((r && r.msg) || '投稿加载失败');
+    return r.list || [];
+  });
 }
 function approveSubmission(id) {
   if (!useCloud()) {
@@ -478,7 +483,10 @@ function listApplications() {
       dorm: a.dorm || '', note: a.note || '', createdAt: a.createdAt
     })));
   }
-  return call('adminManage', { action: 'listApply' }).then(r => (r && r.list) || []);
+  return call('adminManage', { action: 'listApply' }).then(r => {
+    if (!r || r.ok === false) throw new Error((r && r.msg) || '申请加载失败');
+    return r.list || [];
+  });
 }
 function approveApplication(id) {
   if (!useCloud()) {

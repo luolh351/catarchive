@@ -10,6 +10,8 @@ Page({
     content: '',
     photos: [],
     saving: false,
+    dirty: false,
+    ready: false,
     maxPhotos: MAX_PHOTOS,
     quick: QUICK
   },
@@ -21,9 +23,23 @@ Page({
       return;
     }
     this.setData({ catId });
+    service.checkAdmin().then(r => {
+      if (!r || !r.isAdmin) { wx.redirectTo({ url: '/pages/denied/denied' }); return; }
+      this.setData({ ready: true });
+    }).catch(() => { wx.showToast({ title: '身份校验失败，请重新进入', icon: 'none' }); });
+  },
+  markDirty() {
+    if (this.data.dirty) return;
+    this.setData({ dirty: true });
+    if (wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: '近况尚未保存，确定离开吗？' });
+  },
+  clearDirty() {
+    this.setData({ dirty: false });
+    if (wx.disableAlertBeforeUnload) wx.disableAlertBeforeUnload();
   },
   onInput(e) {
     this.setData({ content: (e.detail && e.detail.value) || '' });
+    this.markDirty();
   },
   // 追加快捷短语到正文末尾（重复添加会提示，避免误触堆成一串）
   addQuick(e) {
@@ -34,6 +50,7 @@ Page({
     const next = (trimmed ? trimmed + '，' : '') + t;
     if (next.length > 500) { wx.showToast({ title: '已达 500 字上限', icon: 'none' }); return; }
     this.setData({ content: next });
+    this.markDirty();
   },
   chooseImage() {
     const remain = MAX_PHOTOS - this.data.photos.length;
@@ -44,6 +61,7 @@ Page({
         const paths = (res.tempFiles || []).map(f => f.tempFilePath).filter(Boolean);
         if (!paths.length) return;
         this.setData({ photos: this.data.photos.concat(paths) });
+        this.markDirty();
       },
       fail: () => {}
     });
@@ -53,6 +71,7 @@ Page({
     const list = this.data.photos.slice();
     list.splice(i, 1);
     this.setData({ photos: list });
+    this.markDirty();
   },
   previewPhoto(e) {
     const list = this.data.photos || [];
@@ -61,6 +80,7 @@ Page({
   },
   save() {
     if (this.data.saving) return; // 防重复提交
+    if (!this.data.ready) { wx.showToast({ title: '请先完成身份校验', icon: 'none' }); return; }
     const content = (this.data.content || '').trim();
     if (!content) { wx.showToast({ title: '请填写近况内容', icon: 'none' }); return; }
     this.setData({ saving: true });
@@ -73,6 +93,7 @@ Page({
         return;
       }
       wx.showToast({ title: '已补充', icon: 'success' });
+      this.clearDirty();
       setTimeout(() => wx.navigateBack(), 600);
     }).catch(err => {
       wx.hideLoading();
@@ -86,6 +107,13 @@ Page({
     });
   },
   cancel() {
+    if (this.data.saving) return;
+    if (this.data.dirty) {
+      wx.showModal({ title: '放弃修改', content: '近况尚未保存，确定离开吗？', success: r => {
+        if (r.confirm) { this.clearDirty(); wx.navigateBack(); }
+      } });
+      return;
+    }
     wx.navigateBack();
   }
 });

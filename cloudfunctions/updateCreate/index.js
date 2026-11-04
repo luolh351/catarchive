@@ -2,9 +2,7 @@ const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const cats = db.collection('cats');
-const updates = db.collection('cat_updates');
 const admins = db.collection('admin_users');
-const logs = db.collection('admin_audit_logs');
 
 // 近况配图：最多 3 张，必须是云存储地址（拒绝 http://tmp/、wxfile:// 等本地临时路径）
 const MAX_PHOTOS = 3;
@@ -49,14 +47,14 @@ exports.main = async (event) => {
       } catch (e) {
         cat = null;
       }
-      if (!cat || !cat.data) { reason = 'NO_CAT'; throw new Error('tx_abort'); }
+      if (!cat || !cat.data || cat.data.published === false) { reason = 'NO_CAT'; throw new Error('tx_abort'); }
       await tx.collection('cat_updates').add({ data: { catId, content: text, photos: imgs, createdAt: now, operatorOpenid: OPENID } });
       await tx.collection('cats').doc(catId).update({ data: { latestNote: text, updatedAt: now, operatorOpenid: OPENID } });
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'updateCreate', target: catId, detail: text.slice(0, 50), createdAt: now } });
     });
   } catch (e) {
-    if (reason === 'NO_CAT') return { ok: false, msg: '猫咪不存在，近况未写入' };
+    if (reason === 'NO_CAT') return { ok: false, msg: '猫咪不存在或已归档，近况未写入' };
     return { ok: false, msg: '补充近况失败（已回滚）：' + ((e && e.message) || '未知错误') };
   }
-  await logs.add({ data: { operatorOpenid: OPENID, action: 'updateCreate', target: catId, detail: text.slice(0, 50), createdAt: db.serverDate() } });
   return { ok: true };
 };

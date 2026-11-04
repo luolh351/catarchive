@@ -25,6 +25,8 @@
     <view class="vempty">叫声暂缺 · 若有它的录音欢迎投稿补充</view>
   </view>
 
+  <view wx:if="{{cat.latestNote}}" class="morebox">最近情况：{{cat.latestNote}}</view>
+
   <view class="attrs">
     <view class="attr" wx:for="{{attrs}}" wx:key="k">
       <view class="k">{{item.k}}</view>

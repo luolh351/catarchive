@@ -45,7 +45,7 @@ Page({
           usualLocations: (c.usualLocations || []).join('、'),
           personalityTags: (c.personalityTags || []).join('、'), healthNotes: c.healthNotes || '',
           latestNote: c.latestNote || '',
-          more: c.more || '',
+          more: res.more || '',
           photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
         }
       });

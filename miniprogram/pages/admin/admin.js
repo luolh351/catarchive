@@ -36,6 +36,7 @@ Page({
     if (this.data.ready) this.loadData();
   },
   loadData() {
+    const failed = () => wx.showToast({ title: '部分数据加载失败，请重新进入重试', icon: 'none' });
     service.getCats('').then(list => {
       const s = { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 };
       const map = { '在校': 'zaixiao', '毕业': 'biye', '休学': 'xiuxue', '喵星': 'miaoxing' };
@@ -45,10 +46,15 @@ Page({
         return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : ''), latest: c.latestNote || '' };
       });
       this.setData({ stats: s, cats });
-    });
-    service.listSubmissions().then(list => this.setData({ subs: list || [] }));
-    service.listApplications().then(list => this.setData({ apps: list || [] }));
+    }).catch(failed);
+    service.listSubmissions().then(list => this.setData({ subs: list || [] })).catch(failed);
+    if (this.data.myRole !== 'superadmin') {
+      this.setData({ apps: [], admins: [], noEditor: false });
+      return;
+    }
+    service.listApplications().then(list => this.setData({ apps: list || [] })).catch(failed);
     service.listAdmins().then(r => {
+      if (!r || r.ok === false) throw new Error('管理员名单加载失败');
       const me = this.data.myRole;
       const admins = (r.list || []).map(a => ({
         openid: a.openid, realName: a.realName, role: a.role,
@@ -59,7 +65,22 @@ Page({
       }));
       // 修复：映射里曾丢失 role，导致 noEditor 恒为 true、提示一直显示
       this.setData({ admins, noEditor: admins.filter(a => a.role === 'editor').length === 0 });
-    });
+    }).catch(failed);
+  },
+  async runOperation(work, after) {
+    if (this.operationBusy) return;
+    this.operationBusy = true;
+    wx.showLoading({ title: '处理中', mask: true });
+    try {
+      const r = await work();
+      if (!r || r.ok === false) throw new Error((r && r.msg) || '操作失败');
+      wx.hideLoading();
+      if (after) after();
+      else this.loadData();
+    } catch (e) {
+      wx.hideLoading();
+      wx.showModal({ title: '操作失败', content: e.message || '网络异常，请重试', showCancel: false });
+    } finally { this.operationBusy = false; }
   },
   goForm(e) {
     const id = e.currentTarget.dataset.id;
@@ -88,7 +109,7 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '归档', content: '确定归档该猫咪？公开页将不再展示。',
-      success: res => { if (res.confirm) service.catManage('archive', { id }).then(() => this.loadData()); }
+      success: res => { if (res.confirm) this.runOperation(() => service.catManage('archive', { id })); }
     });
   },
   // 补充近况改为独立页面：弹窗输入无法附加配图，跳转后可写正文并上传现场照片
@@ -128,15 +149,20 @@ Page({
     const openid = e.currentTarget.dataset.id;
     wx.showModal({
       title: '撤权', content: '确定移除该管理员？',
-      success: res => { if (res.confirm) service.adminManage('remove', { openid }).then(() => this.refreshRole()); }
+      success: res => { if (res.confirm) this.runOperation(() => service.adminManage('remove', { openid }), () => this.refreshRole()); }
     });
   },
   // 管理操作（转让/撤权/新增）后刷新当前身份与列表
   refreshRole() {
     service.checkAdmin().then(r => {
-      if (r && r.isAdmin) this.setData({ myRole: r.role });
+      if (!r || !r.isAdmin) {
+        this.setData({ ready: false, myRole: '', admins: [], apps: [], subs: [], cats: [] });
+        wx.redirectTo({ url: '/pages/denied/denied' });
+        return;
+      }
+      this.setData({ myRole: r.role });
       this.loadData();
-    }).catch(() => this.loadData());
+    }).catch(() => wx.showToast({ title: '身份校验失败，请重新进入', icon: 'none' }));
   },
   // 待认领申请：通过后该用户直接成为管理员（无需手抄 openid）
   approveApp(e) {
@@ -159,7 +185,7 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '忽略申请', content: '确定忽略该申请？',
-      success: res => { if (res.confirm) service.rejectApplication(id).then(() => this.loadData()); }
+      success: res => { if (res.confirm) this.runOperation(() => service.rejectApplication(id)); }
     });
   },
   addAdmin() {
@@ -167,10 +193,7 @@ Page({
       title: '新增管理员', editable: true, placeholderText: '输入对方微信 openid',
       success: res => {
         if (res.confirm && res.content) {
-          service.adminManage('add', { openid: res.content, realName: res.content }).then(r => {
-            if (r && r.ok === false) { wx.showToast({ title: r.msg || '操作失败', icon: 'none' }); return; }
-            this.refreshRole();
-          });
+          this.runOperation(() => service.adminManage('add', { openid: res.content, realName: res.content }), () => this.refreshRole());
         }
       }
     });
@@ -389,7 +412,7 @@ Page({
       title: '忽略投稿', content: '确定忽略该投稿？',
       success: res => {
         if (!res.confirm) return;
-        service.rejectSubmission(id).then(() => { this.setData({ detail: null }); this.loadData(); });
+        this.runOperation(() => service.rejectSubmission(id), () => { this.setData({ detail: null }); this.loadData(); });
       }
     });
   }
