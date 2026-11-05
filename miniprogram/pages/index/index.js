@@ -4,6 +4,16 @@ const service = require('../../utils/service');
 
 Page({
   data: { active: '在校', list: [], all: [], q: '' },
+  onLoad() {
+    // 开启右上角菜单的「转发给朋友 / 分享到朋友圈 / 复制链接」
+    wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+  },
+  onShareAppMessage() {
+    return { title: '校园猫咪档案馆｜看看校园里的猫', path: '/pages/index/index' };
+  },
+  onShareTimeline() {
+    return { title: '校园猫咪档案馆｜看看校园里的猫' };
+  },
   onShow() { this.loadAll(); },
   loadAll() {
     wx.showLoading({ title: '加载中' });

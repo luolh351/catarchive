@@ -2,6 +2,16 @@
 const service = require('../../utils/service');
 
 Page({
+  onLoad() {
+    // 开启右上角菜单的「转发给朋友 / 分享到朋友圈 / 复制链接」
+    wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+  },
+  onShareAppMessage() {
+    return { title: '校园猫咪档案馆｜投稿与了解校园猫', path: '/pages/about/about' };
+  },
+  onShareTimeline() {
+    return { title: '校园猫咪档案馆｜投稿与了解校园猫' };
+  },
   goSubmit() {
     wx.navigateTo({ url: '/pages/catSubmit/catSubmit' });
   },
