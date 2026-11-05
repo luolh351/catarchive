@@ -1,0 +1,11 @@
+/* 搜索页：卡片列表样式复用 app.wxss（.card/.avatar/.info/.nm/.sub/.muted） */
+
+.sbar { display: flex; align-items: center; gap: 16rpx; padding: 16rpx 24rpx; }
+.sinput {
+  flex: 1; background: var(--card); border-radius: 24rpx;
+  padding: 18rpx 28rpx; font-size: 28rpx; color: var(--fg);
+}
+.scancel { color: var(--primary); font-size: 28rpx; padding: 8rpx; flex: none; }
+
+.sresult { padding: 8rpx 32rpx 0; }
+.sempty { text-align: center; padding: 60rpx 0; }

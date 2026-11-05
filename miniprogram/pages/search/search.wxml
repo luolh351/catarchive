@@ -1,0 +1,19 @@
+<view class="sbar">
+  <input class="sinput" focus placeholder="搜索猫咪名字 / 常出没" value="{{q}}" bindinput="onInput" confirm-type="search" />
+  <view class="scancel" bindtap="goBack">取消</view>
+</view>
+
+<view wx:if="{{q}}" class="muted sresult">找到 {{list.length}} 只</view>
+<view wx:if="{{searched && !list.length}}" class="muted sempty">没有匹配的猫咪</view>
+<view wx:if="{{!q}}" class="muted sempty">输入名字、毛色或出没地点试试</view>
+
+<view wx:for="{{list}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
+  <view class="avatar" style="background:{{item.bg}}">
+    <image wx:if="{{item.photo}}" class="aimg" src="{{item.photo}}" mode="aspectFill" />
+    <block wx:else>{{item.photoText}}</block>
+  </view>
+  <view class="info">
+    <view class="nm">{{item.name}}<text wx:if="{{item.isAdoptable}}" class="badge">待领养</text></view>
+    <view class="sub">{{item.sub}}</view>
+  </view>
+</view>

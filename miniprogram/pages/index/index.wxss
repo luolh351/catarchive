@@ -1,6 +1,1 @@
-/* 首页样式复用 app.wxss 公共类 */
-
-/* 搜索结果行：左计数 + 右返回 */
-.searchbar { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 4rpx; }
-.smuted { color: var(--sub); font-size: 24rpx; }
-.back { color: var(--primary); font-size: 24rpx; padding: 4rpx 12rpx; }
+/* 首页样式复用 app.wxss 公共类；搜索入口用全局 .search，点击跳转搜索页 */
