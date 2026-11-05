@@ -12,6 +12,11 @@
     <text class="statustag st-on">{{cat.statusText}}</text>
   </view>
 
+  <view class="sharerow">
+    <button class="sharebtn" open-type="share" plain>↗ 分享给朋友</button>
+    <view class="sharehint">分享到朋友圈请点右上角 ···</view>
+  </view>
+
   <view wx:if="{{cat.photos.length > 1}}" class="gallery">
     <image wx:for="{{cat.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="gimg" />
   </view>

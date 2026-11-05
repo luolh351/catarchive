@@ -38,6 +38,11 @@ Page({
     }
     this.setData({ list });
   },
+  // 清空搜索回到默认列表（等同于返回首页视图）
+  clearSearch() {
+    this.setData({ q: '' });
+    this.applyView();
+  },
   // 命中任一字段即算匹配：名字、昵称、毛色、常出没（全部）、最近情况
   match(c, q) {
     const hit = v => (v || '').toLowerCase().indexOf(q) >= 0;
