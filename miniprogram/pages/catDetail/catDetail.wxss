@@ -33,18 +33,18 @@
 .vcount { color: #fff; font-size: 28rpx; }
 /* 左右切换箭头：半透明淡黑圆钮 */
 .vnav {
-  position: absolute; top: 50%; margin-top: -56rpx;
-  width: 88rpx; height: 88rpx; border-radius: 50%;
+  position: absolute; top: 50%; margin-top: -50rpx;
+  width: 76rpx; height: 76rpx; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,.32); color: rgba(255,255,255,.85);
-  font-size: 60rpx; line-height: 1; padding-bottom: 8rpx;
+  background: rgba(0,0,0,.32); color: rgba(255,255,255,.9);
+  font-size: 74rpx; line-height: 1; padding-bottom: 10rpx;
 }
-.vnav.left { left: 28rpx; }
-.vnav.right { right: 28rpx; }
+.vnav.left { left: 24rpx; }
+.vnav.right { right: 24rpx; }
 .vsave {
-  color: #fff; font-size: 28rpx; font-weight: 500;
-  background: rgba(255,255,255,.18);
-  border: 1rpx solid rgba(255,255,255,.95);
+  color: #fff; font-size: 28rpx; font-weight: 600;
+  background: rgba(255,255,255,.3);
+  border: 1rpx solid #fff;
   border-radius: 999rpx; padding: 10rpx 36rpx; line-height: 1.4; margin: 0;
 }
 .vsave::after { border: none; }
