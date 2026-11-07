@@ -1,6 +1,7 @@
 // 首页：四状态标签 + 卡片列表。搜索在独立页面 pages/search 进行（返回键自动回首页）。
 // 经服务层读取（默认本地模拟，可切云端）。编辑后 onShow 重新拉取，保证首页即时更新。
 const service = require('../../utils/service');
+const nav = require('../../utils/nav');
 
 Page({
   data: { active: '在校', list: [], all: [] },
@@ -31,9 +32,9 @@ Page({
     this.setData({ list: this.data.all.filter(c => c.lifeStatus === this.data.active) });
   },
   goSearch() {
-    wx.navigateTo({ url: '/pages/search/search' });
+    nav.go('/pages/search/search');
   },
   goDetail(e) {
-    wx.navigateTo({ url: '/pages/catDetail/catDetail?id=' + e.currentTarget.dataset.id });
+    nav.go('/pages/catDetail/catDetail?id=' + e.currentTarget.dataset.id);
   }
 });

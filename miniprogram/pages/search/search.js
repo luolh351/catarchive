@@ -1,6 +1,7 @@
 // 搜索页：独立页面，手机返回键/手势自动回首页（navigateTo 返回栈），
 // 页内另有「取消」按钮兜底。数据来自 service.getCats() 全量，本地过滤。
 const service = require('../../utils/service');
+const nav = require('../../utils/nav');
 
 Page({
   data: { q: '', list: [], searched: false },
@@ -30,6 +31,6 @@ Page({
     wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) });
   },
   goDetail(e) {
-    wx.navigateTo({ url: '/pages/catDetail/catDetail?id=' + e.currentTarget.dataset.id });
+    nav.go('/pages/catDetail/catDetail?id=' + e.currentTarget.dataset.id);
   }
 });
