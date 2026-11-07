@@ -17,13 +17,15 @@
     <view class="sharehint">分享到朋友圈请点右上角 ···</view>
   </view>
 
-  <!-- 全屏照片查看层：左右滑动切换，支持保存到相册 -->
+  <!-- 全屏照片查看层：左右滑动或点箭头切换，支持保存到相册 -->
   <view wx:if="{{viewer}}" class="viewer" catchtouchmove="stop">
     <swiper class="vswiper" current="{{viewerIndex}}" circular bindchange="onViewerChange">
       <swiper-item wx:for="{{cat.photos}}" wx:key="*this">
         <image src="{{item}}" mode="aspectFit" class="vimg" bindtap="closeViewer" />
       </swiper-item>
     </swiper>
+    <view class="vnav left" catchtap="prevPhoto">‹</view>
+    <view class="vnav right" catchtap="nextPhoto">›</view>
     <view class="vbar">
       <text class="vcount">{{viewerIndex + 1}} / {{cat.photos.length}}</text>
       <button class="vsave" plain catchtap="savePhoto">⤓ 保存图片</button>
@@ -37,7 +39,7 @@
         <view class="gpage">
           <image wx:for="{{page.items}}" wx:for-index="ci" wx:for-item="p" wx:key="*this"
                  src="{{p}}" mode="aspectFill" class="gcell"
-                 data-i="{{pi * 3 + ci + 1}}" bindtap="openViewer" />
+                 data-i="{{pi * 3 + ci}}" bindtap="openViewer" />
         </view>
       </swiper-item>
     </swiper>

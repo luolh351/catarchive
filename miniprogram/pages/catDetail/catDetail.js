@@ -104,6 +104,17 @@ Page({
   closeViewer() { this.setData({ viewer: false }); },
   stop() {},   // 阻止查看层背景滚动穿透
   onViewerChange(e) { this.setData({ viewerIndex: e.detail.current }); },
+  // 左右箭头切换（循环）
+  prevPhoto() {
+    const n = this.data.cat.photos.length;
+    if (!n) return;
+    this.setData({ viewerIndex: (this.data.viewerIndex - 1 + n) % n });
+  },
+  nextPhoto() {
+    const n = this.data.cat.photos.length;
+    if (!n) return;
+    this.setData({ viewerIndex: (this.data.viewerIndex + 1) % n });
+  },
   // 保存当前大图到相册（游客可用）；cloud:// 需先下载为临时文件
   savePhoto() {
     const photos = this.data.cat.photos || [];
