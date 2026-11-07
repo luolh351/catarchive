@@ -28,7 +28,7 @@
     <view class="vnav right" catchtap="nextPhoto">›</view>
     <view class="vbar">
       <text class="vcount">{{viewerIndex + 1}} / {{cat.photos.length}}</text>
-      <button class="vsave" plain catchtap="savePhoto">⤓ 保存图片</button>
+      <button class="vsave" catchtap="savePhoto">⤓ 保存图片</button>
     </view>
   </view>
 
