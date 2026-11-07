@@ -415,5 +415,105 @@ Page({
         this.runOperation(() => service.rejectSubmission(id), () => { this.setData({ detail: null }); this.loadData(); });
       }
     });
+  },
+
+  // ---------- 一键通过 ----------
+  // 先做同名检测：无同名直接确认新建；有同名弹出对比视图，管理员决定「并入」或「新猫」
+  approveSub() {
+    const d = this.data.detail;
+    if (!d || this._conflictBusy) return;
+    this._conflictBusy = true;
+    wx.showLoading({ title: '检测同名猫咪', mask: true });
+    service.checkSubConflict(d.id).then(r => {
+      wx.hideLoading();
+      this._conflictBusy = false;
+      if (!r || r.ok === false) { wx.showToast({ title: (r && r.msg) || '检测失败', icon: 'none' }); return; }
+      const cands = r.candidates || [];
+      if (!cands.length) {
+        wx.showModal({
+          title: '一键通过', content: '未发现同名猫咪，将作为新猫收录进公开档案。',
+          success: res => { if (res.confirm) this.approveAsNew(); }
+        });
+        return;
+      }
+      this.openMergeView(cands);
+    }).catch(() => {
+      wx.hideLoading();
+      this._conflictBusy = false;
+      wx.showToast({ title: '检测失败，请重试', icon: 'none' });
+    });
+  },
+  // 合并对比视图：候选猫 + 冲突字段逐个开关（默认建议「用投稿」）
+  openMergeView(cands) {
+    this._mergeCands = cands;
+    this.setData({ mergeView: this.buildMergeView(cands, cands[0].id) });
+  },
+  buildMergeView(cands, pickedId) {
+    const d = this.data.detail;
+    const toS = v => (v === undefined || v === null || v === '') ? '—' : String(v);
+    const picked = cands.find(c => c.id === pickedId) || cands[0];
+    const fields = [
+      { key: 'coatColor', label: '毛色' },
+      { key: 'gender', label: '性别' },
+      { key: 'sterilizationStatus', label: '绝育' },
+      { key: 'sterilizedAt', label: '绝育时间' },
+      { key: 'healthNotes', label: '健康状况' },
+      { key: 'lifeStatus', label: '去向' }
+    ].map(f => {
+      const mine = toS(d[f.key]);
+      const sub = toS(picked[f.key]);
+      return { key: f.key, label: f.label, mine, sub, conflict: mine !== sub, use: true };
+    });
+    return {
+      candidates: cands.map(c => ({
+        id: c.id, name: c.name,
+        sub: [c.coatColor, (c.usualLocations || [])[0] || ''].filter(Boolean).join(' · '),
+        photo: (c.photos || [])[0] || '', similar: !!c.similar
+      })),
+      pickedId,
+      fields,
+      autoText: '近况与配图将写入所选猫咪的时间线；照片/昵称/性格/出没自动追加（不覆盖）；叫声仅在档案缺失时收录。'
+    };
+  },
+  pickCandidate(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id || id === this.data.mergeView.pickedId) return;
+    this.setData({ mergeView: this.buildMergeView(this._mergeCands, id) });
+  },
+  toggleField(e) {
+    const key = e.currentTarget.dataset.key;
+    const mv = this.data.mergeView;
+    if (!mv) return;
+    const fields = mv.fields.map(f => (f.key === key ? Object.assign({}, f, { use: !f.use }) : f));
+    this.setData({ mergeView: Object.assign({}, mv, { fields }) });
+  },
+  closeMerge() { this.setData({ mergeView: null }); this._mergeCands = null; },
+  // 并入所选猫咪
+  confirmMerge() {
+    const mv = this.data.mergeView;
+    if (!mv) return;
+    const overrides = {};
+    mv.fields.forEach(f => { overrides[f.key] = f.use ? 'use' : 'keep'; });
+    this.runOperation(
+      () => service.approveSubmission(this.data.detail.id, { mode: 'merge', targetId: mv.pickedId, overrides }),
+      () => {
+        this.setData({ detail: null, mergeView: null });
+        this._mergeCands = null;
+        wx.showToast({ title: '已并入档案', icon: 'success' });
+        this.loadData();
+      }
+    );
+  },
+  // 作为新猫收录
+  approveAsNew() {
+    this.runOperation(
+      () => service.approveSubmission(this.data.detail.id),
+      () => {
+        this.setData({ detail: null, mergeView: null });
+        this._mergeCands = null;
+        wx.showToast({ title: '已收录为新猫', icon: 'success' });
+        this.loadData();
+      }
+    );
   }
 });

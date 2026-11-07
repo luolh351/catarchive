@@ -406,11 +406,43 @@ function listSubmissions() {
     return r.list || [];
   });
 }
-function approveSubmission(id) {
+// 一键通过：opts.mode='merge' 并入已有档案（targetId + overrides 逐字段 use/keep），缺省新建
+function approveSubmission(id, opts) {
+  const o = opts || {};
   if (!useCloud()) {
     const i = MOCK_SUBS.findIndex(s => s.id === id && s.status === 'pending');
     if (i < 0) return Promise.resolve({ ok: false, msg: '未找到投稿' });
     const d = MOCK_SUBS[i];
+    // mock 合并：与云端 approve(merge) 行为一致，便于本地预览冲突流程
+    if (o.mode === 'merge') {
+      const cat = MOCK_CATS.find(c => c.id === o.targetId);
+      if (!cat) return Promise.resolve({ ok: false, msg: '目标猫咪不存在' });
+      const ov = o.overrides || {};
+      const useSub = k => ov[k] !== 'keep';
+      const mergeArr = (a, b, cap) => {
+        const out = [];
+        [].concat(Array.isArray(a) ? a : [], Array.isArray(b) ? b : []).forEach(x => { if (x && out.indexOf(x) < 0 && out.length < cap) out.push(x); });
+        return out;
+      };
+      ['coatColor', 'gender', 'sterilizationStatus', 'sterilizedAt', 'healthNotes', 'lifeStatus'].forEach(k => {
+        if (d[k] !== undefined && d[k] !== '' && useSub(k)) cat[k] = d[k];
+      });
+      if (useSub('isAdoptable')) cat.isAdoptable = !!d.isAdoptable && cat.lifeStatus === '在校';
+      cat.photos = mergeArr(cat.photos, d.photos || [], 9);
+      if (!cat.voice && d.voice) cat.voice = d.voice;
+      cat.aliases = mergeArr(cat.aliases, toArr(d.aliases) || [], 20);
+      cat.personalityTags = mergeArr(cat.personalityTags, toArr(d.personalityTags) || [], 20);
+      cat.usualLocations = mergeArr(cat.usualLocations, toArr(d.usualLocations) || [], 20);
+      if (d.latestNote) {
+        cat.latestNote = d.latestNote;
+        cat.timeline = (cat.timeline || []).concat([{ t: '投稿审核通过', c: d.latestNote }]);
+      }
+      cat.sub = [cat.coatColor, (toArr(cat.usualLocations)[0] || '')].filter(Boolean).join(' · ');
+      MOCK_SUBS.splice(i, 1);
+      saveStore(STORE_CATS, MOCK_CATS);
+      saveStore(STORE_SUBS, MOCK_SUBS);
+      return mockOk();
+    }
     const cat = {
       id: 'c' + Date.now(), name: d.name, lifeStatus: d.lifeStatus || '在校', isAdoptable: !!d.isAdoptable && (d.lifeStatus || '在校') === '在校',
       coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
@@ -429,7 +461,24 @@ function approveSubmission(id) {
     saveStore(STORE_SUBS, MOCK_SUBS);
     return mockOk();
   }
-  return call('submissionManage', { action: 'approve', id });
+  return call('submissionManage', { action: 'approve', id, mode: o.mode || 'new', targetId: o.targetId || '', overrides: o.overrides || {} });
+}
+// 一键通过前的同名检测：返回同名已发布档案候选（含相似度标记）
+function checkSubConflict(id) {
+  if (!useCloud()) {
+    const s = MOCK_SUBS.find(x => x.id === id);
+    if (!s) return Promise.resolve({ ok: false, msg: '未找到投稿' });
+    const candidates = MOCK_CATS.filter(c => c.published !== false && c.name === s.name).map(c => ({
+      id: c.id, name: c.name, coatColor: c.coatColor, gender: c.gender,
+      sterilizationStatus: c.sterilizationStatus || '未知', sterilizedAt: c.sterilizedAt || '',
+      healthNotes: c.healthNotes || '', lifeStatus: c.lifeStatus || '在校', isAdoptable: !!c.isAdoptable,
+      usualLocations: toArr(c.usualLocations) || [], personalityTags: toArr(c.personalityTags) || [],
+      aliases: toArr(c.aliases) || [], photos: (c.photos || []).slice(0, 2), voice: c.voice || '',
+      latestNote: c.latestNote || '', more: c.more || '', similar: true
+    }));
+    return Promise.resolve({ ok: true, candidates });
+  }
+  return call('submissionManage', { action: 'checkConflict', id });
 }
 function rejectSubmission(id) {
   if (!useCloud()) {

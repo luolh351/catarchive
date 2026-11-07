@@ -3,6 +3,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const subs = db.collection('cat_submissions');
 const admins = db.collection('admin_users');
+const cats = db.collection('cats');
 
 const GENDER = ['公', '母', '未知'];
 const STER = ['已绝育', '未绝育', '未知'];
@@ -126,6 +127,34 @@ exports.main = async (event) => {
     return { ok: true, list };
   }
 
+  // 一键通过前的同名检测：查已发布档案中的同名猫，按 名字/毛色/性别/出没 计算相似度
+  if (action === 'checkConflict') {
+    const id = event.id;
+    if (!id) return { ok: false, msg: 'missing id' };
+    const s = await subs.doc(id).get();
+    const d = s.data;
+    if (!d || d.status !== 'pending') return { ok: false, msg: '投稿不存在或已处理' };
+    const r = await cats.where({ name: d.name, published: true }).limit(5).get();
+    const arr = v => (Array.isArray(v) ? v : []);
+    const subLoc = arr(d.usualLocations);
+    const candidates = (r.data || []).map(c => {
+      let score = 1;   // 名字相同为基数
+      if ((c.coatColor || '') === (d.coatColor || '')) score++;
+      if ((c.gender || '') === (d.gender || '')) score++;
+      if (arr(c.usualLocations).some(x => subLoc.indexOf(x) >= 0)) score++;
+      return {
+        id: c._id, name: c.name, coatColor: c.coatColor || '未知', gender: c.gender || '未知',
+        sterilizationStatus: c.sterilizationStatus || '未知', sterilizedAt: c.sterilizedAt || '',
+        healthNotes: c.healthNotes || '', lifeStatus: c.lifeStatus || '在校', isAdoptable: !!c.isAdoptable,
+        usualLocations: arr(c.usualLocations), personalityTags: arr(c.personalityTags),
+        aliases: arr(c.aliases), photos: (c.photos || []).slice(0, 2), voice: c.voice || '',
+        latestNote: c.latestNote || '', more: c.more || '',
+        similar: score >= 3   // 名字 + 两项以上一致 → 高度疑似同一只
+      };
+    }).sort((a, b) => (b.similar ? 1 : 0) - (a.similar ? 1 : 0));
+    return { ok: true, candidates };
+  }
+
   if (action === 'approve') {
     const id = event.id;
     if (!id) return { ok: false, msg: 'missing id' };
@@ -138,6 +167,65 @@ exports.main = async (event) => {
     if (n.err) return { ok: false, msg: '投稿数据不合规，无法采纳：' + n.err };
     const nd = n.data;
     const now = db.serverDate();
+
+    // —— 并入已有档案（一键通过的合并模式）——
+    // 描述类字段按 overrides 逐字段决定（'use'=用投稿 / 'keep'=保留档案）；
+    // 近况/配图/照片/叫声/昵称/性格/出没自动并入：照片追加不覆盖，近况写时间线
+    if (event.mode === 'merge') {
+      const targetId = event.targetId;
+      if (!targetId) return { ok: false, msg: 'missing targetId' };
+      const ov = event.overrides || {};
+      const useSub = k => ov[k] !== 'keep';   // 缺省视为采纳投稿
+      const remoteArr = v => (Array.isArray(v) ? v.filter(isRemote) : []);
+      let reason = '';
+      try {
+        await db.runTransaction(async tx => {
+          const cur = await tx.collection('cat_submissions').doc(id).get();
+          if (!cur.data || cur.data.status !== 'pending') { reason = 'DONE'; throw new Error('tx_abort'); }
+          let cat = null;
+          try { cat = await tx.collection('cats').doc(targetId).get(); } catch (e) { cat = null; }
+          if (!cat || !cat.data || cat.data.published === false) { reason = 'NO_CAT'; throw new Error('tx_abort'); }
+          const c = cat.data;
+          const mergeArr = (a, b, cap) => {
+            const out = [];
+            [].concat(Array.isArray(a) ? a : [], Array.isArray(b) ? b : []).forEach(x => {
+              if (x && out.indexOf(x) < 0 && out.length < cap) out.push(x);
+            });
+            return out;
+          };
+          const patch = { updatedAt: now, operatorOpenid: OPENID };
+          // 描述类：投稿没填的保留档案；填了且管理员选「用投稿」才覆盖
+          ['coatColor', 'gender', 'sterilizationStatus', 'sterilizedAt', 'healthNotes', 'lifeStatus'].forEach(k => {
+            if (nd[k] === undefined || nd[k] === '') return;
+            if (useSub(k)) patch[k] = nd[k];
+          });
+          if (useSub('isAdoptable')) patch.isAdoptable = !!nd.isAdoptable && (patch.lifeStatus || c.lifeStatus) === '在校';
+          // 累积类：追加去重
+          patch.photos = mergeArr(c.photos, remoteArr(nd.photos), 9);
+          if (!c.voice && nd.voice) patch.voice = nd.voice;
+          patch.aliases = mergeArr(c.aliases, nd.aliases, 20);
+          patch.personalityTags = mergeArr(c.personalityTags, nd.personalityTags, 20);
+          patch.usualLocations = mergeArr(c.usualLocations, nd.usualLocations, 20);
+          // 近况：更新档案摘要并写时间线（与 updateCreate 的数据结构一致）
+          const note = (nd.latestNote || '').trim();
+          if (note) patch.latestNote = note;
+          await tx.collection('cats').doc(targetId).update({ data: patch });
+          if (note || remoteArr(nd.latestPhotos).length) {
+            await tx.collection('cat_updates').add({
+              data: { catId: targetId, content: note || '投稿补充资料', photos: remoteArr(nd.latestPhotos).slice(0, 3), createdAt: now, operatorOpenid: OPENID }
+            });
+          }
+          await tx.collection('cat_submissions').doc(id).update({ data: { status: 'approved', approvedCatId: targetId } });
+          await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'subApproveMerge', target: targetId, detail: '投稿并入：' + (d.name || ''), createdAt: now } });
+        });
+      } catch (e) {
+        if (reason === 'DONE') return { ok: false, msg: '该投稿已被处理，未重复操作' };
+        if (reason === 'NO_CAT') return { ok: false, msg: '目标猫咪不存在或已归档' };
+        return { ok: false, msg: '并入失败（已回滚）：' + ((e && e.message) || '未知错误') };
+      }
+      return { ok: true, id: targetId, merged: true };
+    }
+
     const life = nd.lifeStatus || '在校';
     const catData = Object.assign({
       aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '',

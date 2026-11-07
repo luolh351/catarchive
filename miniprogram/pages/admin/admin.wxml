@@ -67,7 +67,46 @@
     <view class="kv"><text>提交时间</text><view class="vw"><text class="val">{{detail.createdAtText}}</text></view></view>
     <view class="btns">
       <view class="mini" bindtap="rejectSub" data-id="{{detail.id}}">忽略</view>
-      <view class="mini primary" bindtap="closeSub">关闭</view>
+      <view class="mini" bindtap="closeSub">关闭</view>
+      <view class="mini primary" bindtap="approveSub">一键通过</view>
+    </view>
+  </view>
+</view>
+
+<!-- 一键通过 · 同名对比视图：选目标猫 + 冲突字段逐个决定 -->
+<view wx:if="{{mergeView}}" class="mask" bindtap="closeMerge">
+  <view class="sheet" catchtap="stop">
+    <view class="sh">发现同名猫咪「{{detail.name}}」</view>
+    <view class="mv-tip">{{mergeView.autoText}}</view>
+
+    <view class="mv-pick">
+      <view wx:for="{{mergeView.candidates}}" wx:key="id"
+            class="mv-cand {{mergeView.pickedId === item.id ? 'on' : ''}}"
+            bindtap="pickCandidate" data-id="{{item.id}}">
+        <image wx:if="{{item.photo}}" class="mv-cimg" src="{{item.photo}}" mode="aspectFill" />
+        <view wx:else class="mv-cimg mv-noimg">猫</view>
+        <view class="mv-cinfo">
+          <view class="mv-cname">{{item.name}}<text wx:if="{{item.similar}}" class="mv-sim">高度相似</text></view>
+          <view class="mv-csub">{{item.sub}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="mv-fields">
+      <view class="mv-frow" wx:for="{{mergeView.fields}}" wx:key="key">
+        <view class="mv-fl">{{item.label}}</view>
+        <view class="mv-fv">档案：{{item.mine}}</view>
+        <view class="mv-fv">投稿：{{item.sub}}</view>
+        <view wx:if="{{item.conflict}}" class="mv-sw {{item.use ? 'on' : ''}}"
+              catchtap="toggleField" data-key="{{item.key}}">{{item.use ? '用投稿' : '留档案'}}</view>
+        <view wx:else class="mv-sw same">一致</view>
+      </view>
+    </view>
+
+    <view class="btns">
+      <view class="mini" bindtap="closeMerge">取消</view>
+      <view class="mini" bindtap="approveAsNew">作为新猫收录</view>
+      <view class="mini primary" bindtap="confirmMerge">并入这只猫</view>
     </view>
   </view>
 </view>
