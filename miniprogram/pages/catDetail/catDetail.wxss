@@ -18,6 +18,25 @@
 }
 .sharebtn::after { border: none; }
 .sharehint { font-size: 22rpx; color: var(--sub); }
+/* 照片墙：一屏 3 张，swiper 翻页（高度须显式设定，含圆点空间） */
+.gwrap { margin-top: 20rpx; }
+.gswiper { height: 300rpx; }
+.gpage { display: flex; gap: 12rpx; padding: 0 24rpx; }
+.gcell { flex: 1; height: 240rpx; border-radius: 20rpx; }
+.ghint { text-align: center; font-size: 22rpx; color: var(--sub); padding-top: 10rpx; }
+
+/* 全屏照片查看层 */
+.viewer { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,0,0,.92); z-index: 999; }
+.vswiper { width: 100%; height: 100%; }
+.vimg { width: 100%; height: 100%; }
+.vbar { position: absolute; left: 0; right: 0; bottom: 60rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 48rpx; }
+.vcount { color: #fff; font-size: 28rpx; }
+.vsave {
+  color: #fff; font-size: 28rpx; background: transparent; margin: 0;
+  border: 1rpx solid rgba(255,255,255,.8); border-radius: 999rpx; padding: 10rpx 36rpx; line-height: 1.4;
+}
+.vsave::after { border: none; }
+
 /* 近况时间线里的配图 */
 .tlimgs { display: flex; flex-wrap: wrap; margin-top: 14rpx; }
 .tlimg { width: 160rpx; height: 160rpx; border-radius: 16rpx; margin: 0 12rpx 12rpx 0; }

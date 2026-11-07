@@ -1,7 +1,7 @@
 <view wx:if="{{notFound}}" class="muted" style="text-align:center;padding:80rpx 0;">猫咪不存在或已归档</view>
 
 <block wx:else>
-  <view class="hero">
+  <view class="hero" data-i="0" bindtap="openViewer">
     <image wx:if="{{cat.photos.length}}" class="heroimg" src="{{cat.photos[0]}}" mode="aspectFill" />
     <block wx:if="{{!cat.photos.length}}">猫咪照片</block>
   </view>
@@ -17,8 +17,31 @@
     <view class="sharehint">分享到朋友圈请点右上角 ···</view>
   </view>
 
-  <view wx:if="{{cat.photos.length > 1}}" class="gallery">
-    <image wx:for="{{cat.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="gimg" />
+  <!-- 全屏照片查看层：左右滑动切换，支持保存到相册 -->
+  <view wx:if="{{viewer}}" class="viewer" catchtouchmove="stop">
+    <swiper class="vswiper" current="{{viewerIndex}}" circular bindchange="onViewerChange">
+      <swiper-item wx:for="{{cat.photos}}" wx:key="*this">
+        <image src="{{item}}" mode="aspectFit" class="vimg" bindtap="closeViewer" />
+      </swiper-item>
+    </swiper>
+    <view class="vbar">
+      <text class="vcount">{{viewerIndex + 1}} / {{cat.photos.length}}</text>
+      <button class="vsave" plain catchtap="savePhoto">⤓ 保存图片</button>
+    </view>
+  </view>
+
+  <!-- 照片墙：一屏 3 张，左右滑动翻页（第 2 张起全部照片） -->
+  <view wx:if="{{cat.photos.length > 1}}" class="gwrap">
+    <swiper class="gswiper" indicator-dots indicator-color="rgba(255,255,255,.4)" indicator-active-color="#2F6FDB" circular>
+      <swiper-item wx:for="{{photoPages}}" wx:key="k" wx:for-index="pi" wx:for-item="page">
+        <view class="gpage">
+          <image wx:for="{{page.items}}" wx:for-index="ci" wx:for-item="p" wx:key="*this"
+                 src="{{p}}" mode="aspectFill" class="gcell"
+                 data-i="{{pi * 3 + ci + 1}}" bindtap="openViewer" />
+        </view>
+      </swiper-item>
+    </swiper>
+    <view class="ghint">左右滑动查看更多 · 点击查看大图</view>
   </view>
 
   <view wx:if="{{cat.voice}}" class="media">

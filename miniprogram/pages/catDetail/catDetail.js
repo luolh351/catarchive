@@ -9,7 +9,10 @@ Page({
     attrs: [],
     timeline: [],
     notFound: false,
-    playing: false
+    playing: false,
+    photoPages: [],      // 照片墙：每页 3 张（{k, items}）
+    viewer: false,       // 全屏查看层开关
+    viewerIndex: 0       // 当前查看的照片序号
   },
   onLoad(options) {
     const id = options && options.id;
@@ -42,7 +45,11 @@ Page({
   load(id) {
     service.getCat(id).then(res => {
       if (!res.cat) { this.setData({ notFound: true }); return; }
-      this.setData({ cat: res.cat, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
+      // 照片按每页 3 张分块，供照片墙 swiper 渲染
+      const photos = res.cat.photos || [];
+      const photoPages = [];
+      for (let i = 0; i < photos.length; i += 3) photoPages.push({ k: String(i), items: photos.slice(i, i + 3) });
+      this.setData({ cat: res.cat, photoPages, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
     }).catch(() => { this.setData({ notFound: true }); wx.showToast({ title: '加载失败', icon: 'none' }); });
   },
   // 播放/停止猫叫声（本地文件直接播；云存储 cloud:// 需先下载为临时文件）
@@ -86,5 +93,52 @@ Page({
     const list = e.currentTarget.dataset.list || [];
     if (!list.length) return;
     wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
+  },
+
+  // ---------- 全屏照片查看层 ----------
+  openViewer(e) {
+    const i = parseInt(e.currentTarget.dataset.i || 0, 10) || 0;
+    if (!this.data.cat.photos.length) return;
+    this.setData({ viewer: true, viewerIndex: Math.min(i, this.data.cat.photos.length - 1) });
+  },
+  closeViewer() { this.setData({ viewer: false }); },
+  stop() {},   // 阻止查看层背景滚动穿透
+  onViewerChange(e) { this.setData({ viewerIndex: e.detail.current }); },
+  // 保存当前大图到相册（游客可用）；cloud:// 需先下载为临时文件
+  savePhoto() {
+    const photos = this.data.cat.photos || [];
+    const src = photos[this.data.viewerIndex];
+    if (!src) return;
+    const save = path => wx.saveImageToPhotosAlbum({
+      filePath: path,
+      success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
+      fail: err => {
+        const msg = (err && err.errMsg) || '';
+        if (msg.indexOf('auth') >= 0 || msg.indexOf('denied') >= 0) {
+          // 授权被拒：引导去设置开启，避免静默失败
+          wx.showModal({
+            title: '需要相册权限', content: '保存图片需要授权访问相册，请在设置中开启',
+            confirmText: '去设置', success: r => { if (r.confirm) wx.openSetting({}); }
+          });
+        } else if (msg.indexOf('cancel') < 0) {
+          wx.showToast({ title: '保存失败', icon: 'none' });
+        }
+      }
+    });
+    if (src.indexOf('cloud://') === 0 && wx.cloud && wx.cloud.downloadFile) {
+      wx.showLoading({ title: '准备图片' });
+      wx.cloud.downloadFile({ fileID: src }).then(r => { wx.hideLoading(); save(r.tempFilePath); }).catch(err => {
+        wx.hideLoading();
+        console.warn('[photo] 云存储下载失败:', src, err);
+        wx.showToast({ title: '图片下载失败', icon: 'none' });
+      });
+      return;
+    }
+    if (/^https?:\/\//.test(src)) {
+      wx.showLoading({ title: '准备图片' });
+      wx.downloadFile({ url: src, success: r => { wx.hideLoading(); save(r.tempFilePath); }, fail: () => { wx.hideLoading(); wx.showToast({ title: '图片下载失败', icon: 'none' }); } });
+      return;
+    }
+    save(src);   // 本地路径（mock 演示图）
   }
 });
