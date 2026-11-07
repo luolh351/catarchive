@@ -563,6 +563,6 @@ function rejectApplication(id) {
 
 module.exports = {
   getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin,
-  submitCat, listSubmissions, approveSubmission, rejectSubmission,
+  submitCat, listSubmissions, approveSubmission, rejectSubmission, checkSubConflict,
   applyAdmin, myApplication, listApplications, approveApplication, rejectApplication
 };

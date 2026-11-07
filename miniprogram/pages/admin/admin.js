@@ -424,7 +424,8 @@ Page({
     if (!d || this._conflictBusy) return;
     this._conflictBusy = true;
     wx.showLoading({ title: '检测同名猫咪', mask: true });
-    service.checkSubConflict(d.id).then(r => {
+    // 用 Promise 链包裹同步调用：即便 service 里抛同步异常也能走 catch，避免 loading 永不关闭
+    Promise.resolve().then(() => service.checkSubConflict(d.id)).then(r => {
       wx.hideLoading();
       this._conflictBusy = false;
       if (!r || r.ok === false) { wx.showToast({ title: (r && r.msg) || '检测失败', icon: 'none' }); return; }
