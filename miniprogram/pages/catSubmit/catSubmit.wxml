@@ -2,7 +2,7 @@
 
 <view class="field">
   <view class="lab"><text class="req">*</text> 名字</view>
-  <input placeholder="如：小橘" value="{{form.name}}" bindinput="onInput" data-field="name" />
+  <input placeholder="如：小橘（不知道它叫什么？那请你做第一个为它起名的人）" value="{{form.name}}" bindinput="onInput" data-field="name" />
 </view>
 <view class="field">
   <view class="lab">昵称（用于搜索）</view>
