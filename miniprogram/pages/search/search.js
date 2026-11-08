@@ -5,6 +5,7 @@ const nav = require('../../utils/nav');
 
 Page({
   data: { q: '', list: [], searched: false },
+  all: [],   // 数据到位前的兜底：避免云模式网络窗口期输入触发 this.all undefined
   onLoad() {
     service.getCats().then(all => {
       this.all = all || [];
