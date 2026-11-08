@@ -1,1 +1,4 @@
 /* 首页样式复用 app.wxss 公共类；搜索入口用全局 .search，点击跳转搜索页 */
+
+/* 分类末尾的数量统计小字 */
+.footcount { text-align: center; font-size: 22rpx; color: #9AA3AD; padding: 8rpx 0 30rpx; }
