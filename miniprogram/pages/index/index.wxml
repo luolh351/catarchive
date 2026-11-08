@@ -10,9 +10,6 @@
 
 <view wx:if="{{list.length===0}}" class="muted" style="text-align:center;padding:40rpx 0;">该分类下还没有猫咪</view>
 
-<!-- 分类末尾的数量统计 -->
-<view wx:if="{{list.length>0}}" class="footcount">{{active}}共有 {{list.length}} 只猫</view>
-
 <view wx:for="{{list}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
   <view class="avatar" style="background:{{item.bg}}">
     <image wx:if="{{item.photo}}" class="aimg" src="{{item.photo}}" mode="aspectFill" />
@@ -23,3 +20,6 @@
     <view class="sub">{{item.sub}}</view>
   </view>
 </view>
+
+<!-- 数量统计：紧跟最后一张卡片下方 -->
+<view wx:if="{{list.length>0}}" class="footcount">{{active}}共有 {{list.length}} 只猫</view>
