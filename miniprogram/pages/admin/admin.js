@@ -336,50 +336,84 @@ Page({
     });
   },
   // 投稿音频：转发给微信好友。
-  // wx.shareFileMessage 只接受本地文件路径，cloud:// 需先下载为临时文件；
-  // 该接口在开发者工具模拟器上不可用，需真机预览。
-  shareSubVoice() { return this.handleVoiceFile('share'); },
-  downloadSubVoice() { return this.handleVoiceFile('save'); },
-  async handleVoiceFile(action) {
+  // 微信强制限制：wx.shareFileMessage 必须在用户点击的同步调用栈内执行，
+  // 任何 await / then 之后再调用都会报 "can only be invoked by user TAP gesture"
+  // （表现为投稿本人手机正常，另一台审核手机无法转发/保存）。
+  // 因此这里不做异步链：缓存已就绪就当场同步分享；未就绪先下载，再提示点第二次。
+  shareSubVoice() {
     const detail = this.data.detail;
-    if (!detail || !detail.voice || this.voiceFileBusy) return;
-    this.voiceFileBusy = true;
-    let file;
-    try {
-      wx.showLoading({ title: '准备音频', mask: true });
-      // 同一文件重试时复用，避免重复下载、堆积本地文件。
-      const cached = this.voiceFileCache;
-      if (cached && cached.source === detail.voice && cached.name === detail.name) {
-        try {
-          await audioFile.invoke(wx.getFileSystemManager(), 'access', { path: cached.file.path });
-          file = cached.file;
-        } catch (e) { /* 文件被系统清理后重新准备 */ }
-      }
-      if (!file) {
-        file = await audioFile.prepare(wx, detail.voice, detail.name);
-        this.voiceFileCache = { source: detail.voice, name: detail.name, file };
-      }
-      wx.hideLoading();
-      if (action === 'save') { await this.saveVoiceFile(file); return; }
-      try {
-        await audioFile.invoke(wx, 'shareFileMessage', { filePath: file.path, fileName: file.fileName });
-      } catch (e) {
-        if (audioFile.isCancelled(e)) return;
-        console.warn('[audio] share failed', e);
-        const result = await audioFile.invoke(wx, 'showModal', {
+    if (!detail || !detail.voice) return;
+    const cached = this.voiceFileCache;
+    if (cached && cached.source === detail.voice && cached.name === detail.name && cached.file) {
+      this.shareVoiceNow(cached.file);   // 同步调用，保住手势
+      return;
+    }
+    this.prepareVoiceFile().then(file => {
+      if (!file) return;
+      wx.showToast({ title: '音频已就绪，请再点一次「转发好友」', icon: 'none', duration: 2500 });
+    }).catch(e => {
+      if (audioFile.isCancelled(e)) return;
+      console.warn('[audio] prepare failed', e);
+      wx.showModal({ title: '音频准备失败', content: this.voiceError(e), showCancel: false });
+    });
+  },
+  // 必须是同步函数：调用链里不能出现 await
+  shareVoiceNow(file) {
+    wx.shareFileMessage({
+      filePath: file.path,
+      fileName: file.fileName,
+      fail: err => {
+        if (audioFile.isCancelled(err)) return;
+        console.warn('[audio] share failed', err);
+        this.voiceFileCache = null;   // 文件可能被系统清理，清掉缓存引导重新准备
+        wx.showModal({
           title: '暂时无法转发',
-          content: '可先保存音频，稍后重试转发。\n原因：' + this.voiceError(e),
-          confirmText: '保存音频', cancelText: '关闭'
+          content: '可先保存音频，或再点一次「转发好友」重新准备后转发。\n原因：' + this.voiceError(err),
+          confirmText: '保存音频', cancelText: '关闭',
+          success: r => { if (r.confirm) this.downloadSubVoice(); }
         });
-        if (result.confirm) await this.saveVoiceFile(file);
       }
-    } catch (e) {
-      wx.hideLoading();
-      if (!audioFile.isCancelled(e)) {
-        console.warn('[audio] prepare/save failed', e);
+    });
+  },
+  // 下载并命名音频，带缓存；返回 Promise<file>
+  prepareVoiceFile() {
+    const detail = this.data.detail;
+    if (!detail || !detail.voice || this.voiceFileBusy) return Promise.resolve(null);
+    this.voiceFileBusy = true;
+    wx.showLoading({ title: '准备音频', mask: true });
+    return audioFile.prepare(wx, detail.voice, detail.name).then(
+      file => {
+        wx.hideLoading();
+        this.voiceFileBusy = false;
+        this.voiceFileCache = { source: detail.voice, name: detail.name, file };
+        return file;
+      },
+      e => {
+        wx.hideLoading();
+        this.voiceFileBusy = false;
+        throw e;
+      }
+    );
+  },
+  // 保存音频：走本地缓存，不涉及分享 API，不受手势限制
+  downloadSubVoice() {
+    const detail = this.data.detail;
+    if (!detail || !detail.voice) return;
+    const cached = this.voiceFileCache;
+    const ready = cached && cached.source === detail.voice && cached.name === detail.name && cached.file;
+    const p = ready ? Promise.resolve(cached.file) : this.prepareVoiceFile();
+    p.then(file => {
+      if (!file) return;
+      return this.saveVoiceFile(file).catch(e => {
+        if (audioFile.isCancelled(e)) return;
+        console.warn('[audio] save failed', e);
         wx.showModal({ title: '音频操作失败', content: this.voiceError(e), showCancel: false });
-      }
-    } finally { this.voiceFileBusy = false; }
+      });
+    }).catch(e => {
+      if (audioFile.isCancelled(e)) return;
+      console.warn('[audio] prepare failed', e);
+      wx.showModal({ title: '音频准备失败', content: this.voiceError(e), showCancel: false });
+    });
   },
   voiceError(e) {
     return String((e && (e.errMsg || e.message)) || '请检查网络、音频是否仍存在以及云存储读取权限后重试').slice(0, 240);
