@@ -220,6 +220,12 @@ Page({
         submitter: s.submitterOpenid || '游客投稿', createdAtText
       }
     });
+    // 后台预载投稿音频：分享/试听需要本地文件（cloud:// 须先下载）。
+    // 提前下载让「转发好友」一次点击即可（shareFileMessage 必须在 tap 同步栈内调用，
+    // 点了才开始下载就会丢手势）。静默进行，失败不打扰，用户点击时再降级提示。
+    if (s.voice) {
+      this.prepareVoiceFile(true).catch(() => {});
+    }
   },
   closeSub() {
     if (this.subAudio) { this.subAudio.stop(); this.subAudio.destroy(); this.subAudio = null; }
@@ -345,9 +351,10 @@ Page({
     if (!detail || !detail.voice) return;
     const cached = this.voiceFileCache;
     if (cached && cached.source === detail.voice && cached.name === detail.name && cached.file) {
-      this.shareVoiceNow(cached.file);   // 同步调用，保住手势
+      this.shareVoiceNow(cached.file);   // 同步调用，保住手势；打开弹层时已预载，通常一次就成
       return;
     }
+    if (this.voiceFileBusy) { wx.showToast({ title: '音频准备中，请稍候再点', icon: 'none' }); return; }
     this.prepareVoiceFile().then(file => {
       if (!file) return;
       wx.showToast({ title: '音频已就绪，请再点一次「转发好友」', icon: 'none', duration: 2500 });
@@ -376,20 +383,21 @@ Page({
     });
   },
   // 下载并命名音频，带缓存；返回 Promise<file>
-  prepareVoiceFile() {
+  // silent=true 时不弹 loading/错误（供弹层打开时的后台预载使用）
+  prepareVoiceFile(silent) {
     const detail = this.data.detail;
     if (!detail || !detail.voice || this.voiceFileBusy) return Promise.resolve(null);
     this.voiceFileBusy = true;
-    wx.showLoading({ title: '准备音频', mask: true });
+    if (!silent) wx.showLoading({ title: '准备音频', mask: true });
     return audioFile.prepare(wx, detail.voice, detail.name).then(
       file => {
-        wx.hideLoading();
+        if (!silent) wx.hideLoading();
         this.voiceFileBusy = false;
         this.voiceFileCache = { source: detail.voice, name: detail.name, file };
         return file;
       },
       e => {
-        wx.hideLoading();
+        if (!silent) wx.hideLoading();
         this.voiceFileBusy = false;
         throw e;
       }
@@ -401,6 +409,7 @@ Page({
     if (!detail || !detail.voice) return;
     const cached = this.voiceFileCache;
     const ready = cached && cached.source === detail.voice && cached.name === detail.name && cached.file;
+    if (!ready && this.voiceFileBusy) { wx.showToast({ title: '音频准备中，请稍候再点', icon: 'none' }); return; }
     const p = ready ? Promise.resolve(cached.file) : this.prepareVoiceFile();
     p.then(file => {
       if (!file) return;
