@@ -135,14 +135,14 @@ Page({
     if (!list.length) return;
     wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
   },
-  // 音频可选填：从微信聊天记录选音频文件（mp3/wav 等）
-  // 叫声仅支持 mp3 / wav
+  // 音频可选填：从微信聊天记录选音频文件（mp3/wav/m4a 等）
+  // 叫声仅支持 mp3 / wav / m4a
   chooseVoice() {
     wx.chooseMessageFile({
-      count: 1, type: 'file', extension: ['mp3', 'wav'],
+      count: 1, type: 'file', extension: ['mp3', 'wav', 'm4a'],
       success: res => {
         const p = res.tempFiles[0].path;
-        if (!/\.(mp3|wav)$/i.test(p)) { wx.showToast({ title: '仅支持 mp3 / wav', icon: 'none' }); return; }
+        if (!/\.(mp3|wav|m4a)$/i.test(p)) { wx.showToast({ title: '仅支持 mp3 / wav / m4a', icon: 'none' }); return; }
         this.setData({ 'form.voice': p });
         this.markDirty();
       },

@@ -46,8 +46,8 @@ function takePhotos(v, max) {
   for (let i = 0; i < v.length; i++) if (!isRemote(v[i])) return null;
   return v.slice();
 }
-// 叫声仅允许 mp3 / wav
-const AUDIO_EXT = ['mp3', 'wav'];
+// 叫声仅允许 mp3 / wav / m4a
+const AUDIO_EXT = ['mp3', 'wav', 'm4a'];
 function voiceExt(v) {
   const m = String(v).toLowerCase().split('?')[0].match(/\.([a-z0-9]+)$/);
   return m ? m[1] : '';
@@ -97,7 +97,7 @@ exports.main = async (event) => {
   const latestPhotos = takePhotos(d.latestPhotos, MAX.notePhotos);
   if (latestPhotos === null) return { ok: false, msg: '近况配图须为最多3项的云存储地址数组' };
   const voice = takeVoice(d.voice);
-  if (voice === null) return { ok: false, msg: '音频须为 mp3 / wav 格式的云存储地址' };
+  if (voice === null) return { ok: false, msg: '音频须为 mp3 / wav / m4a 格式的云存储地址' };
 
   const life = d.lifeStatus || '在校';
   const data = {

@@ -70,7 +70,7 @@ Page({
   },
   safeVoice(v) {
     if (!v) return '';
-    if (!this.mediaOk(v) || !/\.(mp3|wav)$/i.test(v)) {
+    if (!this.mediaOk(v) || !/\.(mp3|wav|m4a)$/i.test(v)) {
       wx.showToast({ title: '已清除失效的叫声文件', icon: 'none' });
       return '';
     }
@@ -160,13 +160,13 @@ Page({
     this.markDirty();
     wx.showToast({ title: '已设为封面', icon: 'none' });
   },
-  // 叫声仅支持 mp3 / wav（与 InnerAudioContext 支持的格式一致，也避免把图片等文件当音频存入）
+  // 叫声仅支持 mp3 / wav / m4a（与 InnerAudioContext 支持的格式一致，也避免把图片等文件当音频存入）
   chooseVoice() {
     wx.chooseMessageFile({
-      count: 1, type: 'file', extension: ['mp3', 'wav'],
+      count: 1, type: 'file', extension: ['mp3', 'wav', 'm4a'],
       success: res => {
         const p = res.tempFiles[0].path;
-        if (!/\.(mp3|wav)$/i.test(p)) { wx.showToast({ title: '仅支持 mp3 / wav', icon: 'none' }); return; }
+        if (!/\.(mp3|wav|m4a)$/i.test(p)) { wx.showToast({ title: '仅支持 mp3 / wav / m4a', icon: 'none' }); return; }
         this.setData({ 'form.voice': p });
         this.markDirty();
       },
