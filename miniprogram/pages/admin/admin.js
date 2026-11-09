@@ -16,8 +16,20 @@ Page({
     noEditor: false,
     ready: false
   },
+  // 离开管理台（页面卸载或切后台）：按最小存储原则删除本地音频副本，
+  // 并停掉可能还在播放的投稿音频。重新进入时 onShow 会按需重新预载。
+  leaveCleanup() {
+    this.voiceFileCache = null;
+    this.voiceFileBusy = false;
+    if (this.subAudio) { this.subAudio.stop(); this.subAudio.destroy(); this.subAudio = null; }
+    this.setData({ subPlaying: false });
+    audioFile.cleanup(wx);
+  },
   onUnload() {
-    if (this.subAudio) { this.subAudio.destroy(); this.subAudio = null; }
+    this.leaveCleanup();
+  },
+  onHide() {
+    this.leaveCleanup();
   },
   onLoad() {
     // 诊断用：页面栈上限 10 层，达到上限后 navigateTo 会失败（历史“编辑点不开”的常见原因）
@@ -34,6 +46,8 @@ Page({
   onShow() {
     this._jumping = false;
     if (this.data.ready) this.loadData();
+    // 切后台时音频副本已被清理，回到管理台且有打开中的投稿详情则重新预载
+    if (this.data.detail && this.data.detail.voice) this.prepareVoiceFile(true).catch(() => {});
   },
   loadData() {
     const failed = () => wx.showToast({ title: '部分数据加载失败，请重新进入重试', icon: 'none' });
@@ -220,12 +234,14 @@ Page({
         submitter: s.submitterOpenid || '游客投稿', createdAtText
       }
     });
-    // 后台预载投稿音频：分享/试听需要本地文件（cloud:// 须先下载）。
-    // 提前下载让「转发好友」一次点击即可（shareFileMessage 必须在 tap 同步栈内调用，
-    // 点了才开始下载就会丢手势）。静默进行，失败不打扰，用户点击时再降级提示。
-    if (s.voice) {
-      this.prepareVoiceFile(true).catch(() => {});
-    }
+    // 存储策略：本地同时只保留「当前正在查看」这一份投稿音频。
+    // 打开新投稿前先删掉上一份副本，再后台预载当前投稿——
+    // 提前下载让「转发好友」一次点击即可（shareFileMessage 必须在 tap 同步栈内调用）。
+    // 静默进行，失败不打扰；离开管理台时统一清理。
+    audioFile.cleanup(wx).then(() => {
+      this.voiceFileCache = null;
+      if (s.voice) return this.prepareVoiceFile(true);
+    }).catch(() => {});
   },
   closeSub() {
     if (this.subAudio) { this.subAudio.stop(); this.subAudio.destroy(); this.subAudio = null; }

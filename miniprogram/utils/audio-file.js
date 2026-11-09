@@ -43,4 +43,25 @@ function isCancelled(error) {
   return /cancel/i.test((error && (error.errMsg || error.message)) || '');
 }
 
-module.exports = { invoke, fileName, prepare, isCancelled };
+// 清理本地音频副本：删除用户目录下所有 cat-audio- 开头的文件（可排除一个保留）。
+// 存储策略：管理员查看投稿时自动下载，离开管理台即删除——本地不留不必要的数据。
+function cleanup(api, exceptPath) {
+  return new Promise(resolve => {
+    let fs;
+    try { fs = api.getFileSystemManager(); } catch (e) { resolve(); return; }
+    fs.readdir({
+      dirPath: api.env.USER_DATA_PATH,
+      success: r => {
+        const files = (r.files || []).filter(f => f.indexOf('cat-audio-') === 0 && f !== exceptPath);
+        if (!files.length) { resolve(); return; }
+        let left = files.length;
+        files.forEach(f => {
+          fs.unlink({ filePath: api.env.USER_DATA_PATH + '/' + f, complete: () => { if (--left === 0) resolve(); } });
+        });
+      },
+      fail: () => resolve()
+    });
+  });
+}
+
+module.exports = { invoke, fileName, prepare, isCancelled, cleanup };
