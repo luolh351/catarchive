@@ -13,7 +13,9 @@ Page({
     dirty: false,
     ready: false,
     maxPhotos: MAX_PHOTOS,
-    quick: QUICK
+    quick: QUICK,
+    occurred: '',   // 发生时间 YYYY-MM-DD，默认今天；补记过去的事时选择
+    today: ''
   },
   onLoad(options) {
     const catId = options && options.catId;
@@ -23,6 +25,11 @@ Page({
       return;
     }
     this.setData({ catId });
+    // 发生时间默认今天，不允许选未来
+    const d = new Date();
+    const p = n => (n < 10 ? '0' + n : '' + n);
+    const today = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    this.setData({ occurred: today, today });
     service.checkAdmin().then(r => {
       if (!r || !r.isAdmin) { wx.redirectTo({ url: '/pages/denied/denied' }); return; }
       this.setData({ ready: true });
@@ -78,6 +85,11 @@ Page({
     if (!list.length) return;
     wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
   },
+  // 选择发生日期
+  onDate(e) {
+    this.setData({ occurred: e.detail.value || this.data.occurred });
+    this.markDirty();
+  },
   save() {
     if (this.data.saving) return; // 防重复提交
     if (!this.data.ready) { wx.showToast({ title: '请先完成身份校验', icon: 'none' }); return; }
@@ -85,7 +97,7 @@ Page({
     if (!content) { wx.showToast({ title: '请填写近况内容', icon: 'none' }); return; }
     this.setData({ saving: true });
     wx.showLoading({ title: '提交中' });
-    service.addUpdate(this.data.catId, content, this.data.photos).then(r => {
+    service.addUpdate(this.data.catId, content, this.data.photos, this.data.occurred).then(r => {
       wx.hideLoading();
       this.setData({ saving: false });
       if (r && r.ok === false) {

@@ -303,20 +303,24 @@ function catManage(action, payload) {
 }
 
 // ---------- 管理员：新增近况 ----------
-function addUpdate(catId, content, photos) {
+// occurred：可选 'YYYY-MM-DD'，管理员补记过去发生的事；不传=现在（旧行为）
+function addUpdate(catId, content, photos, occurred) {
   if (!useCloud()) {
     const cat = MOCK_CATS.find(x => x.id === catId);
     if (cat) {
-      cat.latestNote = content;
-      cat.timeline = cat.timeline || [];
-      cat.timeline.unshift({ t: '刚刚', c: content, photos: photos || [] }); // 补充近况＝新增时间线条目
+      const tl = cat.timeline = cat.timeline || [];
+      const createdAt = occurred ? new Date(occurred + 'T00:00:00+08:00').getTime() : Date.now();
+      // mock 时间线按 新→旧 排列（unshift 在头部）
+      tl.unshift({ t: occurred || '刚刚', c: content, photos: photos || [], createdAt });
+      // 仅当不早于现有最新一条时才更新档案摘要（补记旧事不顶掉摘要）
+      if (!occurred || !tl[1] || !(tl[1].createdAt > createdAt)) cat.latestNote = content;
       saveStore(STORE_CATS, MOCK_CATS);
     }
     return mockOk();
   }
-  // 云端：近况配图先上传云存储，再连同正文写入
+  // 云端：近况配图先上传云存储，再连同正文写入（occurred 透传给 updateCreate）
   return prepareMedia({ photos: photos || [] })
-    .then(m => call('updateCreate', { catId, content, photos: (m && m.photos) || [] }));
+    .then(m => call('updateCreate', { catId, content, photos: (m && m.photos) || [], occurredAt: occurred || '' }));
 }
 
 // ---------- 管理员：名单（mock） ----------
@@ -495,9 +499,10 @@ function listUpdates(catId) {
   if (!useCloud()) {
     const c = MOCK_CATS.find(x => x.id === catId);
     const tl = (c && c.timeline) || [];
+    // mock timeline 本身按 新→旧 排列，直接映射（与云端 orderBy createdAt desc 一致）
     const list = tl.map((u, i) => ({
-      id: 'u' + i, t: u.t || '', content: u.c || u.content || '', photos: u.photos || [], createdAt: u.createdAt || (Date.now() - (tl.length - i) * 86400000)
-    })).reverse();
+      id: 'u' + i, t: u.t || '', content: u.c || u.content || '', photos: u.photos || [], createdAt: u.createdAt || (Date.now() - i * 86400000)
+    }));
     return Promise.resolve({ ok: true, list });
   }
   return call('catManage', { action: 'updatesList', catId }).then(r => {
@@ -513,7 +518,7 @@ function editUpdate(catId, updateId, data) {
     const tl = c.timeline || [];
     if (!(i >= 0 && i < tl.length)) return Promise.resolve({ ok: false, msg: '近况不存在' });
     tl[i] = { t: tl[i].t || '', c: data.content, photos: data.photos || [] };
-    if (i === tl.length - 1) c.latestNote = data.content;
+    if (i === 0) c.latestNote = data.content;   // mock timeline 头部=最新一条
     saveStore(STORE_CATS, MOCK_CATS);
     return mockOk();
   }
@@ -527,7 +532,7 @@ function deleteUpdate(catId, updateId) {
     const tl = c.timeline || [];
     if (!(i >= 0 && i < tl.length)) return Promise.resolve({ ok: false, msg: '近况不存在' });
     tl.splice(i, 1);
-    if (i === tl.length) c.latestNote = tl.length ? (tl[tl.length - 1].c || '') : '';
+    if (i === 0) c.latestNote = tl.length ? (tl[0].c || '') : '';   // mock timeline 头部=最新一条
     saveStore(STORE_CATS, MOCK_CATS);
     return mockOk();
   }

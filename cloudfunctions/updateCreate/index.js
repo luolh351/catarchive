@@ -3,6 +3,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const cats = db.collection('cats');
 const admins = db.collection('admin_users');
+const updates = db.collection('cat_updates');
 
 // 近况配图：最多 3 张，必须是云存储地址（拒绝 http://tmp/、wxfile:// 等本地临时路径）
 const MAX_PHOTOS = 3;
@@ -27,7 +28,7 @@ exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
   const r = await admins.where({ openid: OPENID }).get();
   if (!r.data || r.data.length === 0) return { ok: false, msg: '无权限' };
-  const { catId, content, photos } = event || {};
+  const { catId, content, photos, occurredAt } = event || {};
   if (!catId) return { ok: false, msg: '缺少猫咪 id' };
   if (typeof content !== 'string' || !content.trim() || content.length > 500) {
     return { ok: false, msg: '内容必填且≤500字' };
@@ -36,6 +37,26 @@ exports.main = async (event) => {
   if (imgs === null) return { ok: false, msg: '近况配图须为最多3项的云存储地址数组' };
   const text = content.trim();
   const now = db.serverDate();
+
+  // 发生时间（可选）：管理员补记过去发生的事。格式 YYYY-MM-DD，不允许未来日期。
+  // 未填写时行为与旧版完全一致：createdAt 取服务器当前时间、无条件覆盖档案摘要。
+  // 填写后：时间线按该时间排序插入；且仅当它不早于现有最新一条时才更新 latestNote
+  //（补记旧事不应把旧消息顶到档案摘要上）。
+  let createTime = now;
+  let isNewest = true;
+  if (occurredAt) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(occurredAt))) return { ok: false, msg: '发生时间格式错误' };
+    const t = new Date(occurredAt + 'T00:00:00+08:00');   // 按北京时间解析，避免时区偏移
+    if (isNaN(t.getTime())) return { ok: false, msg: '发生时间格式错误' };
+    if (t.getTime() > Date.now() + 86400000) return { ok: false, msg: '发生时间不能是未来' };
+    createTime = t;
+    const top1 = await updates.where({ catId }).orderBy('createdAt', 'desc').limit(1).get();
+    const latest = (top1.data || [])[0];
+    if (latest && latest.createdAt) {
+      const lt = latest.createdAt instanceof Date ? latest.createdAt.getTime() : new Date(latest.createdAt).getTime();
+      isNewest = t.getTime() >= (isNaN(lt) ? 0 : lt);
+    }
+  }
 
   let reason = '';
   try {
@@ -48,8 +69,10 @@ exports.main = async (event) => {
         cat = null;
       }
       if (!cat || !cat.data || cat.data.published === false) { reason = 'NO_CAT'; throw new Error('tx_abort'); }
-      await tx.collection('cat_updates').add({ data: { catId, content: text, photos: imgs, createdAt: now, operatorOpenid: OPENID } });
-      await tx.collection('cats').doc(catId).update({ data: { latestNote: text, updatedAt: now, operatorOpenid: OPENID } });
+      await tx.collection('cat_updates').add({ data: { catId, content: text, photos: imgs, createdAt: createTime, operatorOpenid: OPENID } });
+      if (isNewest) {
+        await tx.collection('cats').doc(catId).update({ data: { latestNote: text, updatedAt: now, operatorOpenid: OPENID } });
+      }
       await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'updateCreate', target: catId, detail: text.slice(0, 50), createdAt: now } });
     });
   } catch (e) {

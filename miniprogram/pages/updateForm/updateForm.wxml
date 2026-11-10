@@ -25,6 +25,14 @@
   <view class="muted" style="margin-top:16rpx">配图会随这条近况一起显示在档案的时间线里。</view>
 </view>
 
+<view class="field">
+  <view class="lab">发生时间</view>
+  <picker mode="date" value="{{occurred}}" end="{{today}}" bindchange="onDate">
+    <view class="opt">{{occurred}}（点击改为过去某天）</view>
+  </picker>
+  <view class="muted" style="margin-top:16rpx">默认今天。补记过去发生的事时选对应日期，时间线会按它排序；旧事不会顶掉档案的“最近情况”。</view>
+</view>
+
 <view class="save {{saving?'disabled':''}}" bindtap="save">{{saving ? '提交中…' : '保存近况'}}</view>
 <view class="hist" bindtap="goHistory">查看历史近况（修改 / 删除）</view>
 <view class="cancel" bindtap="cancel">取消</view>
