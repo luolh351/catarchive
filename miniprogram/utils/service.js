@@ -489,6 +489,51 @@ function rejectSubmission(id) {
   return call('submissionManage', { action: 'reject', id });
 }
 
+// ---------- 管理端：近况时间线（列表 / 编辑 / 删除） ----------
+// 云端数据在 cat_updates 集合；mock 数据在猫的 timeline 数组（条目 {t, c, photos}，旧→新排列）
+function listUpdates(catId) {
+  if (!useCloud()) {
+    const c = MOCK_CATS.find(x => x.id === catId);
+    const tl = (c && c.timeline) || [];
+    const list = tl.map((u, i) => ({
+      id: 'u' + i, t: u.t || '', content: u.c || u.content || '', photos: u.photos || [], createdAt: u.createdAt || (Date.now() - (tl.length - i) * 86400000)
+    })).reverse();
+    return Promise.resolve({ ok: true, list });
+  }
+  return call('catManage', { action: 'updatesList', catId }).then(r => {
+    if (!r || r.ok === false) throw new Error((r && r.msg) || '近况加载失败');
+    return r;
+  });
+}
+function editUpdate(catId, updateId, data) {
+  if (!useCloud()) {
+    const c = MOCK_CATS.find(x => x.id === catId);
+    if (!c) return Promise.resolve({ ok: false, msg: '猫咪不存在' });
+    const i = parseInt(String(updateId).slice(1), 10);
+    const tl = c.timeline || [];
+    if (!(i >= 0 && i < tl.length)) return Promise.resolve({ ok: false, msg: '近况不存在' });
+    tl[i] = { t: tl[i].t || '', c: data.content, photos: data.photos || [] };
+    if (i === tl.length - 1) c.latestNote = data.content;
+    saveStore(STORE_CATS, MOCK_CATS);
+    return mockOk();
+  }
+  return call('catManage', { action: 'updatesEdit', catId, updateId, content: data.content, photos: data.photos || [] });
+}
+function deleteUpdate(catId, updateId) {
+  if (!useCloud()) {
+    const c = MOCK_CATS.find(x => x.id === catId);
+    if (!c) return Promise.resolve({ ok: false, msg: '猫咪不存在' });
+    const i = parseInt(String(updateId).slice(1), 10);
+    const tl = c.timeline || [];
+    if (!(i >= 0 && i < tl.length)) return Promise.resolve({ ok: false, msg: '近况不存在' });
+    tl.splice(i, 1);
+    if (i === tl.length) c.latestNote = tl.length ? (tl[tl.length - 1].c || '') : '';
+    saveStore(STORE_CATS, MOCK_CATS);
+    return mockOk();
+  }
+  return call('catManage', { action: 'updatesDelete', catId, updateId });
+}
+
 // ---------- 公开：申请成为管理员（无需手抄 openid，云端自动取本人 openid） ----------
 function applyAdmin(profile) {
   if (!useCloud()) {
@@ -564,5 +609,6 @@ function rejectApplication(id) {
 module.exports = {
   getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin,
   submitCat, listSubmissions, approveSubmission, rejectSubmission, checkSubConflict,
+  listUpdates, editUpdate, deleteUpdate,
   applyAdmin, myApplication, listApplications, approveApplication, rejectApplication
 };

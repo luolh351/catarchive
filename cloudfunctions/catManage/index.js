@@ -181,5 +181,67 @@ exports.main = async (event) => {
     });
   }
 
+  // ---------- 近况时间线管理（列表 / 编辑 / 删除） ----------
+  // 近况配图：最多 3 张云存储地址（与 updateCreate 规则一致）
+  function takeUpdatePhotos(v) {
+    if (v === undefined || v === null) return [];
+    if (!Array.isArray(v)) return null;
+    if (v.length > 3) return null;
+    for (let i = 0; i < v.length; i++) if (!isRemote(v[i])) return null;
+    return v.slice();
+  }
+
+  // 管理员：列出该猫全部历史近况（时间倒序），供修改/删除
+  if (action === 'updatesList') {
+    const catId = event.catId;
+    if (!catId) return { ok: false, msg: 'missing catId' };
+    const up = await db.collection('cat_updates').where({ catId }).orderBy('createdAt', 'desc').limit(100).get();
+    const list = (up.data || []).map(u => ({ id: u._id, content: u.content || '', photos: u.photos || [], createdAt: u.createdAt }));
+    return { ok: true, list };
+  }
+
+  // 编辑一条历史近况；若编辑的是最新一条，同步档案的 latestNote
+  if (action === 'updatesEdit') {
+    const catId = event.catId, updateId = event.updateId;
+    if (!catId || !updateId) return { ok: false, msg: 'missing catId/updateId' };
+    const content = takeStr(event.content, MAX.latest);
+    if (content === null || !content) return { ok: false, msg: '内容必填且≤500字（不能只有空格）' };
+    const ph = takeUpdatePhotos(event.photos);
+    if (ph === null) return { ok: false, msg: '近况配图须为最多3项的云存储地址数组' };
+    const now = db.serverDate();
+    // 事务不支持 where 查询，先在事务外确定目标是否最新一条
+    const top1 = await db.collection('cat_updates').where({ catId }).orderBy('createdAt', 'desc').limit(1).get();
+    const isLatest = ((top1.data || [])[0] || {})._id === updateId;
+    return write(async tx => {
+      const cur = await tx.collection('cat_updates').doc(updateId).get();
+      if (!cur.data || cur.data.catId !== catId) throw new Error('近况不存在');
+      await tx.collection('cat_updates').doc(updateId).update({ data: { content, photos: ph } });
+      if (isLatest) {
+        await tx.collection('cats').doc(catId).update({ data: { latestNote: content, updatedAt: now, operatorOpenid: OPENID } });
+      }
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'updateEdit', target: updateId, detail: content.slice(0, 50), createdAt: now } });
+    });
+  }
+
+  // 删除一条历史近况；若删除的是最新一条，档案摘要回退为次新一条（没有则清空）
+  if (action === 'updatesDelete') {
+    const catId = event.catId, updateId = event.updateId;
+    if (!catId || !updateId) return { ok: false, msg: 'missing catId/updateId' };
+    const now = db.serverDate();
+    const top2 = await db.collection('cat_updates').where({ catId }).orderBy('createdAt', 'desc').limit(2).get();
+    const rows = top2.data || [];
+    const isLatest = (rows[0] || {})._id === updateId;
+    const prev = rows[1];   // 次新一条，回退用
+    return write(async tx => {
+      const cur = await tx.collection('cat_updates').doc(updateId).get();
+      if (!cur.data || cur.data.catId !== catId) throw new Error('近况不存在');
+      await tx.collection('cat_updates').doc(updateId).remove();
+      if (isLatest) {
+        await tx.collection('cats').doc(catId).update({ data: { latestNote: prev ? (prev.content || '') : '', updatedAt: now, operatorOpenid: OPENID } });
+      }
+      await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'updateDelete', target: updateId, createdAt: now } });
+    });
+  }
+
   return { ok: false, msg: '未知 action' };
 };

@@ -1,0 +1,27 @@
+<view class="hint">点击任意一条展开编辑。修改会同步更新猫咪详情页的时间线；删除最新一条时，档案摘要会回退到上一条。</view>
+
+<view class="up" wx:for="{{list}}" wx:key="id">
+  <view class="uphead" bindtap="toggle" data-id="{{item.id}}">
+    <text class="upd">{{item.date}}</text>
+    <text class="summary">{{item.open ? item.draft : item.content}}</text>
+    <text class="arrow">{{item.open ? '收起 ▴' : '展开 ▾'}}</text>
+  </view>
+
+  <view wx:if="{{item.open}}" class="upedit">
+    <textarea class="ta" value="{{item.draft}}" maxlength="500" auto-height
+              bindinput="onDraft" data-id="{{item.id}}" placeholder="近况内容（必填，≤500字）" />
+    <view class="imgrow" wx:if="{{item.photos.length}}">
+      <view class="imgwrap" wx:for="{{item.photos}}" wx:for-item="ph" wx:for-index="pi" wx:key="*this">
+        <image class="pimg" src="{{ph}}" mode="aspectFill" bindtap="previewPhoto" data-src="{{ph}}" data-list="{{item.photos}}" />
+        <text class="pdel" catchtap="removePhoto" data-id="{{item.id}}" data-pi="{{pi}}">✕</text>
+      </view>
+    </view>
+    <view class="meta">配图仅支持移除；需要补充新配图请在「补充近况」中新增一条。</view>
+    <view class="btns">
+      <view class="mini danger" bindtap="del" data-id="{{item.id}}">删除此条</view>
+      <view class="mini primary" bindtap="save" data-id="{{item.id}}">保存修改</view>
+    </view>
+  </view>
+</view>
+
+<view wx:if="{{!list.length && loaded}}" class="empty">这只猫还没有任何近况记录</view>

@@ -1,0 +1,41 @@
+/* 近况管理页 */
+.hint { font-size: 22rpx; color: #8a8f99; line-height: 1.6; padding: 0 4rpx 16rpx; }
+
+.up {
+  background: #fff; border-radius: 20rpx; margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(47,111,219,.06); overflow: hidden;
+}
+.uphead { display: flex; align-items: center; gap: 16rpx; padding: 22rpx 24rpx; }
+.upd { flex: none; font-size: 22rpx; color: #8a8f99; }
+.summary {
+  flex: 1; min-width: 0; font-size: 26rpx; color: #2b3240;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.arrow { flex: none; font-size: 22rpx; color: #97A0AA; }
+
+.upedit { border-top: 1rpx solid #EEF2F8; padding: 20rpx 24rpx 24rpx; }
+.ta {
+  width: 100%; box-sizing: border-box; min-height: 140rpx;
+  font-size: 26rpx; color: #2b3240; line-height: 1.6;
+  background: #F4F6FA; border-radius: 16rpx; padding: 20rpx;
+}
+.imgrow { display: flex; flex-wrap: wrap; gap: 14rpx; margin-top: 18rpx; }
+.imgwrap { position: relative; width: 150rpx; height: 150rpx; }
+.pimg { width: 100%; height: 100%; border-radius: 14rpx; }
+.pdel {
+  position: absolute; top: -12rpx; right: -12rpx;
+  width: 40rpx; height: 40rpx; border-radius: 50%;
+  background: rgba(0,0,0,.55); color: #fff; font-size: 22rpx;
+  display: flex; align-items: center; justify-content: center;
+}
+.meta { font-size: 22rpx; color: #8a8f99; margin-top: 14rpx; line-height: 1.5; }
+.btns { display: flex; gap: 16rpx; margin-top: 20rpx; justify-content: flex-end; }
+
+.mini {
+  font-size: 26rpx; padding: 12rpx 32rpx; border-radius: 999rpx;
+  border: 1rpx solid #D8DEE8; color: #4b5563;
+}
+.mini.primary { background: #2F6FDB; border-color: #2F6FDB; color: #fff; }
+.mini.danger { border-color: #E7A2A2; color: #C0392B; }
+
+.empty { text-align: center; color: #8a8f99; font-size: 26rpx; padding: 60rpx 0; }
