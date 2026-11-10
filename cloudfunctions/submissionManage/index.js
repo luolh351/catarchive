@@ -230,12 +230,14 @@ exports.main = async (event) => {
     const catData = Object.assign({
       aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '',
       coatColor: '未知', gender: '未知', sterilizationStatus: '未知', photos: [], voice: '', latestPhotos: [],
-      more: ''
+      more: '', cover: ''
     }, nd, {
       lifeStatus: life,
       isAdoptable: !!nd.isAdoptable && life === '在校',
       published: true, createdAt: now, updatedAt: now, operatorOpenid: OPENID
     });
+    // 独立封面：新建档案默认取第一张照片；管理员后续可在表单里单独裁剪设置（cover 字段）
+    catData.cover = (Array.isArray(catData.photos) && catData.photos[0]) || '';
 
     // 事务防重复建档：并发采纳同一投稿时，两个事务都会写同一条 submission 文档，
     // 后提交的会因写冲突失败并回滚，因此只会产生一条猫咪记录。

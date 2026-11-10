@@ -16,7 +16,7 @@ Page({
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
       more: '',      // 「更多」栏目：一整段自由补充资料
-      photos: [], voice: '', isAdoptable: false, lifeStatus: '在校'
+      photos: [], voice: '', isAdoptable: false, lifeStatus: '在校', cover: ''   // 独立封面（裁剪版），空=默认第一张照片
     }
   },
   onUnload() {
@@ -46,7 +46,8 @@ Page({
           personalityTags: (c.personalityTags || []).join('、'), healthNotes: c.healthNotes || '',
           latestNote: c.latestNote || '',
           more: res.more || '',
-          photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校'
+          photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校',
+          cover: (c.cover && this.mediaOk(c.cover)) ? c.cover : ''
         }
       });
     }).catch(() => { wx.hideLoading(); wx.showToast({ title: '加载失败', icon: 'none' }); });
@@ -138,9 +139,13 @@ Page({
   },
   removeImage(e) {
     const i = e.currentTarget.dataset.i;
-    const photos = this.data.form.photos.slice();
+    const form = this.data.form;
+    const removed = form.photos[i];
+    const photos = form.photos.slice();
     photos.splice(i, 1);
-    this.setData({ 'form.photos': photos });
+    const patch = { 'form.photos': photos };
+    if (form.cover === removed) patch['form.cover'] = '';   // 删除的正是封面图时清空，回退第一张
+    this.setData(patch);
     this.markDirty();
   },
   // 点缩略图看大图
@@ -150,16 +155,15 @@ Page({
     wx.previewImage({ urls: photos, current: e.currentTarget.dataset.src });
   },
   // 设为封面：弹出官方裁剪框（wx.editImage，拖框选取区域），
-  // 确认后裁剪结果作为首图（详情页大图/首页封面都按框选区域显示）；
-  // 取消编辑或基础库不支持时降级为直接设封面（原图）。
+  // 裁剪结果存入独立 cover 字段——照片墙保留原图（一图两份），封面单独用裁剪版。
+  // 取消裁剪或基础库不支持时降级为直接用原图作封面（不移动照片顺序）。
   setCover(e) {
     const i = e.currentTarget.dataset.i;
-    const photos = this.data.form.photos.slice();
+    const photos = this.data.form.photos || [];
     if (i < 0 || i >= photos.length) return;
-    const picked = photos.splice(i, 1)[0];
+    const picked = photos[i];
     const done = cover => {
-      photos.unshift(cover);
-      this.setData({ 'form.photos': photos });
+      this.setData({ 'form.cover': cover });
       this.markDirty();
     };
     this.resolveLocal(picked).then(({ path: local, temp }) => {
@@ -243,7 +247,7 @@ Page({
       sterilizationStatus: STERS.includes(f.sterilizationStatus) ? f.sterilizationStatus : '未知',
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
-      latestNote: f.latestNote, photos: f.photos, voice: f.voice,
+      latestNote: f.latestNote, photos: f.photos, voice: f.voice, cover: f.cover || '',
       more: f.more || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
       lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校'

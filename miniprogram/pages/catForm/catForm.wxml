@@ -64,12 +64,18 @@
     <view class="opt" bindtap="chooseImage">＋ 拍照 / 选照片</view>
     <view class="opt" bindtap="chooseVoice">＋ 上传叫声</view>
   </view>
+  <view class="coverrow" wx:if="{{form.cover || form.photos.length}}">
+    <image class="coverimg" src="{{form.cover || form.photos[0]}}" mode="aspectFill" />
+    <view class="covertxt">
+      <view>当前封面{{form.cover ? '（已单独框选/裁剪）' : '（默认第一张照片）'}}</view>
+      <view class="coversub">点任意照片的「设为封面」可框选裁剪；照片墙保留原图</view>
+    </view>
+  </view>
   <view class="imgs" wx:if="{{form.photos.length}}">
     <view class="img" wx:for="{{form.photos}}" wx:key="*this">
       <image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
       <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
-      <text wx:if="{{index===0}}" class="cover">封面</text>
-      <text wx:else class="setcover" catchtap="setCover" data-i="{{index}}">设为封面</text>
+      <text class="setcover" catchtap="setCover" data-i="{{index}}">设为封面</text>
     </view>
   </view>
   <view wx:if="{{form.voice}}" class="voice">

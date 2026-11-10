@@ -1,2 +1,12 @@
 /* 表单样式复用 app.wxss 公共类 */
 .custom { margin-top: 16rpx; }
+
+/* 当前封面预览行 */
+.coverrow {
+  display: flex; align-items: center; gap: 18rpx;
+  background: var(--tagBg, #F4F6FA); border-radius: 16rpx;
+  padding: 16rpx 20rpx; margin-top: 16rpx;
+}
+.coverimg { width: 110rpx; height: 110rpx; border-radius: 14rpx; flex: none; }
+.covertxt { flex: 1; min-width: 0; font-size: 24rpx; color: var(--fg, #2b3240); line-height: 1.5; }
+.coversub { font-size: 22rpx; color: var(--sub, #8a8f99); margin-top: 4rpx; }
