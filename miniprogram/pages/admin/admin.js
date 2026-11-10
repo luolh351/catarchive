@@ -119,23 +119,6 @@ Page({
       }
     });
   },
-  // 打开该猫的历史近况管理（列表 → 展开编辑/删除）
-  goUpdates(e) {
-    const id = e.currentTarget.dataset.id;
-    const name = e.currentTarget.dataset.name || '';
-    if (this._jumping) return;
-    this._jumping = true;
-    const url = '/pages/updatesManage/updatesManage?catId=' + id + '&name=' + encodeURIComponent(name);
-    wx.navigateTo({
-      url,
-      success: () => setTimeout(() => { this._jumping = false; }, 400),
-      fail: err => {
-        this._jumping = false;
-        console.warn('[nav] 打开近况管理失败:', (err && err.errMsg) || '', url);
-        wx.showToast({ title: '打开失败，请重试', icon: 'none' });
-      }
-    });
-  },
   archive(e) {
     const id = e.currentTarget.dataset.id;
     wx.showModal({

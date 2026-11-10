@@ -1,3 +1,9 @@
 /* 样式复用 app.wxss 的 .field / .lab / .opts / .opt / .imgs / .img / .save / .cancel 与可伸缩的 .ta，
    与「编辑猫咪」表单保持一致；这里只留字数统计 */
 .count { text-align: right; font-size: 24rpx; color: var(--sub); margin-top: 10rpx; }
+
+/* 历史近况入口：保存按钮下方的居中链接 */
+.hist {
+  text-align: center; font-size: 26rpx; color: var(--primary, #2F6FDB);
+  padding: 24rpx 0; margin-bottom: 8rpx;
+}

@@ -26,4 +26,5 @@
 </view>
 
 <view class="save {{saving?'disabled':''}}" bindtap="save">{{saving ? '提交中…' : '保存近况'}}</view>
+<view class="hist" bindtap="goHistory">查看历史近况（修改 / 删除）</view>
 <view class="cancel" bindtap="cancel">取消</view>

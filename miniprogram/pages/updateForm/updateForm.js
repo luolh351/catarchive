@@ -106,6 +106,16 @@ Page({
       });
     });
   },
+  // 进入历史近况管理：查看/修改/删除已有时间线条目
+  goHistory() {
+    if (this._jumping) return;
+    this._jumping = true;
+    wx.navigateTo({
+      url: '/pages/updatesManage/updatesManage?catId=' + this.data.catId,
+      success: () => setTimeout(() => { this._jumping = false; }, 400),
+      fail: () => { this._jumping = false; wx.showToast({ title: '打开失败，请重试', icon: 'none' }); }
+    });
+  },
   cancel() {
     if (this.data.saving) return;
     if (this.data.dirty) {
