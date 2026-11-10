@@ -162,7 +162,13 @@ Page({
       this.setData({ 'form.photos': photos });
       this.markDirty();
     };
-    this.resolveLocal(picked).then(local => {
+    this.resolveLocal(picked).then(({ path: local, temp }) => {
+      // 中间文件清理：仅当封面改用裁剪产物（local 不再被引用）时删除；
+      // 取消裁剪时 local 就是封面照片本体，删除会导致保存上传失败
+      const cleanup = () => {
+        if (!temp) return;
+        try { wx.getFileSystemManager().unlink({ filePath: local, fail: () => {} }); } catch (e) {}
+      };
       if (typeof wx.editImage !== 'function') {
         done(local);
         wx.showToast({ title: '已设为封面', icon: 'none' });
@@ -171,26 +177,29 @@ Page({
       wx.editImage({
         src: local,
         success: res => {
-          done((res && res.tempFilePath) || local);
+          const cropped = (res && res.tempFilePath) || local;
+          done(cropped);
+          if (cropped !== local) cleanup();   // 裁剪成功：下载的中间文件用完即删
           wx.showToast({ title: '已设为封面', icon: 'none' });
         },
         fail: () => {
-          done(local);   // 用户取消裁剪：仍设为封面，用原图
+          done(local);   // 用户取消裁剪：仍设为封面，用原图（local 仍在使用，不删）
           wx.showToast({ title: '已设为封面（未裁剪）', icon: 'none' });
         }
       });
     }).catch(() => wx.showToast({ title: '图片读取失败', icon: 'none' }));
   },
-  // 把 cloud:// / https 归一化为本地临时路径（wx.editImage 需要可直接读取的图片）
+  // 把 cloud:// / https 归一化为本地临时路径（wx.editImage 需要可直接读取的图片）。
+  // 返回 { path, temp }：temp=true 表示该文件是为裁剪临时下载的，用完应删除
   resolveLocal(p) {
     if (/^cloud:\/\//.test(p) && wx.cloud && wx.cloud.downloadFile) {
-      return wx.cloud.downloadFile({ fileID: p }).then(r => r.tempFilePath);
+      return wx.cloud.downloadFile({ fileID: p }).then(r => ({ path: r.tempFilePath, temp: true }));
     }
     if (/^https?:\/\//.test(p) && !/^https?:\/\/tmp\//i.test(p)) {
       return new Promise((resolve, reject) =>
-        wx.downloadFile({ url: p, success: r => resolve(r.tempFilePath), fail: reject }));
+        wx.downloadFile({ url: p, success: r => resolve({ path: r.tempFilePath, temp: true }), fail: reject }));
     }
-    return Promise.resolve(p);   // 本地临时路径/真机路径直接可用
+    return Promise.resolve({ path: p, temp: false });   // 本地临时路径/真机路径直接可用
   },
   // 叫声仅支持 mp3 / wav / m4a（与 InnerAudioContext 支持的格式一致，也避免把图片等文件当音频存入）
   chooseVoice() {
