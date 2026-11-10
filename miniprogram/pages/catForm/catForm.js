@@ -149,16 +149,48 @@ Page({
     if (!photos.length) return;
     wx.previewImage({ urls: photos, current: e.currentTarget.dataset.src });
   },
-  // 设为封面：移到首位（列表首图即详情页大图与首页封面）
+  // 设为封面：弹出官方裁剪框（wx.editImage，拖框选取区域），
+  // 确认后裁剪结果作为首图（详情页大图/首页封面都按框选区域显示）；
+  // 取消编辑或基础库不支持时降级为直接设封面（原图）。
   setCover(e) {
     const i = e.currentTarget.dataset.i;
     const photos = this.data.form.photos.slice();
-    if (i <= 0 || i >= photos.length) return;
+    if (i < 0 || i >= photos.length) return;
     const picked = photos.splice(i, 1)[0];
-    photos.unshift(picked);
-    this.setData({ 'form.photos': photos });
-    this.markDirty();
-    wx.showToast({ title: '已设为封面', icon: 'none' });
+    const done = cover => {
+      photos.unshift(cover);
+      this.setData({ 'form.photos': photos });
+      this.markDirty();
+    };
+    this.resolveLocal(picked).then(local => {
+      if (typeof wx.editImage !== 'function') {
+        done(local);
+        wx.showToast({ title: '已设为封面', icon: 'none' });
+        return;
+      }
+      wx.editImage({
+        src: local,
+        success: res => {
+          done((res && res.tempFilePath) || local);
+          wx.showToast({ title: '已设为封面', icon: 'none' });
+        },
+        fail: () => {
+          done(local);   // 用户取消裁剪：仍设为封面，用原图
+          wx.showToast({ title: '已设为封面（未裁剪）', icon: 'none' });
+        }
+      });
+    }).catch(() => wx.showToast({ title: '图片读取失败', icon: 'none' }));
+  },
+  // 把 cloud:// / https 归一化为本地临时路径（wx.editImage 需要可直接读取的图片）
+  resolveLocal(p) {
+    if (/^cloud:\/\//.test(p) && wx.cloud && wx.cloud.downloadFile) {
+      return wx.cloud.downloadFile({ fileID: p }).then(r => r.tempFilePath);
+    }
+    if (/^https?:\/\//.test(p) && !/^https?:\/\/tmp\//i.test(p)) {
+      return new Promise((resolve, reject) =>
+        wx.downloadFile({ url: p, success: r => resolve(r.tempFilePath), fail: reject }));
+    }
+    return Promise.resolve(p);   // 本地临时路径/真机路径直接可用
   },
   // 叫声仅支持 mp3 / wav / m4a（与 InnerAudioContext 支持的格式一致，也避免把图片等文件当音频存入）
   chooseVoice() {
