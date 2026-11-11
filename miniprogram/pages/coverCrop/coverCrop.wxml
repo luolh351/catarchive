@@ -22,7 +22,4 @@
     <view class="cbtn ghost" bindtap="cancel">取消</view>
     <view class="cbtn primary {{(exporting || !ready) ? 'disabled' : ''}}" bindtap="confirm">{{exporting ? '生成中…' : (!ready ? '图片加载中…' : '确认封面')}}</view>
   </view>
-
-  <!-- 导出用画布：置于屏幕外 -->
-  <canvas type="2d" id="cropOut" class="offscreen"></canvas>
 </view>

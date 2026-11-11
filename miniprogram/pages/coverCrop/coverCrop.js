@@ -43,8 +43,11 @@ Page({
       const canvas = res && res[0] && res[0].node;
       if (!canvas) { wx.showToast({ title: '画布初始化失败', icon: 'none' }); return; }
       const dpr = this._dpr;
-      canvas.width = this.data.vw * dpr;
-      canvas.height = this.data.vh * dpr;
+      // 物理像素取整（dpr 可能是 2.75 等非整数），绘制与导出的坐标系都用这组值
+      this._cw = Math.round(this.data.vw * dpr);
+      this._ch = Math.round(this.data.vh * dpr);
+      canvas.width = this._cw;
+      canvas.height = this._ch;
       this._canvas = canvas;
       this._ctx = canvas.getContext('2d');
       // 真实尺寸必须用 wx.getImageInfo 取：createImage 的 img.width/height 在部分基础库
@@ -78,14 +81,17 @@ Page({
       });
     });
   },
-  // 绘制：图片 + （圆形时）圆外压暗与白色圆环。预览与导出同一变换
-  draw() {
+  // 绘制：图片 + （圆形时）圆外压暗与白色圆环。
+  // noMask=true 时只画图片（导出用），保证导出内容=框内画面
+  draw(noMask) {
     const ctx = this._ctx;
     if (!ctx || !this._img) return;
-    const W = this.data.vw, H = this.data.vh, dpr = this._dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);      // 以 CSS px 为单位绘制
+    const W = this.data.vw, H = this.data.vh;
+    const rx = this._cw / W, ry = this._ch / H;
+    ctx.setTransform(rx, 0, 0, ry, 0, 0);        // 以 CSS px 为单位绘制
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(this._img, this._tx, this._ty, this._iw * this._s, this._ih * this._s);
+    if (noMask) return;
     if (this._target === 'home') {
       const cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2;
       // 反向路径挖洞：方形四角压暗，圆形区域保持清晰
@@ -165,6 +171,7 @@ Page({
     wx.navigateBack();
   },
   onUnload() {
+    clearTimeout(this._exportTimer);
     if (!this._done) {
       const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
       if (ch && ch.emit) ch.emit('coverCropCancel', {});   // 物理返回也通知来源页清理中间文件
@@ -174,43 +181,31 @@ Page({
     if (this.data.exporting || !this.data.ready) return;
     if (!this._ready) { wx.showToast({ title: '图片尚未加载', icon: 'none' }); return; }
     this.setData({ exporting: true });
-    const W = this.data.vw, H = this.data.vh;
-    const s = this._s || 1;
-    // 与预览完全一致：取景框 [0,W]×[0,H] 对应图片显示坐标 [−tx, W−tx]，÷s 回到原始像素
-    const sx = -this._tx / s;
-    const sy = -this._ty / s;
-    const sw = W / s;
-    const sh = H / s;
+    // 直接导出预览画布：画布上画的就是框内画面（所见即所得），无需坐标换算，
+    // 也不依赖页面外的第二块画布（其 canvasToTempFilePath 在真机上回调不稳定会卡死）。
+    // 先重绘一帧去掉遮罩/圆环，导出整块画布即可。
+    this.draw(true);
     const ow = OUT[this._target][0], oh = OUT[this._target][1];
-    wx.createSelectorQuery().in(this).select('#cropOut').fields({ node: true }).exec(res => {
-      const cv = res && res[0] && res[0].node;
-      if (!cv) { this.failExport(); return; }
-      cv.width = ow; cv.height = oh;
-      const ctx = cv.getContext('2d');
-      const img = cv.createImage();
-      img.onload = () => {
-        ctx.clearRect(0, 0, ow, oh);
-        // 兜底：源区域可能越界时先钳制，再按同比例映射到输出画布
-        const x0 = Math.max(sx, 0), y0 = Math.max(sy, 0);
-        const x1 = Math.min(sx + sw, this._iw), y1 = Math.min(sy + sh, this._ih);
-        if (x1 > x0 && y1 > y0) {
-          const dx = (x0 - sx) / sw * ow, dy = (y0 - sy) / sh * oh;
-          const dw = (x1 - x0) / sw * ow, dh = (y1 - y0) / sh * oh;
-          ctx.drawImage(img, x0, y0, x1 - x0, y1 - y0, dx, dy, dw, dh);
-        }
-        wx.canvasToTempFilePath({
-          canvas: cv, x: 0, y: 0, width: ow, height: oh, destWidth: ow, destHeight: oh,
-          success: r => {
-            this._done = true;
-            const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
-            if (ch && ch.emit) ch.emit('coverCropDone', { target: this._target, path: r.tempFilePath });
-            wx.navigateBack();
-          },
-          fail: () => this.failExport()
-        });
-      };
-      img.onerror = () => this.failExport();
-      img.src = this._src;
+    // 兜底：万一个别机型上导出回调不触发，超时恢复按钮，避免永久卡在“生成中”
+    clearTimeout(this._exportTimer);
+    this._exportTimer = setTimeout(() => {
+      if (this._done) return;
+      this.draw();
+      this.failExport();
+    }, 5000);
+    wx.canvasToTempFilePath({
+      canvas: this._canvas,
+      x: 0, y: 0, width: this._cw, height: this._ch,
+      destWidth: ow, destHeight: oh,
+      fileType: 'jpg', quality: 0.92,
+      success: r => {
+        clearTimeout(this._exportTimer);
+        this._done = true;
+        const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
+        if (ch && ch.emit) ch.emit('coverCropDone', { target: this._target, path: r.tempFilePath });
+        wx.navigateBack();
+      },
+      fail: () => { clearTimeout(this._exportTimer); this.draw(); this.failExport(); }
     });
   },
   failExport() {

@@ -22,4 +22,3 @@
 .cbtn.primary { background: #2F6FDB; color: #fff; }
 .cbtn.primary.disabled { opacity: .6; }
 .cbtn.ghost { background: rgba(255, 255, 255, .12); color: #fff; }
-.offscreen { position: fixed; left: -2000px; top: -2000px; width: 960px; height: 600px; }
