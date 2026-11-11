@@ -1,19 +1,15 @@
-<!-- 封面裁剪：视口比例固定（1:1 圆形源 / 15:8 卡片），拖动缩放图片取景，框不动 -->
+<!-- 封面裁剪：固定比例取景（首页圆形 1:1 / 卡片横向 15:8）。
+     图片可拖动/双指缩放，边界严格钳制（图片永远盖住取景框，不会拖出框外）；
+     圆形封面时取景框显示为圆形亮框，圆外（含四角）压暗，所见即所得 -->
 <view class="crop-page">
-  <view class="cropview" style="width:{{vw}}px;height:{{vh}}px">
-    <movable-area class="area">
-      <movable-view class="mv"
-        direction="all"
-        scale="{{true}}"
-        scale-min="{{scaleMin}}"
-        scale-max="{{scaleMax}}"
-        scale-value="{{scaleValue}}"
-        x="{{x}}" y="{{y}}"
-        style="width:{{bw}}px;height:{{bh}}px"
-        bindchange="onChange" bindscale="onScale">
-        <image class="cimg" src="{{src}}" mode="scaleToFill" style="width:{{bw}}px;height:{{bh}}px" />
-      </movable-view>
-    </movable-area>
+  <view class="cropwrap" style="width:{{vw}}px;height:{{vh}}px">
+    <view class="cropview {{target === 'card' ? 'card' : ''}}"
+      catchtouchstart="onTouchStart" catchtouchmove="onTouchMove" catchtouchend="onTouchEnd">
+      <image class="cimg" src="{{src}}" mode="scaleToFill"
+        style="width:{{bw}}px;height:{{bh}}px;transform:translate({{tx}}px,{{ty}}px) scale({{s}});transform-origin:0 0;" />
+    </view>
+    <!-- 压暗遮罩：圆形封面=圆外全暗；卡片封面=取景框外全暗。放在 overflow 容器外，阴影不被裁剪 -->
+    <view class="mask {{target === 'home' ? 'round' : ''}}"></view>
   </view>
 
   <view class="crophint">

@@ -1,15 +1,22 @@
-/* 裁剪页：暗色背景，视口外自动压暗（大扩散阴影），突出固定比例取景框 */
+/* 裁剪页：暗色背景；遮罩把取景框以外全部压暗 */
 .crop-page {
   min-height: 100vh; background: #101828; box-sizing: border-box;
   display: flex; flex-direction: column; align-items: center;
   padding: 24rpx 0;
 }
+.cropwrap { position: relative; }
 .cropview {
-  position: relative; overflow: hidden; border-radius: 12rpx;
-  box-shadow: 0 0 0 9999rpx rgba(16,24,40,.35);
+  width: 100%; height: 100%; overflow: hidden;
+  background: #000; border-radius: 16rpx;
 }
-.area { width: 100%; height: 100%; }
-.cimg { display: block; }
+.cimg { display: block; will-change: transform; }
+/* 取景框外压暗：巨大扩散阴影实现；圆形封面时圆外（含方形四角）全暗 */
+.mask {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  box-shadow: 0 0 0 9999rpx rgba(16, 24, 40, .5);
+  pointer-events: none;
+}
+.mask.round { border-radius: 50%; }
 .crophint {
   color: #9AA3AD; font-size: 24rpx; text-align: center;
   line-height: 1.7; margin: 28rpx 32rpx 0;
@@ -21,5 +28,5 @@
 .cbtn { flex: 1; text-align: center; padding: 22rpx 0; border-radius: 24rpx; font-size: 29rpx; }
 .cbtn.primary { background: #2F6FDB; color: #fff; }
 .cbtn.primary.disabled { opacity: .6; }
-.cbtn.ghost { background: rgba(255,255,255,.12); color: #fff; }
+.cbtn.ghost { background: rgba(255, 255, 255, .12); color: #fff; }
 .offscreen { position: fixed; left: -2000px; top: -2000px; width: 960px; height: 600px; }
