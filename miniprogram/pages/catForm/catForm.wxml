@@ -75,7 +75,7 @@
     </view>
     <view class="covitem covitem-wide" bindtap="openCoverPicker" data-target="card">
       <view class="covcard">
-        <image wx:if="{{form.coverCard || form.cover || form.photos[0]}}" src="{{form.coverCard || form.cover || form.photos[0]}}" mode="aspectFill" />
+        <image wx:if="{{form.coverCard || form.photos[0]}}" src="{{form.coverCard || form.photos[0]}}" mode="aspectFill" />
         <text wx:else class="covph">点击设置</text>
       </view>
       <view class="covlab">卡片封面（详情页大图）</view>

@@ -2,8 +2,8 @@
 
 <block wx:else>
   <view class="hero" data-i="0" bindtap="openViewer">
-    <image wx:if="{{cat.coverCard || cat.cover || cat.photos.length}}" class="heroimg" src="{{cat.coverCard || cat.cover || cat.photos[0]}}" mode="aspectFill" />
-    <block wx:if="{{!cat.coverCard && !cat.cover && !cat.photos.length}}">猫咪照片</block>
+    <image wx:if="{{cat.coverCard || cat.photos.length}}" class="heroimg" src="{{cat.coverCard || cat.photos[0]}}" mode="aspectFill" />
+    <block wx:if="{{!cat.coverCard && !cat.photos.length}}">猫咪照片</block>
   </view>
 
   <view class="d-name">
