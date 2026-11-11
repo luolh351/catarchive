@@ -236,8 +236,9 @@ exports.main = async (event) => {
       isAdoptable: !!nd.isAdoptable && life === '在校',
       published: true, createdAt: now, updatedAt: now, operatorOpenid: OPENID
     });
-    // 独立封面：新建档案默认取第一张照片；管理员后续可在表单里单独裁剪设置（cover 字段）
+    // 独立封面：新建档案默认取第一张照片；管理员后续可在表单里单独裁剪设置
     catData.cover = (Array.isArray(catData.photos) && catData.photos[0]) || '';
+    catData.coverCard = catData.cover;
 
     // 事务防重复建档：并发采纳同一投稿时，两个事务都会写同一条 submission 文档，
     // 后提交的会因写冲突失败并回滚，因此只会产生一条猫咪记录。

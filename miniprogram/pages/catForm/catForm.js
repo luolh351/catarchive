@@ -12,11 +12,14 @@ Page({
     saving: false,      // 防重复点击
     dirty: false,       // 是否有未保存改动
     voicePlaying: false,
+    coverPick: '',   // 正在为哪个封面选图：'' | 'home' | 'card'
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
       more: '',      // 「更多」栏目：一整段自由补充资料
-      photos: [], voice: '', isAdoptable: false, lifeStatus: '在校', cover: ''   // 独立封面（裁剪版），空=默认第一张照片
+      photos: [], voice: '', isAdoptable: false, lifeStatus: '在校',
+      cover: '',       // 首页圆形封面（1:1 裁剪版），空=默认第一张
+      coverCard: ''    // 卡片横向封面（详情页大图），空=回退 cover/第一张
     }
   },
   onUnload() {
@@ -47,7 +50,8 @@ Page({
           latestNote: c.latestNote || '',
           more: res.more || '',
           photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校',
-          cover: (c.cover && this.mediaOk(c.cover)) ? c.cover : ''
+          cover: (c.cover && this.mediaOk(c.cover)) ? c.cover : '',
+          coverCard: (c.coverCard && this.mediaOk(c.coverCard)) ? c.coverCard : ''
         }
       });
     }).catch(() => { wx.hideLoading(); wx.showToast({ title: '加载失败', icon: 'none' }); });
@@ -144,7 +148,9 @@ Page({
     const photos = form.photos.slice();
     photos.splice(i, 1);
     const patch = { 'form.photos': photos };
-    if (form.cover === removed) patch['form.cover'] = '';   // 删除的正是封面图时清空，回退第一张
+    // 删除的正是某处封面的原图时清空该项，回退默认
+    if (form.cover === removed) patch['form.cover'] = '';
+    if (form.coverCard === removed) patch['form.coverCard'] = '';
     this.setData(patch);
     this.markDirty();
   },
@@ -154,28 +160,54 @@ Page({
     if (!photos.length) return;
     wx.previewImage({ urls: photos, current: e.currentTarget.dataset.src });
   },
-  // 设为封面：弹出官方裁剪框（wx.editImage，拖框选取区域），
-  // 裁剪结果存入独立 cover 字段——照片墙保留原图（一图两份），封面单独用裁剪版。
-  // 取消裁剪或基础库不支持时降级为直接用原图作封面（不移动照片顺序）。
-  setCover(e) {
-    const i = e.currentTarget.dataset.i;
-    const photos = this.data.form.photos || [];
-    if (i < 0 || i >= photos.length) return;
-    const picked = photos[i];
-    const done = cover => {
-      this.setData({ 'form.cover': cover });
-      this.markDirty();
-    };
-    this.resolveLocal(picked).then(({ path: local, temp }) => {
+  // ---------- 封面（两处独立存储）：首页圆形 1:1 / 卡片横向 ----------
+  // 点击任一预览 → 选原图 → 打开官方框选界面（wx.editImage），框选区即封面
+  openCoverPicker(e) {
+    const target = e.currentTarget.dataset.target;   // 'home' | 'card'
+    if (!target) return;
+    if (!(this.data.form.photos || []).length) { this.pickNew(target); return; }
+    this.setData({ coverPick: target });
+  },
+  closeCoverPicker() { this.setData({ coverPick: '' }); },
+  noop() {},
+  // 从照片墙选一张作封面原图（照片墙本身不变，仍保留原图）
+  pickCoverFrom(e) {
+    const target = this.data.coverPick;
+    const src = e.currentTarget.dataset.src;
+    this.setData({ coverPick: '' });
+    if (target && src) this.doCrop(target, src);
+  },
+  // 浮层里的「拍照 / 相册」：新图仅作封面，不加入照片墙
+  chooseCoverNew() {
+    const target = this.data.coverPick;
+    this.setData({ coverPick: '' });
+    this.pickNew(target);
+  },
+  pickNew(target) {
+    if (!target) return;
+    wx.chooseMedia({
+      count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
+      success: res => {
+        const p = (res.tempFiles || [])[0];
+        if (p && p.tempFilePath) this.doCrop(target, p.tempFilePath);
+      },
+      fail: () => {}
+    });
+  },
+  // 打开框选界面：确定=用框选区域；点 ×=默认按中间区域取用
+  doCrop(target, src) {
+    const key = target === 'card' ? 'form.coverCard' : 'form.cover';
+    const apply = cover => { const patch = {}; patch[key] = cover; this.setData(patch); this.markDirty(); };
+    this.resolveLocal(src).then(({ path: local, temp }) => {
       // 中间文件清理：仅当封面改用裁剪产物（local 不再被引用）时删除；
-      // 取消裁剪时 local 就是封面照片本体，删除会导致保存上传失败
+      // 取消裁剪时 local 就是封面本体，删除会导致保存上传失败
       const cleanup = () => {
         if (!temp) return;
         try { wx.getFileSystemManager().unlink({ filePath: local, fail: () => {} }); } catch (e) {}
       };
       if (typeof wx.editImage !== 'function') {
-        // 当前环境不支持框选界面（如开发者工具）：自动按中间区域取用
-        done(local);
+        // 当前环境不支持框选界面（如开发者工具）：直接按中间区域取用
+        apply(local);
         wx.showToast({ title: '已按中间区域取封面', icon: 'none' });
         return;
       }
@@ -183,17 +215,27 @@ Page({
         src: local,
         success: res => {
           const cropped = (res && res.tempFilePath) || local;
-          done(cropped);
+          apply(cropped);
           if (cropped !== local) cleanup();   // 裁剪成功：下载的中间文件用完即删
           wx.showToast({ title: '已设为封面', icon: 'none' });
         },
         fail: () => {
-          // 用户点 × 取消框选：自动按中间区域取用（原图作封面，展示时系统居中裁切）
-          done(local);
+          apply(local);   // 点 ×：默认按中间区域取用
           wx.showToast({ title: '已按中间区域取封面', icon: 'none' });
         }
       });
     }).catch(() => wx.showToast({ title: '图片读取失败', icon: 'none' }));
+  },
+  // 清除两处封面设置，恢复“默认第一张照片”
+  clearCovers() {
+    wx.showModal({
+      title: '清除封面设置', content: '两处封面将恢复为默认第一张照片，确定？',
+      success: r => {
+        if (!r.confirm) return;
+        this.setData({ 'form.cover': '', 'form.coverCard': '' });
+        this.markDirty();
+      }
+    });
   },
   // 把 cloud:// / https 归一化为本地临时路径（wx.editImage 需要可直接读取的图片）。
   // 返回 { path, temp }：temp=true 表示该文件是为裁剪临时下载的，用完应删除
@@ -249,7 +291,8 @@ Page({
       sterilizationStatus: STERS.includes(f.sterilizationStatus) ? f.sterilizationStatus : '未知',
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
-      latestNote: f.latestNote, photos: f.photos, voice: f.voice, cover: f.cover || '',
+      latestNote: f.latestNote, photos: f.photos, voice: f.voice,
+      cover: f.cover || '', coverCard: f.coverCard || '',
       more: f.more || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
       lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校'

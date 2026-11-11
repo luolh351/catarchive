@@ -64,18 +64,44 @@
     <view class="opt" bindtap="chooseImage">＋ 拍照 / 选照片</view>
     <view class="opt" bindtap="chooseVoice">＋ 上传叫声</view>
   </view>
-  <view class="coverrow" wx:if="{{form.cover || form.photos.length}}">
-    <image class="coverimg" src="{{form.cover || form.photos[0]}}" mode="aspectFill" />
-    <view class="covertxt">
-      <view>当前封面{{form.cover ? '' : '（默认第一张照片）'}}</view>
-      <view class="coversub">点任意照片的「设为封面」会弹出框选；点 × 则默认按中间区域取用。照片墙始终保留原图。</view>
+  <!-- 两处封面：点击预览 → 选原图 → 框选裁剪（照片墙保留原图） -->
+  <view class="covers">
+    <view class="covitem" bindtap="openCoverPicker" data-target="home">
+      <view class="covhome">
+        <image wx:if="{{form.cover || form.photos[0]}}" src="{{form.cover || form.photos[0]}}" mode="aspectFill" />
+        <text wx:else class="covph">点击设置</text>
+      </view>
+      <view class="covlab">首页圆形封面</view>
+    </view>
+    <view class="covitem covitem-wide" bindtap="openCoverPicker" data-target="card">
+      <view class="covcard">
+        <image wx:if="{{form.coverCard || form.cover || form.photos[0]}}" src="{{form.coverCard || form.cover || form.photos[0]}}" mode="aspectFill" />
+        <text wx:else class="covph">点击设置</text>
+      </view>
+      <view class="covlab">卡片封面（详情页大图）</view>
     </view>
   </view>
+  <view class="covclear" wx:if="{{form.cover || form.coverCard}}" catchtap="clearCovers">清除封面设置，恢复默认第一张</view>
+
   <view class="imgs" wx:if="{{form.photos.length}}">
     <view class="img" wx:for="{{form.photos}}" wx:key="*this">
       <image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
       <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
-      <text class="setcover" catchtap="setCover" data-i="{{index}}">设为封面</text>
+    </view>
+  </view>
+
+  <!-- 选择封面原图的浮层 -->
+  <view wx:if="{{coverPick}}" class="covmask" bindtap="closeCoverPicker">
+    <view class="covsheet" catchtap="noop">
+      <view class="covst">{{coverPick === 'card' ? '选择「卡片封面」的原图' : '选择「首页圆形封面」的原图'}}</view>
+      <view class="covskip">裁剪时请把想显示的部分框在中间；点 × 则默认取中间区域。</view>
+      <view class="covgrid">
+        <view class="covcell" wx:for="{{form.photos}}" wx:key="*this" bindtap="pickCoverFrom" data-src="{{item}}">
+          <image src="{{item}}" mode="aspectFill" />
+        </view>
+        <view class="covcell covadd" catchtap="chooseCoverNew">＋<text>拍照/相册</text></view>
+      </view>
+      <view class="covcancel" bindtap="closeCoverPicker">取消</view>
     </view>
   </view>
   <view wx:if="{{form.voice}}" class="voice">

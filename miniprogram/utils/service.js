@@ -166,7 +166,7 @@ function getCat(id) {
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
       healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
-      latestPhotos: c.latestPhotos || [], cover: c.cover || ''
+      latestPhotos: c.latestPhotos || [], cover: c.cover || '', coverCard: c.coverCard || ''
     };
     return Promise.resolve({ cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(c) });
   }
@@ -179,7 +179,7 @@ function getCat(id) {
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
       healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
-      latestPhotos: c.latestPhotos || [], cover: c.cover || ''
+      latestPhotos: c.latestPhotos || [], cover: c.cover || '', coverCard: c.coverCard || ''
     };
     return { cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(res) };
   });
@@ -228,11 +228,12 @@ function prepareMedia(data) {
   const d = Object.assign({}, data || {});
   if (!useCloud() || !wx.cloud || !wx.cloud.uploadFile) return Promise.resolve(d);
   // latestPhotos（近况配图）同样要上传，否则会把本地临时路径写库；cover（裁剪封面）同
-  return Promise.all([ uploadList(d.photos), uploadOne(d.voice, 'mp3'), uploadList(d.latestPhotos), uploadOne(d.cover, 'jpg') ]).then(r => {
+  return Promise.all([ uploadList(d.photos), uploadOne(d.voice, 'mp3'), uploadList(d.latestPhotos), uploadOne(d.cover, 'jpg'), uploadOne(d.coverCard, 'jpg') ]).then(r => {
     d.photos = r[0] || [];
     d.voice = r[1] || '';
     if (d.latestPhotos !== undefined) d.latestPhotos = r[2] || [];
     if (d.cover !== undefined) d.cover = r[3] || '';
+    if (d.coverCard !== undefined) d.coverCard = r[4] || '';
     return d;
   });
 }
@@ -249,8 +250,8 @@ function catManage(action, payload) {
         coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
         sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
         aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
-      photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
-      cover: (d.photos && d.photos[0]) || '',
+        photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
+        cover: (d.photos && d.photos[0]) || '', coverCard: (d.photos && d.photos[0]) || '',
         more: d.more || '',
         bg: pickBg(d.coatColor), photoText: (d.name || '猫')[0] || '猫',
         sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),
@@ -455,6 +456,7 @@ function approveSubmission(id, opts) {
       sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
       aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
       photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
+      cover: (d.photos && d.photos[0]) || '', coverCard: (d.photos && d.photos[0]) || '',
       more: d.more || '',
       bg: pickBg(d.coatColor), photoText: (d.name || '猫')[0] || '猫',
       sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),

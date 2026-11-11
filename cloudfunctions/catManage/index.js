@@ -90,7 +90,9 @@ function normalize(d, requireName) {
   if (d.isAdoptable !== undefined) out.isAdoptable = !!d.isAdoptable;
   if (d.photos !== undefined) { const v = takePhotos(d.photos); if (v === null) return { err: '照片须为最多9项的云存储地址数组（不接受本地临时路径）' }; out.photos = v; }
   // 独立封面（可与照片墙首图不同：管理员裁剪的版本）；空串表示未单独设置（前端回退 photos[0]）
+  // cover=首页圆形封面，coverCard=卡片/详情页横向封面
   if (d.cover !== undefined) { if (d.cover !== '' && !isRemote(d.cover)) return { err: '封面须为云存储地址或空' }; out.cover = d.cover; }
+  if (d.coverCard !== undefined) { if (d.coverCard !== '' && !isRemote(d.coverCard)) return { err: '卡片封面须为云存储地址或空' }; out.coverCard = d.coverCard; }
   if (d.voice !== undefined) { const v = takeVoice(d.voice); if (v === null) return { err: '音频须为 mp3 / wav / m4a 格式的云存储地址' }; out.voice = v; }
   return { data: out };
 }
