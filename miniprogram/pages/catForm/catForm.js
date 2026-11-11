@@ -174,8 +174,9 @@ Page({
         try { wx.getFileSystemManager().unlink({ filePath: local, fail: () => {} }); } catch (e) {}
       };
       if (typeof wx.editImage !== 'function') {
+        // 当前环境不支持框选界面（如开发者工具）：自动按中间区域取用
         done(local);
-        wx.showToast({ title: '已设为封面', icon: 'none' });
+        wx.showToast({ title: '已按中间区域取封面', icon: 'none' });
         return;
       }
       wx.editImage({
@@ -187,8 +188,9 @@ Page({
           wx.showToast({ title: '已设为封面', icon: 'none' });
         },
         fail: () => {
-          done(local);   // 用户取消裁剪：仍设为封面，用原图（local 仍在使用，不删）
-          wx.showToast({ title: '已设为封面（未裁剪）', icon: 'none' });
+          // 用户点 × 取消框选：自动按中间区域取用（原图作封面，展示时系统居中裁切）
+          done(local);
+          wx.showToast({ title: '已按中间区域取封面', icon: 'none' });
         }
       });
     }).catch(() => wx.showToast({ title: '图片读取失败', icon: 'none' }));

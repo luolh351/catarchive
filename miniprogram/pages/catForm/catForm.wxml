@@ -67,8 +67,8 @@
   <view class="coverrow" wx:if="{{form.cover || form.photos.length}}">
     <image class="coverimg" src="{{form.cover || form.photos[0]}}" mode="aspectFill" />
     <view class="covertxt">
-      <view>当前封面{{form.cover ? '（已单独框选/裁剪）' : '（默认第一张照片）'}}</view>
-      <view class="coversub">点任意照片的「设为封面」可框选裁剪；照片墙保留原图</view>
+      <view>当前封面{{form.cover ? '' : '（默认第一张照片）'}}</view>
+      <view class="coversub">点任意照片的「设为封面」会弹出框选；点 × 则默认按中间区域取用。照片墙始终保留原图。</view>
     </view>
   </view>
   <view class="imgs" wx:if="{{form.photos.length}}">
