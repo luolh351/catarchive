@@ -1,8 +1,8 @@
-// 封面裁剪：固定比例取景（首页圆形 1:1 / 卡片横向 15:8，与实际显示区完全一致）。
-// 自实现手势（弃用 movable-view，其坐标语义不可控导致所见非所得）：
-//   - 单指拖动 / 双指缩放，每次移动后边界钳制——图片永远盖住取景框，不会拖出框外；
-//   - 显示与导出用同一套状态计算映射，保证所见即所得；
-//   - 圆形封面取景框视觉为圆形亮框（导出方形图，显示端圆角裁切，等价）。
+// 封面裁剪（canvas 自绘）：
+//   放弃 DOM 样式方案，图片、遮罩、取景框全部画在 canvas 上——
+//   预览与导出使用同一套坐标计算，所见即所得；
+//   手势直接重绘画布（不 setData），拖动/双指缩放流畅；
+//   每次移动后严格钳制：缩放下限=铺满取景框，位移不出框，图片永远盖满亮框。
 const service = require('../../utils/service');
 
 // 输出尺寸（px）：home 1:1，card 15:8（与详情页 hero 750:400 比例一致）
@@ -11,10 +11,7 @@ const OUT = { home: [600, 600], card: [960, 512] };
 Page({
   data: {
     target: 'home',
-    src: '',
-    vw: 0, vh: 0,          // 取景视口（px）
-    bw: 0, bh: 0,          // 图片基准尺寸（=原始像素）
-    tx: 0, ty: 0, s: 1,    // 图片左上角在视口中的位置与缩放（渲染用）
+    vw: 0, vh: 0,        // 取景框尺寸（CSS px）
     exporting: false
   },
   onLoad(op) {
@@ -24,91 +21,126 @@ Page({
     this._target = target;
     this._src = src;
     this._mode = '';
-    this._ready = false; this._done = false;
+    this._ready = false;
+    this._done = false;
     // 管理操作：非管理员禁止进入
     service.checkAdmin().then(r => {
       if (!r || !r.isAdmin) wx.redirectTo({ url: '/pages/denied/denied' });
     }).catch(() => {});
-    // 视口尺寸：按比例分配，保证在屏幕内放得下
+    // 取景框尺寸：按比例分配，保证在屏幕内放得下
     const win = wx.getSystemInfoSync();
+    const ratio = target === 'card' ? (OUT.card[0] / OUT.card[1]) : 1;
     const availW = win.windowWidth - 32;
     const availH = win.windowHeight - 240;
-    const ratio = target === 'card' ? (OUT.card[0] / OUT.card[1]) : 1;
     let vw = availW, vh = vw / ratio;
     if (vh > availH) { vh = availH; vw = vh * ratio; }
-    this.setData({ target, src, vw: Math.round(vw), vh: Math.round(vh) });
-    // 载入图片：初始缩放至恰好铺满视口并居中（此时确认＝取中间）
-    wx.getImageInfo({
-      src,
-      success: info => {
-        this._iw = info.width; this._ih = info.height;
+    this._dpr = win.pixelRatio || 2;
+    this.setData({ target, vw: Math.round(vw), vh: Math.round(vh) }, () => this.initCanvas());
+  },
+  initCanvas() {
+    wx.createSelectorQuery().in(this).select('#cropView').fields({ node: true }).exec(res => {
+      const canvas = res && res[0] && res[0].node;
+      if (!canvas) { wx.showToast({ title: '画布初始化失败', icon: 'none' }); return; }
+      const dpr = this._dpr;
+      canvas.width = this.data.vw * dpr;
+      canvas.height = this.data.vh * dpr;
+      this._canvas = canvas;
+      this._ctx = canvas.getContext('2d');
+      const img = canvas.createImage();
+      img.onload = () => {
+        this._img = img;
+        this._iw = img.width;
+        this._ih = img.height;
+        // 初始：恰好铺满取景框并居中（此时确认 = 取中间区域）
         const sMin = Math.max(this.data.vw / this._iw, this.data.vh / this._ih);
-        this._s = sMin;
         this._sMin = sMin;
         this._sMax = sMin * 5;
+        this._s = sMin;
         this._tx = (this.data.vw - this._iw * sMin) / 2;
         this._ty = (this.data.vh - this._ih * sMin) / 2;
-        this.setData({
-          bw: this._iw, bh: this._ih,
-          tx: Math.round(this._tx), ty: Math.round(this._ty), s: sMin
-        });
         this._ready = true;
-      },
-      fail: () => { wx.showToast({ title: '图片读取失败', icon: 'none' }); setTimeout(() => wx.navigateBack(), 600); }
+        this.draw();
+      };
+      img.onerror = () => wx.showToast({ title: '图片读取失败', icon: 'none' });
+      img.src = this._src;
     });
   },
+  // 绘制：图片 + （圆形时）圆外压暗与白色圆环。预览与导出同一变换
+  draw() {
+    const ctx = this._ctx;
+    if (!ctx || !this._img) return;
+    const W = this.data.vw, H = this.data.vh, dpr = this._dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);      // 以 CSS px 为单位绘制
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(this._img, this._tx, this._ty, this._iw * this._s, this._ih * this._s);
+    if (this._target === 'home') {
+      const cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2;
+      // 反向路径挖洞：方形四角压暗，圆形区域保持清晰
+      ctx.beginPath();
+      ctx.rect(0, 0, W, H);
+      ctx.arc(cx, cy, r, 0, Math.PI * 2, true);
+      ctx.fillStyle = 'rgba(8,12,20,.62)';
+      ctx.fill();
+      // 白色圆环
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  },
 
-  // ---------- 手势：单指拖动 / 双指缩放，状态自控并即时钳制边界 ----------
+  // ---------- 手势（canvas 触摸事件坐标相对画布，直接重绘，无 setData） ----------
   onTouchStart(e) {
     const ts = e.touches;
     if (ts.length === 1) {
       this._mode = 'move';
-      this._px = ts[0].clientX; this._py = ts[0].clientY;
+      this._px = ts[0].x; this._py = ts[0].y;
       this._tx0 = this._tx; this._ty0 = this._ty;
     } else if (ts.length >= 2) {
       this._mode = 'zoom';
-      this._dist = Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY) || 1;
+      this._dist = Math.hypot(ts[0].x - ts[1].x, ts[0].y - ts[1].y) || 1;
       this._s0 = this._s;
       this._tx0 = this._tx; this._ty0 = this._ty;
-      this._mx = (ts[0].clientX + ts[1].clientX) / 2;
-      this._my = (ts[0].clientY + ts[1].clientY) / 2;
+      this._mx = (ts[0].x + ts[1].x) / 2;
+      this._my = (ts[0].y + ts[1].y) / 2;
     }
   },
   onTouchMove(e) {
     const ts = e.touches;
     if (!this._ready || !this._mode) return;
     if (this._mode === 'move' && ts.length === 1) {
-      this._tx = this._tx0 + (ts[0].clientX - this._px);
-      this._ty = this._ty0 + (ts[0].clientY - this._py);
+      this._tx = this._tx0 + (ts[0].x - this._px);
+      this._ty = this._ty0 + (ts[0].y - this._py);
     } else if (this._mode === 'zoom' && ts.length >= 2) {
-      const d = Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY) || 1;
+      const d = Math.hypot(ts[0].x - ts[1].x, ts[0].y - ts[1].y) || 1;
       this._s = Math.min(Math.max(this._s0 * d / this._dist, this._sMin), this._sMax);
       // 两指中点对应的图片内容点跟随手指，缩放以捏合处为中心
-      const mx = (ts[0].clientX + ts[1].clientX) / 2;
-      const my = (ts[0].clientY + ts[1].clientY) / 2;
-      const px = (this._mx - this._tx0) / this._s0;
-      const py = (this._my - this._ty0) / this._s0;
-      this._tx = mx - px * this._s;
-      this._ty = my - py * this._s;
+      const mx = (ts[0].x + ts[1].x) / 2;
+      const my = (ts[0].y + ts[1].y) / 2;
+      const pxl = (this._mx - this._tx0) / this._s0;
+      const pyl = (this._my - this._ty0) / this._s0;
+      this._tx = mx - pxl * this._s;
+      this._ty = my - pyl * this._s;
     }
     this.clampPos();
-    this.setData({ tx: this._tx, ty: this._ty, s: this._s });
+    this.draw();
   },
   onTouchEnd(e) {
     const ts = e.touches;
     if (ts.length === 0) {
       this._mode = '';
     } else if (ts.length === 1) {
-      // 双指 → 单指：以剩余触点为新拖动起点，避免跳变
+      // 双指 → 单指：以剩余触点为新起点，避免跳变
       this._mode = 'move';
-      this._px = ts[0].clientX; this._py = ts[0].clientY;
+      this._px = ts[0].x; this._py = ts[0].y;
       this._tx0 = this._tx; this._ty0 = this._ty;
     }
   },
-  // 边界钳制：图片任何时刻都必须盖满取景框（缩放下限=铺满，位移钳在框内）
+  // 边界钳制：缩放下限=铺满取景框；位移钳在框内（图片永远盖满亮框）
   clampPos() {
     const vw = this.data.vw, vh = this.data.vh;
-    const w = this.data.bw * this._s, h = this.data.bh * this._s;
+    const w = this._iw * this._s, h = this._ih * this._s;
     this._tx = w <= vw ? (vw - w) / 2 : Math.min(Math.max(this._tx, vw - w), 0);
     this._ty = h <= vh ? (vh - h) / 2 : Math.min(Math.max(this._ty, vh - h), 0);
   },
@@ -129,28 +161,32 @@ Page({
     if (this.data.exporting) return;
     if (!this._ready) { wx.showToast({ title: '图片尚未加载', icon: 'none' }); return; }
     this.setData({ exporting: true });
-    const vw = this.data.vw, vh = this.data.vh;
+    const W = this.data.vw, H = this.data.vh;
     const s = this._s || 1;
-    // 显示与导出同一状态：视口 [0,vw]×[0,vh] → 图片显示坐标 [−tx, vw−tx]，再 ÷s 回到原始像素
-    let sx = -this._tx / s;
-    let sy = -this._ty / s;
-    let sw = vw / s;
-    let sh = vh / s;
-    // 兜底钳制：不越出原图边界
-    sx = sw >= this._iw ? (this._iw - sw) / 2 : Math.min(Math.max(sx, 0), this._iw - sw);
-    sy = sh >= this._ih ? (this._ih - sh) / 2 : Math.min(Math.max(sy, 0), this._ih - sh);
+    // 与预览完全一致：取景框 [0,W]×[0,H] 对应图片显示坐标 [−tx, W−tx]，÷s 回到原始像素
+    const sx = -this._tx / s;
+    const sy = -this._ty / s;
+    const sw = W / s;
+    const sh = H / s;
     const ow = OUT[this._target][0], oh = OUT[this._target][1];
-    wx.createSelectorQuery().in(this).select('#cropCanvas').fields({ node: true }).exec(res => {
-      const canvas = res && res[0] && res[0].node;
-      if (!canvas) { this.failExport(); return; }
-      canvas.width = ow; canvas.height = oh;
-      const ctx = canvas.getContext('2d');
-      const img = canvas.createImage();
+    wx.createSelectorQuery().in(this).select('#cropOut').fields({ node: true }).exec(res => {
+      const cv = res && res[0] && res[0].node;
+      if (!cv) { this.failExport(); return; }
+      cv.width = ow; cv.height = oh;
+      const ctx = cv.getContext('2d');
+      const img = cv.createImage();
       img.onload = () => {
         ctx.clearRect(0, 0, ow, oh);
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, ow, oh);
+        // 兜底：源区域可能越界时先钳制，再按同比例映射到输出画布
+        const x0 = Math.max(sx, 0), y0 = Math.max(sy, 0);
+        const x1 = Math.min(sx + sw, this._iw), y1 = Math.min(sy + sh, this._ih);
+        if (x1 > x0 && y1 > y0) {
+          const dx = (x0 - sx) / sw * ow, dy = (y0 - sy) / sh * oh;
+          const dw = (x1 - x0) / sw * ow, dh = (y1 - y0) / sh * oh;
+          ctx.drawImage(img, x0, y0, x1 - x0, y1 - y0, dx, dy, dw, dh);
+        }
         wx.canvasToTempFilePath({
-          canvas, x: 0, y: 0, width: ow, height: oh, destWidth: ow, destHeight: oh,
+          canvas: cv, x: 0, y: 0, width: ow, height: oh, destWidth: ow, destHeight: oh,
           success: r => {
             this._done = true;
             const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
