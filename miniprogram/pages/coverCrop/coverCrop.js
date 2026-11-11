@@ -12,6 +12,7 @@ Page({
   data: {
     target: 'home',
     vw: 0, vh: 0,        // 取景框尺寸（CSS px）
+    ready: false,        // 图片加载完成前禁用确认，避免误点无反应
     exporting: false
   },
   onLoad(op) {
@@ -46,23 +47,35 @@ Page({
       canvas.height = this.data.vh * dpr;
       this._canvas = canvas;
       this._ctx = canvas.getContext('2d');
-      const img = canvas.createImage();
-      img.onload = () => {
-        this._img = img;
-        this._iw = img.width;
-        this._ih = img.height;
-        // 初始：恰好铺满取景框并居中（此时确认 = 取中间区域）
-        const sMin = Math.max(this.data.vw / this._iw, this.data.vh / this._ih);
-        this._sMin = sMin;
-        this._sMax = sMin * 5;
-        this._s = sMin;
-        this._tx = (this.data.vw - this._iw * sMin) / 2;
-        this._ty = (this.data.vh - this._ih * sMin) / 2;
-        this._ready = true;
-        this.draw();
-      };
-      img.onerror = () => wx.showToast({ title: '图片读取失败', icon: 'none' });
-      img.src = this._src;
+      // 真实尺寸必须用 wx.getImageInfo 取：createImage 的 img.width/height 在部分基础库
+      // 返回默认值而非自然尺寸，会让缩放与导出映射全部错位（截出偏移/半张图）
+      wx.getImageInfo({
+        src: this._src,
+        success: info => {
+          this._iw = info.width;
+          this._ih = info.height;
+          const img = canvas.createImage();   // Image 只用于绘制，不读它的 width
+          img.onload = () => {
+            this._img = img;
+            // 初始：恰好铺满取景框并居中（此时确认 = 取中间区域）
+            const sMin = Math.max(this.data.vw / this._iw, this.data.vh / this._ih);
+            this._sMin = sMin;
+            this._sMax = sMin * 5;
+            this._s = sMin;
+            this._tx = (this.data.vw - this._iw * sMin) / 2;
+            this._ty = (this.data.vh - this._ih * sMin) / 2;
+            this._ready = true;
+            this.setData({ ready: true });
+            this.draw();
+          };
+          img.onerror = () => wx.showToast({ title: '图片读取失败', icon: 'none' });
+          img.src = this._src;
+        },
+        fail: () => {
+          wx.showToast({ title: '图片读取失败', icon: 'none' });
+          setTimeout(() => wx.navigateBack(), 600);
+        }
+      });
     });
   },
   // 绘制：图片 + （圆形时）圆外压暗与白色圆环。预览与导出同一变换
@@ -158,7 +171,7 @@ Page({
     }
   },
   confirm() {
-    if (this.data.exporting) return;
+    if (this.data.exporting || !this.data.ready) return;
     if (!this._ready) { wx.showToast({ title: '图片尚未加载', icon: 'none' }); return; }
     this.setData({ exporting: true });
     const W = this.data.vw, H = this.data.vh;
