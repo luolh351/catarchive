@@ -28,7 +28,8 @@
 .about .p { font-size: 27rpx; line-height: 1.8; color: #34465C; margin-bottom: 8rpx; }
 /* 固定底栏：关于页是 tabBar 页，页面视口已排除 tabBar，bottom:0 即贴其上方 */
 .footbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 99;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 999;
+  box-sizing: border-box;
   /* 不再叠加 env(safe-area-inset-bottom)：底栏下方是原生 tabBar，安全区由它处理，
      这里再垫高会在按钮下方留出一段空白 */
   padding: 16rpx 24rpx;

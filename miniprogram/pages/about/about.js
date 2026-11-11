@@ -1,5 +1,6 @@
 // 关于我们
 const service = require('../../utils/service');
+const nav = require('../../utils/nav');
 
 Page({
   onLoad() {
@@ -12,8 +13,10 @@ Page({
   onShareTimeline() {
     return { title: '校园猫咪档案馆｜投稿与了解校园猫' };
   },
+  // 底栏触摸移动占位：配合 catchtouchmove 阻止页面滚动穿透
+  noop() {},
   goSubmit() {
-    wx.navigateTo({ url: '/pages/catSubmit/catSubmit' });
+    nav.go('/pages/catSubmit/catSubmit');
   },
   // 入口智能分流：
   //   1) 已是管理员 → 进管理台
@@ -25,14 +28,14 @@ Page({
     wx.showLoading({ title: '校验中' });
     service.checkAdmin().then(r => {
       wx.hideLoading();
-      if (r && r.isAdmin) { wx.navigateTo({ url: '/pages/admin/admin' }); return; }
+      if (r && r.isAdmin) { nav.go('/pages/admin/admin'); return; }
       service.initAdmin({}).then(res => {
         if (res && res.ok !== false) {
           wx.showModal({
             title: '初始化成功',
             content: '系统还没有管理员，你已成为首位超级管理员。',
             showCancel: false,
-            success: () => wx.navigateTo({ url: '/pages/admin/admin' })
+            success: () => nav.go('/pages/admin/admin')
           });
           return;
         }
@@ -50,7 +53,7 @@ Page({
       wx.showModal({
         title: '还不是管理员', content: '是否提交管理员申请？审核通过后即可进入管理台。',
         confirmText: '填写申请', cancelText: '关闭',
-        success: res => { if (res.confirm) wx.navigateTo({ url: '/pages/adminApply/adminApply' }); }
+        success: res => { if (res.confirm) nav.go('/pages/adminApply/adminApply'); }
       });
     }).catch(() => wx.showToast({ title: '网络异常', icon: 'none' }));
   }

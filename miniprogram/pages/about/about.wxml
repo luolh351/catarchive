@@ -27,8 +27,9 @@
 
 </view>
 
-<!-- 固定底栏：不随页面滚动，始终贴在 tabBar 上方 -->
-<view class="footbar">
-  <view class="fbtn" bindtap="goSubmit">我要提供猫咪数据</view>
-  <view class="fbtn" bindtap="goAdmin">管理员入口</view>
+<!-- 固定底栏：不随页面滚动，始终贴在 tabBar 上方。
+     catchtouchmove 拦截触摸移动，避免点按钮时手指微动带动背后页面滚动（滚动穿透） -->
+<view class="footbar" catchtouchmove="noop">
+  <view class="fbtn" catchtap="goSubmit">我要提供猫咪数据</view>
+  <view class="fbtn" catchtap="goAdmin">管理员入口</view>
 </view>
