@@ -194,35 +194,26 @@ Page({
       fail: () => {}
     });
   },
-  // 打开框选界面：确定=用框选区域；点 ×=默认按中间区域取用
+  // 跳转固定比例裁剪页：home=1:1（圆形显示源）、card=15:8（与详情页大图比例一致）。
+  // 确认后通过 eventChannel 拿到裁剪结果临时文件；取消/物理返回时清理下载的中间文件。
   doCrop(target, src) {
-    const key = target === 'card' ? 'form.coverCard' : 'form.cover';
-    const apply = cover => { const patch = {}; patch[key] = cover; this.setData(patch); this.markDirty(); };
     this.resolveLocal(src).then(({ path: local, temp }) => {
-      // 中间文件清理：仅当封面改用裁剪产物（local 不再被引用）时删除；
-      // 取消裁剪时 local 就是封面本体，删除会导致保存上传失败
-      const cleanup = () => {
-        if (!temp) return;
-        try { wx.getFileSystemManager().unlink({ filePath: local, fail: () => {} }); } catch (e) {}
-      };
-      if (typeof wx.editImage !== 'function') {
-        // 当前环境不支持框选界面（如开发者工具）：直接按中间区域取用
-        apply(local);
-        wx.showToast({ title: '已按中间区域取封面', icon: 'none' });
-        return;
-      }
-      wx.editImage({
-        src: local,
-        success: res => {
-          const cropped = (res && res.tempFilePath) || local;
-          apply(cropped);
-          if (cropped !== local) cleanup();   // 裁剪成功：下载的中间文件用完即删
-          wx.showToast({ title: '已设为封面', icon: 'none' });
+      this._cropTemp = temp ? local : '';   // 仅为裁剪而下载的中间文件，用完即删
+      const ratio = target === 'card' ? '15:8' : '1:1';
+      wx.navigateTo({
+        url: '/pages/coverCrop/coverCrop?src=' + encodeURIComponent(local) + '&ratio=' + ratio + '&target=' + target,
+        events: {
+          coverCropDone: res => {
+            this._cropTemp = '';
+            const patch = {};
+            patch[target === 'card' ? 'form.coverCard' : 'form.cover'] = (res && res.path) || '';
+            this.setData(patch);
+            this.markDirty();
+            wx.showToast({ title: '已设为封面', icon: 'none' });
+          },
+          coverCropCancel: () => { this._cropTemp = ''; }
         },
-        fail: () => {
-          apply(local);   // 点 ×：默认按中间区域取用
-          wx.showToast({ title: '已按中间区域取封面', icon: 'none' });
-        }
+        fail: () => { this._cropTemp = ''; wx.showToast({ title: '打开失败，请重试', icon: 'none' }); }
       });
     }).catch(() => wx.showToast({ title: '图片读取失败', icon: 'none' }));
   },

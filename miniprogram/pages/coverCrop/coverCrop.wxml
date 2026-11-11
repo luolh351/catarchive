@@ -1,0 +1,31 @@
+<!-- 封面裁剪：视口比例固定（1:1 圆形源 / 15:8 卡片），拖动缩放图片取景，框不动 -->
+<view class="crop-page">
+  <view class="cropview" style="width:{{vw}}px;height:{{vh}}px">
+    <movable-area class="area">
+      <movable-view class="mv"
+        direction="all"
+        scale="{{true}}"
+        scale-min="{{scaleMin}}"
+        scale-max="{{scaleMax}}"
+        scale-value="{{scaleValue}}"
+        x="{{x}}" y="{{y}}"
+        style="width:{{bw}}px;height:{{bh}}px"
+        bindchange="onChange" bindscale="onScale">
+        <image class="cimg" src="{{src}}" mode="scaleToFill" style="width:{{bw}}px;height:{{bh}}px" />
+      </movable-view>
+    </movable-area>
+  </view>
+
+  <view class="crophint">
+    <view>拖动或双指缩放图片，让想显示的部分落在亮框内。</view>
+    <view>不调整直接确认＝取中间区域。</view>
+  </view>
+
+  <view class="cropbtns">
+    <view class="cbtn ghost" bindtap="cancel">取消</view>
+    <view class="cbtn primary {{exporting ? 'disabled' : ''}}" bindtap="confirm">{{exporting ? '生成中…' : '确认封面'}}</view>
+  </view>
+
+  <!-- 导出用画布：置于屏幕外 -->
+  <canvas type="2d" id="cropCanvas" class="offscreen"></canvas>
+</view>

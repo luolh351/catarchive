@@ -9,6 +9,7 @@
     "pages/catSubmit/catSubmit",
     "pages/updateForm/updateForm",
     "pages/updatesManage/updatesManage",
+    "pages/coverCrop/coverCrop",
     "pages/adminApply/adminApply",
     "pages/denied/denied"
   ],

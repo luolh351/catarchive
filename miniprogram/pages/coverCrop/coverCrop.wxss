@@ -1,0 +1,25 @@
+/* 裁剪页：暗色背景，视口外自动压暗（大扩散阴影），突出固定比例取景框 */
+.crop-page {
+  min-height: 100vh; background: #101828; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 24rpx 0;
+}
+.cropview {
+  position: relative; overflow: hidden; border-radius: 12rpx;
+  box-shadow: 0 0 0 9999rpx rgba(16,24,40,.35);
+}
+.area { width: 100%; height: 100%; }
+.cimg { display: block; }
+.crophint {
+  color: #9AA3AD; font-size: 24rpx; text-align: center;
+  line-height: 1.7; margin: 28rpx 32rpx 0;
+}
+.cropbtns {
+  display: flex; gap: 24rpx; width: 100%;
+  padding: 0 32rpx; margin-top: 40rpx; box-sizing: border-box;
+}
+.cbtn { flex: 1; text-align: center; padding: 22rpx 0; border-radius: 24rpx; font-size: 29rpx; }
+.cbtn.primary { background: #2F6FDB; color: #fff; }
+.cbtn.primary.disabled { opacity: .6; }
+.cbtn.ghost { background: rgba(255,255,255,.12); color: #fff; }
+.offscreen { position: fixed; left: -2000px; top: -2000px; width: 960px; height: 600px; }
