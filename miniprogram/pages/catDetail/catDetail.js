@@ -30,6 +30,62 @@ Page({
       complete: () => setTimeout(() => { this._jumping = false; }, 400)
     });
   },
+
+  // ---------- 报近况浮游按钮：可拖动 ----------
+  // 初始在右下角上移约 1/6 屏；拖完松手记忆位置（storage），轻点（未拖动）＝进入提交页
+  onReady() {
+    this.fabInit();
+  },
+  fabInit() {
+    const fallback = 'right:32rpx;bottom:calc(100vh/6);';
+    try {
+      const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+      const size = win.windowWidth / 750 * 116;                  // 116rpx → px
+      const clamp = (nx, ny) => {
+        const pad = 8;
+        nx = Math.min(Math.max(nx, pad), win.windowWidth - size - pad);
+        ny = Math.min(Math.max(ny, pad), win.windowHeight - size - pad);
+        return [nx, ny];
+      };
+      let x, y;
+      const saved = wx.getStorageSync('ufab_pos');
+      if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+        [x, y] = clamp(saved.x, saved.y);
+      } else {
+        x = win.windowWidth - size - win.windowWidth / 750 * 32;  // 右下角
+        y = win.windowHeight * (5 / 6) - size;                    // 上移约 1/6 屏
+      }
+      this._fabWin = win; this._fabSize = size; this._clampFab = clamp;
+      this._fabX = x; this._fabY = y;
+      this.setData({ fabStyle: 'left:' + Math.round(x) + 'px;top:' + Math.round(y) + 'px;' });
+    } catch (e) {
+      this.setData({ fabStyle: fallback });
+    }
+  },
+  fabTouchStart(e) {
+    if (!this._clampFab) return;
+    const t = e.touches[0];
+    this._fsx = t.clientX; this._fsy = t.clientY;
+    this._fbx = this._fabX; this._fby = this._fabY;
+    this._fmoved = false;
+  },
+  fabTouchMove(e) {
+    if (!this._clampFab) return;
+    const t = e.touches[0];
+    const dx = t.clientX - this._fsx, dy = t.clientY - this._fsy;
+    if (!this._fmoved && Math.abs(dx) + Math.abs(dy) > 6) this._fmoved = true;
+    if (!this._fmoved) return;
+    const [nx, ny] = this._clampFab(this._fbx + dx, this._fby + dy);
+    this._fabX = nx; this._fabY = ny;
+    this.setData({ fabStyle: 'left:' + Math.round(nx) + 'px;top:' + Math.round(ny) + 'px;' });
+  },
+  fabTouchEnd() {
+    if (this._fmoved) {
+      try { wx.setStorageSync('ufab_pos', { x: this._fabX, y: this._fabY }); } catch (e) {}
+      return;   // 拖动结束不算点击
+    }
+    this.goReport();
+  },
   // 转发给朋友：带猫咪名与封面，接收者点击直达该猫详情页
   onShareAppMessage() {
     const c = this.data.cat || {};

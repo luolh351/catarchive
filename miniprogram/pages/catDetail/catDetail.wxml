@@ -90,8 +90,10 @@
     </view>
   </view>
 
-  <!-- 游客报近况浮游按钮：右下角、上移约 1/6 屏；低于全屏查看层 z-index -->
-  <view class="ufab" bindtap="goReport" wx:if="{{!viewer}}">
+  <!-- 游客报近况浮游按钮：可拖动（拖完松手记忆位置），初始右下角上移约 1/6 屏；
+       不用 bindtap，触摸结束后按"是否拖动过"自行判断是拖动还是点击 -->
+  <view class="ufab" wx:if="{{!viewer}}" style="{{fabStyle}}"
+        catchtouchstart="fabTouchStart" catchtouchmove="fabTouchMove" catchtouchend="fabTouchEnd">
     <text class="ui">＋</text>
     <text class="ul">报近况</text>
   </view>
