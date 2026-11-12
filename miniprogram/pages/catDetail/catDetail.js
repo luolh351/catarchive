@@ -41,10 +41,10 @@ Page({
     try {
       const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
       const size = win.windowWidth / 750 * 116;                  // 116rpx → px
+      // 边距：左右/顶 8px；底部仅 2px —— 允许拖到屏幕最下方基本贴边
       const clamp = (nx, ny) => {
-        const pad = 8;
-        nx = Math.min(Math.max(nx, pad), win.windowWidth - size - pad);
-        ny = Math.min(Math.max(ny, pad), win.windowHeight - size - pad);
+        nx = Math.min(Math.max(nx, 8), win.windowWidth - size - 8);
+        ny = Math.min(Math.max(ny, 8), win.windowHeight - size - 2);
         return [nx, ny];
       };
       let x, y;
@@ -55,7 +55,7 @@ Page({
         x = win.windowWidth - size - win.windowWidth / 750 * 32;  // 右下角
         y = win.windowHeight * (5 / 6) - size;                    // 上移约 1/6 屏
       }
-      this._fabWin = win; this._fabSize = size; this._clampFab = clamp;
+      this._fabSize = size; this._clampFab = clamp;
       this._fabX = x; this._fabY = y;
       this.setData({ fabStyle: 'left:' + Math.round(x) + 'px;top:' + Math.round(y) + 'px;' });
     } catch (e) {
