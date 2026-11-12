@@ -25,6 +25,23 @@ Page({
   onUnload() {
     if (this.audio) { this.audio.destroy(); this.audio = null; }
   },
+  onShow() {
+    // 从子页面（如封面裁剪）返回：返回动作已完成，此时恢复“未保存离开”保护，不会再误弹
+    this.resumeLeaveAlert();
+  },
+  // 临时挂起未保存离开保护（打开子页面前调用）
+  pauseLeaveAlert() {
+    this._alertPaused = true;
+    if (wx.disableAlertBeforeUnload) { try { wx.disableAlertBeforeUnload(); } catch (e) {} }
+  },
+  // 恢复未保存离开保护（返回本页后调用；仍为脏数据才恢复）
+  resumeLeaveAlert() {
+    if (!this._alertPaused) return;
+    this._alertPaused = false;
+    if (this.data.dirty && wx.enableAlertBeforeUnload) {
+      try { wx.enableAlertBeforeUnload({ message: '资料尚未保存，确定离开吗？' }); } catch (e) {}
+    }
+  },
   onLoad(options) {
     const id = options && options.id;
     this.setData({ id: id || '' });
@@ -84,6 +101,7 @@ Page({
   markDirty() {
     if (this.data.dirty) return;
     this.setData({ dirty: true });
+    if (this._alertPaused) return;   // 从子页面返回途中不启用，交给 onShow 恢复
     if (wx.enableAlertBeforeUnload) { try { wx.enableAlertBeforeUnload({ message: '资料尚未保存，确定离开吗？' }); } catch (e) {} }
   },
   clearDirty() {
@@ -200,6 +218,8 @@ Page({
     this.resolveLocal(src).then(({ path: local, temp }) => {
       this._cropTemp = temp ? local : '';   // 仅为裁剪而下载的中间文件，用完即删
       const ratio = target === 'card' ? '15:8' : '1:1';
+      // 打开裁剪页期间挂起“未保存离开”保护：否则裁剪完返回时会被误判为离开表单而弹窗
+      this.pauseLeaveAlert();
       wx.navigateTo({
         url: '/pages/coverCrop/coverCrop?src=' + encodeURIComponent(local) + '&ratio=' + ratio + '&target=' + target,
         events: {
@@ -213,7 +233,11 @@ Page({
           },
           coverCropCancel: () => { this._cropTemp = ''; }
         },
-        fail: () => { this._cropTemp = ''; wx.showToast({ title: '打开失败，请重试', icon: 'none' }); }
+        fail: () => {
+          this._cropTemp = '';
+          this.resumeLeaveAlert();   // 没跳成功，立刻恢复保护
+          wx.showToast({ title: '打开失败，请重试', icon: 'none' });
+        }
       });
     }).catch(() => wx.showToast({ title: '图片读取失败', icon: 'none' }));
   },

@@ -35,9 +35,21 @@ Page({
       this.setData({ ready: true });
     }).catch(() => { wx.showToast({ title: '身份校验失败，请重新进入', icon: 'none' }); });
   },
+  // 从子页面（历史近况管理）返回：返回动作已完成，此时恢复保护，避免误弹
+  onShow() {
+    if (!this._alertPaused) return;
+    this._alertPaused = false;
+    if (this.data.dirty && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: '近况尚未保存，确定离开吗？' });
+  },
+  // 打开子页面前临时挂起未保存离开保护
+  pauseLeaveAlert() {
+    this._alertPaused = true;
+    if (wx.disableAlertBeforeUnload) { try { wx.disableAlertBeforeUnload(); } catch (e) {} }
+  },
   markDirty() {
     if (this.data.dirty) return;
     this.setData({ dirty: true });
+    if (this._alertPaused) return;   // 返回途中不重新启用，交给 onShow
     if (wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: '近况尚未保存，确定离开吗？' });
   },
   clearDirty() {
@@ -122,10 +134,17 @@ Page({
   goHistory() {
     if (this._jumping) return;
     this._jumping = true;
+    // 挂起未保存保护：否则从历史页返回时会被误判为离开本页而弹窗
+    this.pauseLeaveAlert();
     wx.navigateTo({
       url: '/pages/updatesManage/updatesManage?catId=' + this.data.catId,
       success: () => setTimeout(() => { this._jumping = false; }, 400),
-      fail: () => { this._jumping = false; wx.showToast({ title: '打开失败，请重试', icon: 'none' }); }
+      fail: () => {
+        this._jumping = false;
+        this._alertPaused = false;
+        if (this.data.dirty && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: '近况尚未保存，确定离开吗？' });
+        wx.showToast({ title: '打开失败，请重试', icon: 'none' });
+      }
     });
   },
   cancel() {
