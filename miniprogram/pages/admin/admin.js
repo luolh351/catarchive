@@ -18,6 +18,7 @@ Page({
     admins: [],
     subs: [],
     noteSubs: [],   // 游客近况投稿（待审）
+    noteDetail: null,   // 打开中的近况投稿详情
     apps: [],
     detail: null,
     subPlaying: false,
@@ -494,6 +495,15 @@ Page({
   },
 
   // ---------- 游客近况投稿（先审后显） ----------
+  // 与投稿一致：列表行点「查看」打开详情层，层内做通过/忽略
+  viewNoteSub(e) {
+    const id = e.currentTarget.dataset.id;
+    const s = (this.data.noteSubs || []).find(x => x.id === id);
+    if (s) this.setData({ noteDetail: s });
+  },
+  closeNoteSub() {
+    this.setData({ noteDetail: null });
+  },
   // 通过：写入该猫时间线（发生时间规则与管理员新增近况一致）；拒绝：仅标记
   approveNoteSub(e) {
     const id = e.currentTarget.dataset.id;
@@ -501,7 +511,10 @@ Page({
       title: '通过近况', content: '通过后将展示在该猫咪的档案时间线里，确定？',
       success: res => {
         if (!res.confirm) return;
-        this.runOperation(() => service.handleNoteSubmission('approve', id), () => this.loadData());
+        this.runOperation(() => service.handleNoteSubmission('approve', id), () => {
+          this.setData({ noteDetail: null });
+          this.loadData();
+        });
       }
     });
   },
@@ -511,7 +524,10 @@ Page({
       title: '忽略近况', content: '确定忽略该近况投稿？',
       success: res => {
         if (!res.confirm) return;
-        this.runOperation(() => service.handleNoteSubmission('reject', id), () => this.loadData());
+        this.runOperation(() => service.handleNoteSubmission('reject', id), () => {
+          this.setData({ noteDetail: null });
+          this.loadData();
+        });
       }
     });
   },

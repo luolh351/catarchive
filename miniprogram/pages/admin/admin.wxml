@@ -26,22 +26,45 @@
   </view>
 </view>
 
-<!-- 游客近况投稿（先审后显）：通过后写入对应猫咪的时间线 -->
+<!-- 游客近况投稿（先审后显）：与待审投稿同款紧凑行，配图与操作在详情层里 -->
 <view class="panel" wx:if="{{noteSubs.length}}">
   <view class="h">游客近况投稿（{{noteSubs.length}}）</view>
   <view class="mrow" wx:for="{{noteSubs}}" wx:key="id">
     <view class="l">
       <view class="n">{{item.catName || '未知猫咪'}}</view>
+      <view class="s">{{item.occurredAt || '未填发生时间'}}{{item.photos.length ? ' · ' + item.photos.length + '图' : ''}}</view>
       <view class="s2">{{item.content}}</view>
-      <view class="s">发生：{{item.occurredAt || '未填'}} · 提交：{{item.ct}}</view>
-      <view class="thumbs" wx:if="{{item.photos.length}}">
-        <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{p}}" mode="aspectFill" class="thumb"
-               data-src="{{p}}" data-list="{{item.photos}}" bindtap="previewNotePhotos" />
-      </view>
     </view>
     <view>
-      <text class="mini" bindtap="rejectNoteSub" data-id="{{item.id}}">忽略</text>
-      <text class="mini primary" bindtap="approveNoteSub" data-id="{{item.id}}" style="margin-left:12rpx">通过</text>
+      <text class="mini" bindtap="viewNoteSub" data-id="{{item.id}}">查看</text>
+      <text class="mini" bindtap="rejectNoteSub" data-id="{{item.id}}" style="margin-left:12rpx">忽略</text>
+    </view>
+  </view>
+</view>
+
+<!-- 近况投稿详情层（仿投稿详情） -->
+<view wx:if="{{noteDetail}}" class="mask" bindtap="closeNoteSub">
+  <view class="sheet" catchtap="stop">
+    <view class="sh">近况投稿详情</view>
+    <view class="kv"><text>猫咪</text><view class="vw"><text class="val">{{noteDetail.catName || '未知'}}</text><text class="copy" catchtap="copySub" data-copy="{{noteDetail.catName}}">复制</text></view></view>
+    <view class="kv col">
+      <view class="vhead"><text>近况内容</text><text class="copy" catchtap="copySub" data-copy="{{noteDetail.content}}">复制</text></view>
+      <view class="vtext">{{noteDetail.content}}</view>
+    </view>
+    <view class="kv"><text>发生时间</text><view class="vw"><text class="val">{{noteDetail.occurredAt || '未填'}}</text></view></view>
+    <view class="kv"><text>提交时间</text><view class="vw"><text class="val">{{noteDetail.ct}}</text></view></view>
+    <view class="kv col" wx:if="{{noteDetail.photos.length}}">
+      <view class="vhead"><text>配图（{{noteDetail.photos.length}}）</text></view>
+      <view class="thumbs"><image wx:for="{{noteDetail.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" data-list="{{noteDetail.photos}}" catchtap="previewNotePhotos" /></view>
+    </view>
+    <view class="kv" wx:else>
+      <text>配图</text>
+      <view class="vw"><text class="val dim">无（该投稿未附图）</text></view>
+    </view>
+    <view class="btns">
+      <view class="mini" bindtap="rejectNoteSub" data-id="{{noteDetail.id}}">忽略</view>
+      <view class="mini" bindtap="closeNoteSub">关闭</view>
+      <view class="mini primary" bindtap="approveNoteSub" data-id="{{noteDetail.id}}">通过</view>
     </view>
   </view>
 </view>
