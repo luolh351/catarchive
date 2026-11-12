@@ -29,7 +29,7 @@ Page({
       if (!r || !r.isAdmin) wx.redirectTo({ url: '/pages/denied/denied' });
     }).catch(() => {});
     // 取景框尺寸：按比例分配，保证在屏幕内放得下
-    const win = wx.getSystemInfoSync();
+    const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     const ratio = target === 'card' ? (OUT.card[0] / OUT.card[1]) : 1;
     const availW = win.windowWidth - 32;
     const availH = win.windowHeight - 240;
