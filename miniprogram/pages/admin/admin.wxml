@@ -26,6 +26,26 @@
   </view>
 </view>
 
+<!-- 游客近况投稿（先审后显）：通过后写入对应猫咪的时间线 -->
+<view class="panel" wx:if="{{noteSubs.length}}">
+  <view class="h">游客近况投稿（{{noteSubs.length}}）</view>
+  <view class="mrow" wx:for="{{noteSubs}}" wx:key="id">
+    <view class="l">
+      <view class="n">{{item.catName || '未知猫咪'}}</view>
+      <view class="s2">{{item.content}}</view>
+      <view class="s">发生：{{item.occurredAt || '未填'}} · 提交：{{item.ct}}</view>
+      <view class="thumbs" wx:if="{{item.photos.length}}">
+        <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{p}}" mode="aspectFill" class="thumb"
+               data-src="{{p}}" data-list="{{item.photos}}" bindtap="previewNotePhotos" />
+      </view>
+    </view>
+    <view>
+      <text class="mini" bindtap="rejectNoteSub" data-id="{{item.id}}">忽略</text>
+      <text class="mini primary" bindtap="approveNoteSub" data-id="{{item.id}}" style="margin-left:12rpx">通过</text>
+    </view>
+  </view>
+</view>
+
 <view wx:if="{{detail}}" class="mask" bindtap="closeSub">
   <view class="sheet" catchtap="stop">
     <view class="sh">投稿详情</view>

@@ -89,4 +89,10 @@
       </view>
     </view>
   </view>
+
+  <!-- 游客报近况浮游按钮：右下角、上移约 1/6 屏；低于全屏查看层 z-index -->
+  <view class="ufab" bindtap="goReport" wx:if="{{!viewer}}">
+    <text class="ui">＋</text>
+    <text class="ul">报近况</text>
+  </view>
 </block>

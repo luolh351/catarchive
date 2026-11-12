@@ -1,0 +1,39 @@
+<!-- 游客报告近况（先审后显）：提交进入待审核，管理员通过后展示在猫咪时间线 -->
+<view class="field">
+  <view class="lab" wx:if="{{catName}}">你在看「{{catName}}」的近况？告诉我们！</view>
+  <view class="lab" wx:else>看到的近况</view>
+  <textarea class="ta" auto-height placeholder="如：今天下午在二食堂门口见到它，精神不错，有人在喂" value="{{content}}" bindinput="onInput" maxlength="500" />
+  <view class="count">{{content.length}}/500</view>
+</view>
+
+<view class="field">
+  <view class="lab">快捷短语（点击添加）</view>
+  <view class="opts">
+    <view class="opt" wx:for="{{quick}}" wx:key="*this" bindtap="addQuick" data-t="{{item}}">{{item}}</view>
+  </view>
+</view>
+
+<view class="field">
+  <view class="lab">配图（可选，最多 {{maxPhotos}} 张）</view>
+  <view class="opts">
+    <view class="opt" bindtap="chooseImage">＋ 拍照 / 选照片（{{photos.length}}/{{maxPhotos}}）</view>
+  </view>
+  <view class="imgs" wx:if="{{photos.length}}">
+    <view class="img" wx:for="{{photos}}" wx:key="*this">
+      <image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
+      <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
+    </view>
+  </view>
+</view>
+
+<view class="field">
+  <view class="lab">发生时间</view>
+  <picker mode="date" value="{{occurred}}" end="{{today}}" bindchange="onDate">
+    <view class="opt">{{occurred}}（点击改为过去某天）</view>
+  </picker>
+</view>
+
+<view class="muted">提交后由管理员审核，通过后才会展示在档案时间线。请填写真实见闻，勿提交无关内容。</view>
+
+<view class="save {{saving?'disabled':''}}" bindtap="save">{{saving ? '提交中…' : '提交近况'}}</view>
+<view class="cancel" bindtap="cancel">取消</view>

@@ -1,0 +1,2 @@
+/* 游客报告近况：样式复用 app.wxss 公共类（与补充近况页一致），这里只留字数统计 */
+.count { text-align: right; font-size: 24rpx; color: var(--sub); margin-top: 10rpx; }

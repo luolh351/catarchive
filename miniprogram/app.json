@@ -10,6 +10,7 @@
     "pages/updateForm/updateForm",
     "pages/updatesManage/updatesManage",
     "pages/coverCrop/coverCrop",
+    "pages/updateSubmit/updateSubmit",
     "pages/adminApply/adminApply",
     "pages/denied/denied"
   ],

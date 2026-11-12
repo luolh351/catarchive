@@ -1,5 +1,5 @@
-// 猫咪详情：纯公开只读视图。管理操作（编辑/补充近况）仅在「管理台」进行，
-// 避免游客从首页进入详情即可更改档案。
+// 猫咪详情：公开只读视图 + 游客报近况入口（浮游按钮，提交进待审，管理员通过后展示）。
+// 管理操作（编辑/补充近况）仍在「管理台」进行，游客提交不直接改档案。
 const service = require('../../utils/service');
 
 Page({
@@ -20,6 +20,15 @@ Page({
     this.load(id);
     // 打开右上角菜单的「转发给朋友 / 分享到朋友圈 / 复制链接」
     wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+  },
+  // 游客报近况：跳转公开提交页（先审后显），带防重入
+  goReport() {
+    if (this._jumping) return;
+    this._jumping = true;
+    wx.navigateTo({
+      url: '/pages/updateSubmit/updateSubmit?catId=' + encodeURIComponent(this.data.id || ''),
+      complete: () => setTimeout(() => { this._jumping = false; }, 400)
+    });
   },
   // 转发给朋友：带猫咪名与封面，接收者点击直达该猫详情页
   onShareAppMessage() {

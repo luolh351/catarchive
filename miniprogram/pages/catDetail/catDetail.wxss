@@ -54,6 +54,19 @@
 /* 近况时间线里的配图 */
 .tlimgs { display: flex; flex-wrap: wrap; margin-top: 14rpx; }
 .tlimg { width: 160rpx; height: 160rpx; border-radius: 16rpx; margin: 0 12rpx 12rpx 0; }
+
+/* 游客报近况浮游按钮：固定在右下角、上移约 1/6 屏高（bottom: 100vh/6），
+   圆形主色 + 阴影；层级低于全屏查看层(999)，查看照片时隐藏 */
+.ufab {
+  position: fixed; right: 32rpx; bottom: calc(100vh / 6); z-index: 90;
+  width: 116rpx; height: 116rpx; border-radius: 50%;
+  background: #2F6FDB; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: 0 10rpx 28rpx rgba(47, 111, 219, .4);
+}
+.ufab .ui { font-size: 44rpx; line-height: 1; }
+.ufab .ul { font-size: 20rpx; margin-top: 2rpx; }
+.ufab:active { opacity: .85; }
 .vempty {
   background: #F4F6FA; color: #97A0AA; text-align: center;
   padding: 20rpx 0; border-radius: 24rpx; font-size: 26rpx;

@@ -326,6 +326,59 @@ function addUpdate(catId, content, photos, occurred) {
     .then(m => call('updateCreate', { catId, content, photos: (m && m.photos) || [], occurredAt: occurred || '' }));
 }
 
+// ---------- 公开：游客报近况（先审后显） ----------
+// 游客在详情页提交近况 → 存入待审核（update_submissions），管理员通过后才写入时间线
+const STORE_NOTE_SUBS = 'mock_update_submissions';
+function submitUpdate(catId, content, photos, occurred) {
+  if (!useCloud()) {
+    const list = loadStore(STORE_NOTE_SUBS, []);
+    list.push({
+      id: 'ns' + Date.now(), catId,
+      catName: (MOCK_CATS.find(c => c.id === catId) || {}).name || '',
+      content, photos: photos || [], occurredAt: occurred || '',
+      status: 'pending', createdAt: Date.now(), submitterOpenid: MOCK_ME_OPENID
+    });
+    saveStore(STORE_NOTE_SUBS, list);
+    return mockOk();
+  }
+  // 配图先上传云存储（保证管理员审核时可直接预览），再交云函数校验入库
+  return prepareMedia({ photos: photos || [] })
+    .then(m => call('updateSubmit', { catId, content, photos: (m && m.photos) || [], occurredAt: occurred || '' }));
+}
+// 管理台：待审近况投稿列表
+function listNoteSubmissions() {
+  if (!useCloud()) {
+    return Promise.resolve(loadStore(STORE_NOTE_SUBS, []).filter(s => s.status === 'pending'));
+  }
+  return call('updateSubmitManage', { action: 'list' }).then(r => {
+    if (!r || r.ok === false) throw new Error((r && r.msg) || '近况投稿加载失败');
+    return r.list || [];
+  });
+}
+// 管理台：通过（写入该猫时间线，行为与管理员新增近况一致）或拒绝
+function handleNoteSubmission(action, id) {
+  if (!useCloud()) {
+    const list = loadStore(STORE_NOTE_SUBS, []);
+    const i = list.findIndex(s => s.id === id && s.status === 'pending');
+    if (i < 0) return Promise.resolve({ ok: false, msg: '未找到该投稿' });
+    if (action === 'approve') {
+      const s = list[i];
+      const cat = MOCK_CATS.find(c => c.id === s.catId);
+      if (!cat) return Promise.resolve({ ok: false, msg: '猫咪不存在或已归档' });
+      const createdAt = s.occurredAt ? new Date(s.occurredAt + 'T00:00:00+08:00').getTime() : Date.now();
+      const tl = cat.timeline = cat.timeline || [];
+      tl.unshift({ t: s.occurredAt || '刚刚', c: s.content, photos: s.photos || [], createdAt });
+      // 与云端一致：仅当不早于现有最新一条时才更新档案摘要（补记旧事不顶掉摘要）
+      if (!s.occurredAt || !tl[1] || !(tl[1].createdAt > createdAt)) cat.latestNote = s.content;
+      saveStore(STORE_CATS, MOCK_CATS);
+    }
+    list[i].status = action === 'approve' ? 'approved' : 'rejected';
+    saveStore(STORE_NOTE_SUBS, list);
+    return mockOk();
+  }
+  return call('updateSubmitManage', { action, id });
+}
+
 // ---------- 管理员：名单（mock） ----------
 function listAdmins() {
   if (!useCloud()) return Promise.resolve({ ok: true, list: MOCK_ADMINS.map(a => ({ openid: a.openid, role: a.role, realName: a.realName, major: a.major, className: a.className, dorm: a.dorm, note: a.note || '' })) });
@@ -619,5 +672,6 @@ module.exports = {
   getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin,
   submitCat, listSubmissions, approveSubmission, rejectSubmission, checkSubConflict,
   listUpdates, editUpdate, deleteUpdate,
+  submitUpdate, listNoteSubmissions, handleNoteSubmission,
   applyAdmin, myApplication, listApplications, approveApplication, rejectApplication
 };

@@ -2,6 +2,14 @@
 const service = require('../../utils/service');
 const audioFile = require('../../utils/audio-file');
 
+// 时间显示：兼容云端 Date 序列化成的 ISO 字符串与 mock 的毫秒时间戳
+function fmtTs(v) {
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return '';
+  const p = n => (n < 10 ? '0' + n : '' + n);
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
 Page({
   data: {
     // 统计键用 ASCII，避免 WXML 表达式解析器不支持“点+中文属性名”
@@ -9,6 +17,7 @@ Page({
     cats: [],
     admins: [],
     subs: [],
+    noteSubs: [],   // 游客近况投稿（待审）
     apps: [],
     detail: null,
     subPlaying: false,
@@ -62,6 +71,14 @@ Page({
       this.setData({ stats: s, cats });
     }).catch(failed);
     service.listSubmissions().then(list => this.setData({ subs: list || [] })).catch(failed);
+    // 游客近况投稿（先审后显）：有新投稿时面板自动出现
+    service.listNoteSubmissions().then(list => this.setData({
+      noteSubs: (list || []).map(s => ({
+        id: s.id, catId: s.catId, catName: s.catName || '', content: s.content || '',
+        photos: s.photos || [], occurredAt: s.occurredAt || '',
+        ct: s.createdAt ? fmtTs(s.createdAt) : ''
+      }))
+    })).catch(failed);
     if (this.data.myRole !== 'superadmin') {
       this.setData({ apps: [], admins: [], noEditor: false });
       return;
@@ -474,6 +491,33 @@ Page({
         this.runOperation(() => service.rejectSubmission(id), () => { this.setData({ detail: null }); this.loadData(); });
       }
     });
+  },
+
+  // ---------- 游客近况投稿（先审后显） ----------
+  // 通过：写入该猫时间线（发生时间规则与管理员新增近况一致）；拒绝：仅标记
+  approveNoteSub(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '通过近况', content: '通过后将展示在该猫咪的档案时间线里，确定？',
+      success: res => {
+        if (!res.confirm) return;
+        this.runOperation(() => service.handleNoteSubmission('approve', id), () => this.loadData());
+      }
+    });
+  },
+  rejectNoteSub(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '忽略近况', content: '确定忽略该近况投稿？',
+      success: res => {
+        if (!res.confirm) return;
+        this.runOperation(() => service.handleNoteSubmission('reject', id), () => this.loadData());
+      }
+    });
+  },
+  previewNotePhotos(e) {
+    const list = e.currentTarget.dataset.list || [];
+    if (list.length) wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
   },
 
   // ---------- 一键通过 ----------
