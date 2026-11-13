@@ -4,7 +4,6 @@ const GENDERS = ['公', '母', '未知'];
 const STERS = ['已绝育', '未绝育', '未知'];
 const LIFES = ['在校', '毕业', '休学', '喵星'];
 const MAX_PHOTOS = 9;
-const MAX_NOTE_PHOTOS = 3;   // 近况配图上限
 const MAX_NAME = 20;
 
 Page({
@@ -16,7 +15,6 @@ Page({
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校',
-      latestPhotos: [],   // 「最近情况」的配图，最多 MAX_NOTE_PHOTOS 张
       more: ''      // 「更多」栏目：一整段自由补充资料
     }
   },
@@ -108,33 +106,7 @@ Page({
     this.markDirty();
     wx.showToast({ title: '已设为封面', icon: 'none' });
   },
-  // 近况配图：附在「最近情况」上，方便管理员核对现场情况
-  chooseNoteImage() {
-    const remain = MAX_NOTE_PHOTOS - this.data.form.latestPhotos.length;
-    if (remain <= 0) { wx.showToast({ title: '近况图最多 ' + MAX_NOTE_PHOTOS + ' 张', icon: 'none' }); return; }
-    wx.chooseMedia({
-      count: remain, mediaType: ['image'], sourceType: ['album', 'camera'],
-      success: res => {
-        const paths = (res.tempFiles || []).map(f => f.tempFilePath).filter(Boolean);
-        if (!paths.length) return;
-        this.setData({ 'form.latestPhotos': this.data.form.latestPhotos.concat(paths) });
-        this.markDirty();
-      },
-      fail: () => {}
-    });
-  },
-  removeNoteImage(e) {
-    const i = e.currentTarget.dataset.i;
-    const list = this.data.form.latestPhotos.slice();
-    list.splice(i, 1);
-    this.setData({ 'form.latestPhotos': list });
-    this.markDirty();
-  },
-  previewNotePhoto(e) {
-    const list = this.data.form.latestPhotos || [];
-    if (!list.length) return;
-    wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
-  },
+  // 近况配图入口已移除：照片统一走照片墙（photos），避免两处传图混淆导致“照片丢失”
   // 音频可选填：从微信聊天记录选音频文件（mp3/wav/m4a 等）
   // 叫声仅支持 mp3 / wav / m4a
   chooseVoice() {
@@ -179,7 +151,7 @@ Page({
       sterilizationStatus: STERS.includes(f.sterilizationStatus) ? f.sterilizationStatus : '未知',
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
-      latestNote: f.latestNote, photos: f.photos, voice: f.voice, latestPhotos: f.latestPhotos || [],
+      latestNote: f.latestNote, photos: f.photos, voice: f.voice,
       more: f.more || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
       lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校'

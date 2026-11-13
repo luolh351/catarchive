@@ -495,7 +495,8 @@ function approveSubmission(id, opts) {
       cat.usualLocations = mergeArr(cat.usualLocations, toArr(d.usualLocations) || [], 20);
       if (d.latestNote) {
         cat.latestNote = d.latestNote;
-        cat.timeline = (cat.timeline || []).concat([{ t: '投稿审核通过', c: d.latestNote }]);
+        // 与云端一致：投稿的近况配图随时间线条目写入
+        cat.timeline = (cat.timeline || []).concat([{ t: '投稿审核通过', c: d.latestNote, photos: d.latestPhotos || [] }]);
       }
       cat.sub = [cat.coatColor, (toArr(cat.usualLocations)[0] || '')].filter(Boolean).join(' · ');
       MOCK_SUBS.splice(i, 1);
