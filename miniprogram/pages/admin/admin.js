@@ -67,7 +67,7 @@ Page({
       const cats = list.map(c => {
         if (map[c.lifeStatus]) s[map[c.lifeStatus]]++;
         if (c.isAdoptable) s.dailingyang++;
-        return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : ''), latest: c.latestNote || '' };
+        return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : '') };
       });
       this.setData({ stats: s, cats });
     }).catch(failed);
@@ -243,7 +243,7 @@ Page({
       detail: {
         id: s.id, name: s.name, aliasesText: arr2str(s.aliases) || '—', coatColor: s.coatColor || '—',
         gender: s.gender || '—', sterilizationStatus: s.sterilizationStatus || '—', sterilizedAt: s.sterilizedAt || '',
-        usualText: arr2str(s.usualLocations) || '—', latestNote: s.latestNote || '—', healthNotes: s.healthNotes || '—',
+        usualText: arr2str(s.usualLocations) || '—', healthNotes: s.healthNotes || '—',
         more: s.more || '',
         personalityText: arr2str(s.personalityTags) || '—',
         isAdoptable: !!s.isAdoptable, lifeStatus: s.lifeStatus || '—',

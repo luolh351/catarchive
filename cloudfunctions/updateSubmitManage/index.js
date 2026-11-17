@@ -52,26 +52,17 @@ exports.main = async (event) => {
     return { ok: true };
   }
 
-  // ---------- 通过：事务内写时间线 + 更新摘要 + 标记投稿，防止重复通过 ----------
-  // 发生时间/新旧判断在事务外计算（事务内不支持 where 查询，与 updateCreate 同做法）；
-  // 事务内复查 status 防重复通过。
+  // ---------- 通过：事务内写时间线 + 标记投稿，防止重复通过 ----------
+  // 时间线是近况唯一展示处（不再另存 latestNote 摘要）；
+  // 发生时间在事务外按北京时间解析并禁未来；事务内复查 status 防重复通过。
   let reason = '';
   let createTime = now;
-  let isNewest = true;
   const pre = await subs.doc(id).get().catch(() => null);
   if (!pre || !pre.data) return { ok: false, msg: '未找到该投稿' };
   if (pre.data.status !== 'pending') return { ok: true };   // 已处理过（幂等）
   if (pre.data.occurredAt && /^\d{4}-\d{2}-\d{2}$/.test(String(pre.data.occurredAt))) {
     const t = new Date(pre.data.occurredAt + 'T00:00:00+08:00');
-    if (!isNaN(t.getTime()) && t.getTime() <= Date.now() + 86400000) {
-      createTime = t;
-      const top1 = await updates.where({ catId: pre.data.catId }).orderBy('createdAt', 'desc').limit(1).get();
-      const latest = (top1.data || [])[0];
-      if (latest && latest.createdAt) {
-        const lt = latest.createdAt instanceof Date ? latest.createdAt.getTime() : new Date(latest.createdAt).getTime();
-        isNewest = t.getTime() >= (isNaN(lt) ? 0 : lt);
-      }
-    }
+    if (!isNaN(t.getTime()) && t.getTime() <= Date.now() + 86400000) createTime = t;
   }
   try {
     await db.runTransaction(async tx => {
@@ -90,9 +81,7 @@ exports.main = async (event) => {
       const imgs = (Array.isArray(s.photos) ? s.photos : []).filter(isRemote).slice(0, MAX_PHOTOS);
       const text = (s.content || '').trim();
       await tx.collection('cat_updates').add({ data: { catId, content: text, photos: imgs, createdAt: createTime, operatorOpenid: s.submitterOpenid || OPENID, viaSubmission: id } });
-      if (isNewest) {
-        await tx.collection('cats').doc(catId).update({ data: { latestNote: text, updatedAt: now, operatorOpenid: OPENID } });
-      }
+      await tx.collection('cats').doc(catId).update({ data: { updatedAt: now, operatorOpenid: OPENID } });
       await tx.collection('update_submissions').doc(id).update({ data: { status: 'approved', reviewedAt: now, reviewerOpenid: OPENID } });
       await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'updateSubmitApprove', target: catId, detail: text.slice(0, 50), createdAt: now } });
     });

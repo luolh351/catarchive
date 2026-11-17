@@ -1,5 +1,5 @@
 // 近况管理：按时间列出某只猫的全部历史近况，点击展开可修改/删除。
-// 编辑/删除最新一条时，云端会同步回退档案的 latestNote（摘要）。
+// 时间线是近况唯一展示处（摘要字段已废弃）。
 const service = require('../../utils/service');
 
 function fmtDate(v) {

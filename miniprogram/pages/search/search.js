@@ -23,7 +23,7 @@ Page({
     const hit = v => (v || '').toLowerCase().indexOf(q) >= 0;
     const list = this.all.filter(c =>
       hit(c.name) || hit(c.aliasesText) || hit(c.coatColor) ||
-      hit(c.locationsText) || hit(c.latestNote) || hit(c.sub)
+      hit(c.locationsText) || hit(c.sub)
     );
     this.setData({ list, searched: true });
   },

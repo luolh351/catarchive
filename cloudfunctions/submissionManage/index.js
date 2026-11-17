@@ -206,9 +206,8 @@ exports.main = async (event) => {
           patch.aliases = mergeArr(c.aliases, nd.aliases, 20);
           patch.personalityTags = mergeArr(c.personalityTags, nd.personalityTags, 20);
           patch.usualLocations = mergeArr(c.usualLocations, nd.usualLocations, 20);
-          // 近况：更新档案摘要并写时间线（与 updateCreate 的数据结构一致）
+          // 近况：投稿的最近情况写入时间线（时间线为唯一展示处，不再更新档案摘要）
           const note = (nd.latestNote || '').trim();
-          if (note) patch.latestNote = note;
           await tx.collection('cats').doc(targetId).update({ data: patch });
           if (note || remoteArr(nd.latestPhotos).length) {
             await tx.collection('cat_updates').add({

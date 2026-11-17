@@ -13,7 +13,7 @@ Page({
     dirty: false,
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
-      sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
+      sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '',
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校',
       more: ''      // 「更多」栏目：一整段自由补充资料
     }
@@ -151,7 +151,7 @@ Page({
       sterilizationStatus: STERS.includes(f.sterilizationStatus) ? f.sterilizationStatus : '未知',
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
-      latestNote: f.latestNote, photos: f.photos, voice: f.voice,
+      photos: f.photos, voice: f.voice,
       more: f.more || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
       lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校'

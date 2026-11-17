@@ -83,8 +83,6 @@ exports.main = async (event) => {
   if (sterilizedAt === null) return { ok: false, msg: '绝育时间格式错误' };
   const healthNotes = takeStr(d.healthNotes, MAX.note);
   if (healthNotes === null) return { ok: false, msg: '健康状况≤200字' };
-  const latestNote = takeStr(d.latestNote, MAX.latest);
-  if (latestNote === null) return { ok: false, msg: '最近情况≤500字' };
   // 「更多」栏目：一整段自由补充资料，≤500 字
   const more = takeStr(d.more, MAX.latest);
   if (more === null) return { ok: false, msg: '更多≤500字' };
@@ -110,7 +108,6 @@ exports.main = async (event) => {
     personalityTags: arrays.personalityTags,
     usualLocations: arrays.usualLocations,
     healthNotes,
-    latestNote,
     latestPhotos,
     more,
     lifeStatus: life,

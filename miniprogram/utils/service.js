@@ -106,8 +106,7 @@ function cardOf(c) {
     photo: c.cover || (c.photos && c.photos[0]) || '',   // 独立封面优先，未设置回退第一张
     bg: c.bg || pickBg(c.coatColor),
     photoText: c.photoText || (c.name ? c.name[0] : '猫'),
-    // 搜索用：昵称（全部）、常出没（全部区域，而非仅第一个）、最新近况
-    latestNote: c.latestNote || '',
+    // 搜索用：昵称（全部）、常出没（全部区域，而非仅第一个）
     aliasesText: Array.isArray(c.aliases) ? c.aliases.join('、') : (c.aliases || ''),
     locationsText: Array.isArray(c.usualLocations) ? c.usualLocations.join('、') : (c.usualLocations || ''),
     healthNotes: c.healthNotes || '',
@@ -124,7 +123,7 @@ function attrsOf(c) {
     { k: '性格', v: (Array.isArray(c.personalityTags) ? c.personalityTags.join('、') : (c.personalityTags || '')) || '—' },
     { k: '常出没', v: (Array.isArray(c.usualLocations) ? c.usualLocations.join('、') : (c.usualLocations || '')) || '—' },
     { k: '状况', v: c.healthNotes || '—' }
-    // 「最近情况」已移除：与近况时间线重复（补充近况会同时写 latestNote 和时间线）
+    // 「最近情况」已彻底移除：时间线是近况唯一展示处
   ];
 }
 // 「更多」栏目：一段自由文本（父母、子女、独特特点等由填写者自己组织），
@@ -165,7 +164,7 @@ function getCat(id) {
       photos: c.photos || [], voice: c.voice || '', lifeStatus: c.lifeStatus,
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
-      healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
+      healthNotes: c.healthNotes || '', aliases: c.aliases || [],
       latestPhotos: c.latestPhotos || [], cover: c.cover || '', coverCard: c.coverCard || ''
     };
     return Promise.resolve({ cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(c) });
@@ -178,7 +177,7 @@ function getCat(id) {
       photos: c.photos || [], voice: c.voice || '', lifeStatus: c.lifeStatus,
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
-      healthNotes: c.healthNotes || '', aliases: c.aliases || [], latestNote: c.latestNote || '',
+      healthNotes: c.healthNotes || '', aliases: c.aliases || [],
       latestPhotos: c.latestPhotos || [], cover: c.cover || '', coverCard: c.coverCard || ''
     };
     return { cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(res) };
@@ -249,13 +248,13 @@ function catManage(action, payload) {
         id, name: d.name, lifeStatus: life, isAdoptable: !!d.isAdoptable && life === '在校',
         coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
         sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
-        aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
+        aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '',
         photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
         cover: (d.photos && d.photos[0]) || '', coverCard: (d.photos && d.photos[0]) || '',
         more: d.more || '',
         bg: pickBg(d.coatColor), photoText: (d.name || '猫')[0] || '猫',
         sub: [ (d.coatColor || ''), (toArr(d.usualLocations)[0] || '') ].filter(Boolean).join(' · '),
-        timeline: d.latestNote ? [ { t: '刚刚', c: d.latestNote } ] : []
+        timeline: []
       };
       MOCK_CATS.push(cat);
       saveStore(STORE_CATS, MOCK_CATS);
@@ -274,7 +273,7 @@ function catManage(action, payload) {
       if (d.usualLocations !== undefined) cat.usualLocations = toArr(d.usualLocations) || [];
       if (d.aliases !== undefined) cat.aliases = toArr(d.aliases) || [];
       if (d.healthNotes !== undefined) cat.healthNotes = d.healthNotes;
-      if (d.latestNote !== undefined) cat.latestNote = d.latestNote;
+      if (d.latestNote !== undefined) cat.latestNote = d.latestNote;   // 兼容旧客户端（字段已废弃）
       if (d.latestPhotos !== undefined) cat.latestPhotos = d.latestPhotos || [];
       if (d.more !== undefined) cat.more = d.more;
       // 业务规则：去向一旦不是“在校”，自动取消待领养（与云端 update 一致）
@@ -315,8 +314,6 @@ function addUpdate(catId, content, photos, occurred) {
       const createdAt = occurred ? new Date(occurred + 'T00:00:00+08:00').getTime() : Date.now();
       // mock 时间线按 新→旧 排列（unshift 在头部）
       tl.unshift({ t: occurred || '刚刚', c: content, photos: photos || [], createdAt });
-      // 仅当不早于现有最新一条时才更新档案摘要（补记旧事不顶掉摘要）
-      if (!occurred || !tl[1] || !(tl[1].createdAt > createdAt)) cat.latestNote = content;
       saveStore(STORE_CATS, MOCK_CATS);
     }
     return mockOk();
@@ -368,8 +365,6 @@ function handleNoteSubmission(action, id) {
       const createdAt = s.occurredAt ? new Date(s.occurredAt + 'T00:00:00+08:00').getTime() : Date.now();
       const tl = cat.timeline = cat.timeline || [];
       tl.unshift({ t: s.occurredAt || '刚刚', c: s.content, photos: s.photos || [], createdAt });
-      // 与云端一致：仅当不早于现有最新一条时才更新档案摘要（补记旧事不顶掉摘要）
-      if (!s.occurredAt || !tl[1] || !(tl[1].createdAt > createdAt)) cat.latestNote = s.content;
       saveStore(STORE_CATS, MOCK_CATS);
     }
     list[i].status = action === 'approve' ? 'approved' : 'rejected';
@@ -493,10 +488,9 @@ function approveSubmission(id, opts) {
       cat.aliases = mergeArr(cat.aliases, toArr(d.aliases) || [], 20);
       cat.personalityTags = mergeArr(cat.personalityTags, toArr(d.personalityTags) || [], 20);
       cat.usualLocations = mergeArr(cat.usualLocations, toArr(d.usualLocations) || [], 20);
-      if (d.latestNote) {
-        cat.latestNote = d.latestNote;
-        // 与云端一致：投稿的近况配图随时间线条目写入
-        cat.timeline = (cat.timeline || []).concat([{ t: '投稿审核通过', c: d.latestNote, photos: d.latestPhotos || [] }]);
+      // 与云端一致：投稿的最近情况/配图写入时间线（不再更新摘要）
+      if (d.latestNote || (d.latestPhotos || []).length) {
+        cat.timeline = (cat.timeline || []).concat([{ t: '投稿审核通过', c: d.latestNote || '投稿补充资料', photos: d.latestPhotos || [] }]);
       }
       cat.sub = [cat.coatColor, (toArr(cat.usualLocations)[0] || '')].filter(Boolean).join(' · ');
       MOCK_SUBS.splice(i, 1);
@@ -508,7 +502,7 @@ function approveSubmission(id, opts) {
       id: 'c' + Date.now(), name: d.name, lifeStatus: d.lifeStatus || '在校', isAdoptable: !!d.isAdoptable && (d.lifeStatus || '在校') === '在校',
       coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
       sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
-      aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '', latestNote: d.latestNote || '',
+      aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '',
       photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
       cover: (d.photos && d.photos[0]) || '', coverCard: (d.photos && d.photos[0]) || '',
       more: d.more || '',
@@ -536,7 +530,7 @@ function checkSubConflict(id) {
       healthNotes: c.healthNotes || '', lifeStatus: c.lifeStatus || '在校', isAdoptable: !!c.isAdoptable,
       usualLocations: toArr(c.usualLocations) || [], personalityTags: toArr(c.personalityTags) || [],
       aliases: toArr(c.aliases) || [], photos: (c.photos || []).slice(0, 2), voice: c.voice || '',
-      latestNote: c.latestNote || '', more: c.more || '', similar: true
+      more: c.more || '', similar: true
     }));
     return Promise.resolve({ ok: true, candidates });
   }
@@ -576,7 +570,7 @@ function editUpdate(catId, updateId, data) {
     const tl = c.timeline || [];
     if (!(i >= 0 && i < tl.length)) return Promise.resolve({ ok: false, msg: '近况不存在' });
     tl[i] = { t: tl[i].t || '', c: data.content, photos: data.photos || [] };
-    if (i === 0) c.latestNote = data.content;   // mock timeline 头部=最新一条
+    // 时间线头部=最新一条（时间线为唯一展示处，不再维护摘要）
     saveStore(STORE_CATS, MOCK_CATS);
     return mockOk();
   }
@@ -590,7 +584,7 @@ function deleteUpdate(catId, updateId) {
     const tl = c.timeline || [];
     if (!(i >= 0 && i < tl.length)) return Promise.resolve({ ok: false, msg: '近况不存在' });
     tl.splice(i, 1);
-    if (i === 0) c.latestNote = tl.length ? (tl[0].c || '') : '';   // mock timeline 头部=最新一条
+    // 时间线为唯一展示处，删除后无需回退摘要
     saveStore(STORE_CATS, MOCK_CATS);
     return mockOk();
   }

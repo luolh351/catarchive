@@ -17,7 +17,6 @@
     <view class="l">
       <view class="n">{{item.name}}</view>
       <view class="s">{{item.coatColor}} · {{item.lifeStatus}}</view>
-      <view class="s2" wx:if="{{item.latestNote}}">{{item.latestNote}}</view>
     </view>
     <view>
       <text class="mini" bindtap="viewSub" data-id="{{item.id}}">查看</text>
@@ -78,7 +77,6 @@
     <view class="kv"><text>性别</text><view class="vw"><text class="val">{{detail.gender}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.gender}}">复制</text></view></view>
     <view class="kv"><text>绝育</text><view class="vw"><text class="val">{{detail.sterilizationStatus}}{{detail.sterilizedAt ? ' · ' + detail.sterilizedAt : ''}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.sterilizationStatus}}{{detail.sterilizedAt ? ' · ' + detail.sterilizedAt : ''}}">复制</text></view></view>
     <view class="kv"><text>常出没</text><view class="vw"><text class="val">{{detail.usualText}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.usualText}}">复制</text></view></view>
-    <view class="kv"><text>最近情况</text><view class="vw"><text class="val">{{detail.latestNote}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.latestNote}}">复制</text></view></view>
     <view class="kv"><text>性格</text><view class="vw"><text class="val">{{detail.personalityText}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.personalityText}}">复制</text></view></view>
     <view class="kv"><text>健康</text><view class="vw"><text class="val">{{detail.healthNotes}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.healthNotes}}">复制</text></view></view>
     <view class="kv"><text>待领养</text><view class="vw"><text class="val">{{detail.isAdoptable ? '是' : '否'}}</text></view></view>

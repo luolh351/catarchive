@@ -15,7 +15,7 @@ Page({
     coverPick: '',   // 正在为哪个封面选图：'' | 'home' | 'card'
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
-      sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '', latestNote: '',
+      sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '',
       more: '',      // 「更多」栏目：一整段自由补充资料
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校',
       cover: '',       // 首页圆形封面（1:1 裁剪版），空=默认第一张
@@ -64,7 +64,6 @@ Page({
           gender: c.gender || '', sterilizationStatus: c.sterilizationStatus || '', sterilizedAt: c.sterilizedAt || '',
           usualLocations: (c.usualLocations || []).join('、'),
           personalityTags: (c.personalityTags || []).join('、'), healthNotes: c.healthNotes || '',
-          latestNote: c.latestNote || '',
           more: res.more || '',
           photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校',
           cover: (c.cover && this.mediaOk(c.cover)) ? c.cover : '',
@@ -306,7 +305,6 @@ Page({
       sterilizationStatus: STERS.includes(f.sterilizationStatus) ? f.sterilizationStatus : '未知',
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
-      latestNote: f.latestNote, photos: f.photos, voice: f.voice,
       cover: f.cover || '', coverCard: f.coverCard || '',
       more: f.more || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',

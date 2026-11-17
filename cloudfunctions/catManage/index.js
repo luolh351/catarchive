@@ -82,7 +82,7 @@ function normalize(d, requireName) {
   if (d.healthNotes !== undefined) { const v = takeStr(d.healthNotes, MAX.note); if (v === null) return { err: '健康状况≤200字' }; out.healthNotes = v; }
   // 「更多」栏目：一整段自由补充资料（父母 / 子女 / 独特特点等），≤500 字
   if (d.more !== undefined) { const v = takeStr(d.more, MAX.latest); if (v === null) return { err: '更多≤500字' }; out.more = v; }
-  if (d.latestNote !== undefined) { const v = takeStr(d.latestNote, MAX.latest); if (v === null) return { err: '最近情况≤500字' }; out.latestNote = v; }
+  if (d.latestNote !== undefined) { const v = takeStr(d.latestNote, MAX.latest); if (v === null) return { err: '最近情况≤500字' }; out.latestNote = v; }   // 兼容旧客户端提交（字段已废弃，正常请求不再携带）
   if (d.coatColor !== undefined) { const v = takeStr(d.coatColor, MAX.coat); if (v === null) return { err: '毛色格式错误' }; out.coatColor = v || '未知'; }
   if (d.gender !== undefined) { if (!GENDER.includes(d.gender)) return { err: '性别枚举错误' }; out.gender = d.gender; }
   if (d.sterilizationStatus !== undefined) { if (!STER.includes(d.sterilizationStatus)) return { err: '绝育枚举错误' }; out.sterilizationStatus = d.sterilizationStatus; }
@@ -204,7 +204,7 @@ exports.main = async (event) => {
     return { ok: true, list };
   }
 
-  // 编辑一条历史近况；若编辑的是最新一条，同步档案的 latestNote
+  // 编辑一条历史近况（时间线为唯一展示处，不涉及档案摘要）
   if (action === 'updatesEdit') {
     const catId = event.catId, updateId = event.updateId;
     if (!catId || !updateId) return { ok: false, msg: 'missing catId/updateId' };
@@ -213,36 +213,23 @@ exports.main = async (event) => {
     const ph = takeUpdatePhotos(event.photos);
     if (ph === null) return { ok: false, msg: '近况配图须为最多3项的云存储地址数组' };
     const now = db.serverDate();
-    // 事务不支持 where 查询，先在事务外确定目标是否最新一条
-    const top1 = await db.collection('cat_updates').where({ catId }).orderBy('createdAt', 'desc').limit(1).get();
-    const isLatest = ((top1.data || [])[0] || {})._id === updateId;
     return write(async tx => {
       const cur = await tx.collection('cat_updates').doc(updateId).get();
       if (!cur.data || cur.data.catId !== catId) throw new Error('近况不存在');
       await tx.collection('cat_updates').doc(updateId).update({ data: { content, photos: ph } });
-      if (isLatest) {
-        await tx.collection('cats').doc(catId).update({ data: { latestNote: content, updatedAt: now, operatorOpenid: OPENID } });
-      }
       await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'updateEdit', target: updateId, detail: content.slice(0, 50), createdAt: now } });
     });
   }
 
-  // 删除一条历史近况；若删除的是最新一条，档案摘要回退为次新一条（没有则清空）
+  // 删除一条历史近况
   if (action === 'updatesDelete') {
     const catId = event.catId, updateId = event.updateId;
     if (!catId || !updateId) return { ok: false, msg: 'missing catId/updateId' };
     const now = db.serverDate();
-    const top2 = await db.collection('cat_updates').where({ catId }).orderBy('createdAt', 'desc').limit(2).get();
-    const rows = top2.data || [];
-    const isLatest = (rows[0] || {})._id === updateId;
-    const prev = rows[1];   // 次新一条，回退用
     return write(async tx => {
       const cur = await tx.collection('cat_updates').doc(updateId).get();
       if (!cur.data || cur.data.catId !== catId) throw new Error('近况不存在');
       await tx.collection('cat_updates').doc(updateId).remove();
-      if (isLatest) {
-        await tx.collection('cats').doc(catId).update({ data: { latestNote: prev ? (prev.content || '') : '', updatedAt: now, operatorOpenid: OPENID } });
-      }
       await tx.collection('admin_audit_logs').add({ data: { operatorOpenid: OPENID, action: 'updateDelete', target: updateId, createdAt: now } });
     });
   }
