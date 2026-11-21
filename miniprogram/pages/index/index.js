@@ -4,7 +4,7 @@ const service = require('../../utils/service');
 const nav = require('../../utils/nav');
 
 Page({
-  data: { active: '在校', list: [], all: [] },
+  data: { active: '在校', list: [], all: [], daily: null },
   onLoad() {
     // 开启右上角菜单的「转发给朋友 / 分享到朋友圈 / 复制链接」
     wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
@@ -19,9 +19,13 @@ Page({
   loadAll() {
     wx.showLoading({ title: '加载中' });
     service.getCats()
-      .then(all => { this.setData({ all }); this.applyView(); wx.hideLoading(); })
+      .then(all => {
+        this.setData({ all, daily: service.pickDailyCat(all) });
+        this.applyView();
+        wx.hideLoading();
+      })
       .catch(() => {
-        this.setData({ all: [], list: [] });
+        this.setData({ all: [], list: [], daily: null });
         wx.hideLoading();
         wx.showToast({ title: '加载失败，请重试', icon: 'none' });
       });
@@ -36,5 +40,10 @@ Page({
   },
   goDetail(e) {
     nav.go('/pages/catDetail/catDetail?id=' + e.currentTarget.dataset.id);
+  },
+  // 底部「今天随机认识一只猫咪」卡片 → 今日那只猫的详情
+  goDaily() {
+    const d = this.data.daily;
+    if (d && d.id) nav.go('/pages/catDetail/catDetail?id=' + d.id);
   }
 });

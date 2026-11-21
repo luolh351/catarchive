@@ -23,3 +23,17 @@
 
 <!-- 数量统计：紧跟最后一张卡片下方 -->
 <view wx:if="{{list.length>0}}" class="footcount">{{active}}共有 {{list.length}} 只猫</view>
+
+<!-- 今日随机猫：固定在列表最底下，洗牌袋规则（每只猫概率相同、一轮不重复、抽完重置） -->
+<view wx:if="{{daily}}" class="dailycard" bindtap="goDaily">
+  <view class="davatar" style="background:{{daily.bg}}">
+    <image wx:if="{{daily.photo}}" class="dimg" src="{{daily.photo}}" mode="aspectFill" />
+    <block wx:else>{{daily.photoText}}</block>
+  </view>
+  <view class="dinfo">
+    <view class="dt">今天随机认识一只猫咪</view>
+    <view class="ds">{{daily.name}} · 点它认识一下</view>
+  </view>
+  <view class="darrow">›</view>
+</view>
+<view wx:else class="footcount"></view>

@@ -2,3 +2,25 @@
 
 /* 分类末尾的数量统计小字 */
 .footcount { text-align: center; font-size: 22rpx; color: #9AA3AD; padding: 8rpx 0 30rpx; }
+
+/* 今日随机猫卡片：蓝色横幅，圆形封面在左、引导文字在右（与普通卡片同形态） */
+.dailycard {
+  margin: 8rpx 24rpx 30rpx; padding: 24rpx 28rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, #7AA6E8, #5B8FD9);
+  box-shadow: 0 10rpx 26rpx rgba(91, 143, 217, .3);
+  display: flex; align-items: center;
+}
+.davatar {
+  width: 108rpx; height: 108rpx; border-radius: 50%;
+  flex-shrink: 0; overflow: hidden;
+  border: 4rpx solid rgba(255, 255, 255, .85);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 40rpx; font-weight: 600;
+}
+.dimg { width: 100%; height: 100%; }
+.dinfo { flex: 1; min-width: 0; margin-left: 24rpx; }
+.dt { color: #fff; font-size: 30rpx; font-weight: 600; }
+.ds { color: rgba(255, 255, 255, .85); font-size: 24rpx; margin-top: 6rpx; }
+.darrow { color: rgba(255, 255, 255, .8); font-size: 44rpx; margin-left: 8rpx; }
+.dailycard:active { opacity: .88; }
