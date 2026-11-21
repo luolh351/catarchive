@@ -43,7 +43,6 @@
         </view>
       </swiper-item>
     </swiper>
-    <view class="ghint">左右滑动查看更多 · 点击查看大图</view>
   </view>
 
   <view wx:if="{{cat.voice}}" class="media">

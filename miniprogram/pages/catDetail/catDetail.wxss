@@ -23,7 +23,6 @@
 .gswiper { height: 300rpx; }
 .gpage { display: flex; gap: 12rpx; padding: 0 24rpx; }
 .gcell { flex: 1; height: 240rpx; border-radius: 20rpx; }
-.ghint { text-align: center; font-size: 22rpx; color: var(--sub); padding-top: 10rpx; }
 
 /* 全屏照片查看层 */
 .viewer { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,0,0,.92); z-index: 999; }
