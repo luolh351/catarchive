@@ -14,7 +14,6 @@
 
   <view class="sharerow">
     <button class="sharebtn" open-type="share" plain>↗ 分享给朋友</button>
-    <view class="sharehint">分享到朋友圈请点右上角 ···</view>
   </view>
 
   <!-- 全屏照片查看层：左右滑动或点箭头切换，支持保存到相册 -->
