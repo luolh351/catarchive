@@ -1,4 +1,6 @@
 /* 详情页为公开只读视图，无管理操作样式 */
+/* 昵称行：名字下方小字（如「又名 煤球、小黑」） */
+.d-aka { font-size: 24rpx; color: var(--sub); margin: 4rpx 4rpx 0; }
 .heroimg { width: 100%; height: 100%; display: block; }
 .gallery { display: flex; gap: 12rpx; overflow-x: auto; margin-top: 16rpx; }
 .gimg { width: 200rpx; height: 200rpx; border-radius: 20rpx; flex: 0 0 200rpx; }

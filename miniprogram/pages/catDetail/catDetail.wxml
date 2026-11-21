@@ -11,6 +11,7 @@
     <text wx:if="{{cat.isAdoptable}}" class="badge">待领养</text>
     <text class="statustag st-on">{{cat.statusText}}</text>
   </view>
+  <view wx:if="{{aliasesText}}" class="d-aka">又名 {{aliasesText}}</view>
 
   <view class="sharerow">
     <button class="sharebtn" open-type="share" plain>↗ 分享给朋友</button>
