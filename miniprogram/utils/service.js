@@ -113,17 +113,18 @@ function cardOf(c) {
     sub: c.sub || [ (c.coatColor || ''), (Array.isArray(c.usualLocations) ? c.usualLocations[0] : (c.usualLocations || '')) ].filter(Boolean).join(' · ') || '校园流浪猫'
   };
 }
-// 详情属性派生
+// 详情属性派生（顺序：昵称、毛色、性别、性格、状况、绝育情况、绝育时间；常出没补在最后）
 function attrsOf(c) {
+  const aliases = Array.isArray(c.aliases) ? c.aliases.filter(Boolean).join('、') : '';
   return [
+    { k: '昵称', v: aliases || '—' },
     { k: '毛色', v: c.coatColor || '未知' },
     { k: '性别', v: c.gender || '未知' },
+    { k: '性格', v: (Array.isArray(c.personalityTags) ? c.personalityTags.join('、') : (c.personalityTags || '')) || '—' },
+    { k: '状况', v: c.healthNotes || '—' },
     { k: '绝育情况', v: c.sterilizationStatus || '未知' },
     { k: '绝育时间', v: c.sterilizedAt || '—' },
-    { k: '性格', v: (Array.isArray(c.personalityTags) ? c.personalityTags.join('、') : (c.personalityTags || '')) || '—' },
-    { k: '常出没', v: (Array.isArray(c.usualLocations) ? c.usualLocations.join('、') : (c.usualLocations || '')) || '—' },
-    { k: '状况', v: c.healthNotes || '—' }
-    // 「最近情况」已彻底移除：时间线是近况唯一展示处
+    { k: '常出没', v: (Array.isArray(c.usualLocations) ? c.usualLocations.join('、') : (c.usualLocations || '')) || '—' }
   ];
 }
 // 「更多」栏目：一段自由文本（父母、子女、独特特点等由填写者自己组织），

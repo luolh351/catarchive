@@ -12,8 +12,7 @@ Page({
     playing: false,
     photoPages: [],      // 照片墙：每页 3 张（{k, items}）
     viewer: false,       // 全屏查看层开关
-    viewerIndex: 0,      // 当前查看的照片序号
-    aliasesText: ''      // 昵称展示串（顿号连接，空=不显示）
+    viewerIndex: 0       // 当前查看的照片序号
   },
   onLoad(options) {
     const id = options && options.id;
@@ -115,8 +114,7 @@ Page({
       const photos = res.cat.photos || [];
       const photoPages = [];
       for (let i = 0; i < photos.length; i += 3) photoPages.push({ k: String(i), items: photos.slice(i, i + 3) });
-      const aliasesText = Array.isArray(res.cat.aliases) ? res.cat.aliases.filter(Boolean).join('、') : '';
-      this.setData({ cat: res.cat, photoPages, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [], aliasesText });
+      this.setData({ cat: res.cat, photoPages, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
     }).catch(() => { this.setData({ notFound: true }); wx.showToast({ title: '加载失败', icon: 'none' }); });
   },
   // 播放/停止猫叫声（本地文件直接播；云存储 cloud:// 需先下载为临时文件）
