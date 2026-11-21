@@ -304,37 +304,27 @@ function catManage(action, payload) {
   return call('catManage', Object.assign({ action }, payload));
 }
 
-// ---------- 公开：今日随机猫（洗牌袋规则） ----------
-// 不放回抽样：把全部已发布猫排成随机队列按天轮换，一只猫在一个周期内恰好出现一次；
-// 周期结束（箱子抽空）以新的种子重新洗牌——等价于“抽中不放回、抽完重置”。
-// 用日期做确定性计算（无状态）：当天所有人看到同一只，次日自动换，mock/云通用。
-function mulberry32(a) {
-  return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function pickDailyCat(list) {
+// ---------- 公开：随机认识一只猫（洗牌袋规则） ----------
+// 不放回抽样：随机队列存本地，每次进入首页抽出一只并移出队列；
+// 队列抽空后重新洗全部猫放回——每只猫概率相同、一轮内不重复。
+// 猫咪被归档/删除后自动从队列剔除；新投稿的猫会在下次重洗时入袋。
+function drawRandomCat(list) {
   if (!list || !list.length) return null;
-  const n = list.length;
-  const day = Math.floor((Date.now() + 8 * 3600000) / 86400000);   // 按北京时间按天切换
-  const period = Math.floor(day / n);   // 第几个周期（每 n 天换一次洗牌）
-  const slot = day % n;                 // 周期内第几天 → 队列中的第 slot 只
-  // 种子：周期号与全部猫 id 混合。猫集合变化（投稿/归档）后顺序自然重排，仍保证均匀
-  let seed = (period * 2654435761) >>> 0;
-  for (const c of list) {
-    const id = String(c.id || c.name || '');
-    for (let i = 0; i < id.length; i++) seed = ((seed ^ id.charCodeAt(i)) * 16777619) >>> 0;
+  const ids = list.map(c => c.id);
+  let bag = [];
+  try { bag = wx.getStorageSync('cat_bag') || []; } catch (e) { bag = []; }
+  if (!Array.isArray(bag)) bag = [];
+  bag = bag.filter(id => ids.indexOf(id) >= 0);   // 清洗已不存在的猫
+  if (!bag.length) {
+    bag = ids.slice();
+    for (let i = bag.length - 1; i > 0; i--) {    // Fisher-Yates 洗牌
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+    }
   }
-  const rnd = mulberry32(seed);
-  const queue = list.slice();
-  for (let i = queue.length - 1; i > 0; i--) {   // Fisher-Yates 洗牌
-    const j = Math.floor(rnd() * (i + 1));
-    const t = queue[i]; queue[i] = queue[j]; queue[j] = t;
-  }
-  return queue[slot] || null;
+  const picked = bag.shift();
+  try { wx.setStorageSync('cat_bag', bag); } catch (e) {}
+  return list.find(c => c.id === picked) || null;
 }
 
 // ---------- 管理员：新增近况 ----------
@@ -698,7 +688,7 @@ function rejectApplication(id) {
 
 module.exports = {
   getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin,
-  pickDailyCat,
+  drawRandomCat,
   submitCat, listSubmissions, approveSubmission, rejectSubmission, checkSubConflict,
   listUpdates, editUpdate, deleteUpdate,
   submitUpdate, listNoteSubmissions, handleNoteSubmission,

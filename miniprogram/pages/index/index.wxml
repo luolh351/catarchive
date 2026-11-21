@@ -24,7 +24,7 @@
 <!-- 数量统计：紧跟最后一张卡片下方 -->
 <view wx:if="{{list.length>0}}" class="footcount">{{active}}共有 {{list.length}} 只猫</view>
 
-<!-- 今日随机猫：固定在列表最底下，洗牌袋规则（每只猫概率相同、一轮不重复、抽完重置） -->
+<!-- 随机猫：固定在列表最底下，洗牌袋规则——每次进入首页抽取一只（不放回，一轮不重复，抽完重置） -->
 <view wx:if="{{daily}}" class="dailycard" bindtap="goDaily">
   <view class="davatar" style="background:{{daily.bg}}">
     <image wx:if="{{daily.photo}}" class="dimg" src="{{daily.photo}}" mode="aspectFill" />
@@ -36,4 +36,3 @@
   </view>
   <view class="darrow">›</view>
 </view>
-<view wx:else class="footcount"></view>

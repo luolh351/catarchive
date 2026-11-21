@@ -20,7 +20,7 @@ Page({
     wx.showLoading({ title: '加载中' });
     service.getCats()
       .then(all => {
-        this.setData({ all, daily: service.pickDailyCat(all) });
+        this.setData({ all, daily: service.drawRandomCat(all) });
         this.applyView();
         wx.hideLoading();
       })
