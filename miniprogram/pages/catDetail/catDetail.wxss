@@ -13,7 +13,11 @@
 .sharebtn {
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 26rpx; color: var(--primary); border: 1rpx solid var(--primary);
-  border-radius: 999rpx; padding: 8rpx 26rpx; line-height: 1.4; margin: 0;
+  border-radius: 999rpx; padding: 8rpx 26rpx; line-height: 1.4;
+  /* 微信原生 button 默认 margin:0 auto 会吸收两侧空间导致“看起来居中”，
+     左侧 auto 强制吸收剩余空间 → 按钮恒定贴右 */
+  margin: 0 0 0 auto;
+  width: auto;
   background: transparent;
 }
 .sharebtn::after { border: none; }
