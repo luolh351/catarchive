@@ -45,5 +45,9 @@ Page({
   goDaily() {
     const d = this.data.daily;
     if (d && d.id) nav.go('/pages/catDetail/catDetail?id=' + d.id);
+  },
+  // 右下浮游入口 → 人气榜
+  goRank() {
+    nav.go('/pages/likeRank/likeRank');
   }
 });

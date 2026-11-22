@@ -29,21 +29,21 @@ const DEMO_VOICE = ['/assets/sounds/meow1.wav', '/assets/sounds/meow2.wav', '/as
 // 首次启动用默认数据并写入 Storage；之后从 Storage 读取，保证新增/编辑/投稿跨重编译不丢
 function defaultCats() {
   const list = [
-  { id: 'c1', name: '小橘', lifeStatus: '在校', isAdoptable: true, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2024-05', personalityTags: ['亲人', '粘人'], usualLocations: ['食堂', '宿舍区'], healthNotes: '健康', latestNote: '近期食堂出没，状态良好', photos: [], voice: '', bg: 'linear-gradient(135deg,#FFB46B,#FF8A3D)', photoText: '橘', sub: '橘白 · 食堂附近',
+  { id: 'c1', name: '小橘', lifeStatus: '在校', isAdoptable: true, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2024-05', personalityTags: ['亲人', '粘人'], usualLocations: ['食堂', '宿舍区'], healthNotes: '健康', likeCount: 128, photos: [], voice: '', bg: 'linear-gradient(135deg,#FFB46B,#FF8A3D)', photoText: '橘', sub: '橘白 · 食堂附近',
     timeline: [ { t: '2026-10-22 · 食堂附近', c: '投喂正常，体型偏胖' }, { t: '2026-09-10 · 宿舍区', c: '换季掉毛，精神好' } ] },
-  { id: 'c2', name: '煤球', lifeStatus: '在校', isAdoptable: false, coatColor: '黑白', gender: '母', sterilizationStatus: '已绝育', sterilizedAt: '2023-11', personalityTags: ['高冷', '怕生'], usualLocations: ['操场', '体育馆'], healthNotes: '健康', latestNote: '常在操场晒太阳', photos: [], voice: '', bg: 'linear-gradient(135deg,#5B6470,#2F3640)', photoText: '煤', sub: '黑白 · 操场',
+  { id: 'c2', name: '煤球', lifeStatus: '在校', isAdoptable: false, coatColor: '黑白', gender: '母', sterilizationStatus: '已绝育', sterilizedAt: '2023-11', personalityTags: ['高冷', '怕生'], usualLocations: ['操场', '体育馆'], healthNotes: '健康', likeCount: 96, photos: [], voice: '', bg: 'linear-gradient(135deg,#5B6470,#2F3640)', photoText: '煤', sub: '黑白 · 操场',
     timeline: [ { t: '2026-10-20 · 操场', c: '远处观望，未靠近' } ] },
-  { id: 'c3', name: '牛奶', lifeStatus: '在校', isAdoptable: false, coatColor: '白', gender: '母', sterilizationStatus: '未绝育', sterilizedAt: '', personalityTags: ['温顺'], usualLocations: ['图书馆', '教学楼'], healthNotes: '偏瘦，建议驱虫', latestNote: '图书馆门口偶遇', photos: [], voice: '', bg: 'linear-gradient(135deg,#E6ECF3,#C3CCD8)', photoText: '牛', sub: '白 · 图书馆',
+  { id: 'c3', name: '牛奶', lifeStatus: '在校', isAdoptable: false, coatColor: '白', gender: '母', sterilizationStatus: '未绝育', sterilizedAt: '', personalityTags: ['温顺'], usualLocations: ['图书馆', '教学楼'], healthNotes: '偏瘦，建议驱虫', likeCount: 73, photos: [], voice: '', bg: 'linear-gradient(135deg,#E6ECF3,#C3CCD8)', photoText: '牛', sub: '白 · 图书馆',
     timeline: [ { t: '2026-10-18 · 图书馆', c: '安静卧着，未进食' } ] },
-  { id: 'c4', name: '大白', lifeStatus: '在校', isAdoptable: false, coatColor: '白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2024-03', personalityTags: ['慵懒'], usualLocations: ['宿舍区'], healthNotes: '健康', latestNote: '宿舍楼下常驻', photos: [], voice: '', bg: 'linear-gradient(135deg,#CDD7E3,#9AA9BB)', photoText: '白', sub: '白灰 · 宿舍区',
+  { id: 'c4', name: '大白', lifeStatus: '在校', isAdoptable: false, coatColor: '白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2024-03', personalityTags: ['慵懒'], usualLocations: ['宿舍区'], healthNotes: '健康', likeCount: 41, photos: [], voice: '', bg: 'linear-gradient(135deg,#CDD7E3,#9AA9BB)', photoText: '白', sub: '白灰 · 宿舍区',
     timeline: [ { t: '2026-10-15 · 宿舍区', c: '被同学投喂罐头' } ] },
-  { id: 'c5', name: '小花', lifeStatus: '毕业', isAdoptable: false, coatColor: '橘白', gender: '母', sterilizationStatus: '已绝育', sterilizedAt: '2023-06', personalityTags: ['亲人'], usualLocations: ['宿舍区'], healthNotes: '已领养', latestNote: '已被校友领养回家', photos: [], voice: '', bg: 'linear-gradient(135deg,#FFB46B,#FF8A3D)', photoText: '花', sub: '已领养 · 原宿舍区',
+  { id: 'c5', name: '小花', lifeStatus: '毕业', isAdoptable: false, coatColor: '橘白', gender: '母', sterilizationStatus: '已绝育', sterilizedAt: '2023-06', personalityTags: ['亲人'], usualLocations: ['宿舍区'], healthNotes: '已领养', likeCount: 88, photos: [], voice: '', bg: 'linear-gradient(135deg,#FFB46B,#FF8A3D)', photoText: '花', sub: '已领养 · 原宿舍区',
     timeline: [ { t: '2026-06-30', c: '正式被领养，离开校园' } ] },
-  { id: 'c6', name: '阿灰', lifeStatus: '毕业', isAdoptable: false, coatColor: '其他', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2023-04', personalityTags: ['独立'], usualLocations: ['食堂'], healthNotes: '已领养', latestNote: '由教职工领养', photos: [], voice: '', bg: 'linear-gradient(135deg,#9AA9BB,#5B6470)', photoText: '灰', sub: '已领养 · 原食堂',
+  { id: 'c6', name: '阿灰', lifeStatus: '毕业', isAdoptable: false, coatColor: '其他', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2023-04', personalityTags: ['独立'], usualLocations: ['食堂'], healthNotes: '已领养', likeCount: 35, photos: [], voice: '', bg: 'linear-gradient(135deg,#9AA9BB,#5B6470)', photoText: '灰', sub: '已领养 · 原食堂',
     timeline: [ { t: '2026-05-20', c: '被食堂阿姨领养' } ] },
-  { id: 'c7', name: '雪球', lifeStatus: '休学', isAdoptable: false, coatColor: '白', gender: '未知', sterilizationStatus: '未知', sterilizedAt: '', personalityTags: [], usualLocations: ['不明'], healthNotes: '3 个月无可靠记录', latestNote: '不知所踪，暂记为休学', photos: [], voice: '', bg: 'linear-gradient(135deg,#CDD7E3,#9AA9BB)', photoText: '雪', sub: '不知所踪 · 3个月无记录',
+  { id: 'c7', name: '雪球', lifeStatus: '休学', isAdoptable: false, coatColor: '白', gender: '未知', sterilizationStatus: '未知', sterilizedAt: '', personalityTags: [], usualLocations: ['不明'], healthNotes: '3 个月无可靠记录', likeCount: 12, photos: [], voice: '', bg: 'linear-gradient(135deg,#CDD7E3,#9AA9BB)', photoText: '雪', sub: '不知所踪 · 3个月无记录',
     timeline: [ { t: '2026-07-01', c: '最后一次出现在宿舍区' } ] },
-  { id: 'c8', name: '老橘', lifeStatus: '喵星', isAdoptable: false, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2018-01', personalityTags: ['校园元老'], usualLocations: ['全校'], healthNotes: '享年约9岁', latestNote: '已回喵星，铭记', photos: [], voice: '', bg: 'linear-gradient(135deg,#B8C0CC,#8C96A3)', photoText: '老', sub: '已回喵星 · 享年约9岁',
+  { id: 'c8', name: '老橘', lifeStatus: '喵星', isAdoptable: false, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2018-01', personalityTags: ['校园元老'], usualLocations: ['全校'], healthNotes: '享年约9岁', likeCount: 210, photos: [], voice: '', bg: 'linear-gradient(135deg,#B8C0CC,#8C96A3)', photoText: '老', sub: '已回喵星 · 享年约9岁',
     timeline: [ { t: '2025-12-01', c: '安详离世，感谢陪伴' } ] }
   ];
   // 给 mock 猫轮询分配照片与叫声
@@ -326,6 +326,51 @@ function drawRandomCat(list) {
   const picked = bag.shift();
   try { wx.setStorageSync('cat_bag', bag); } catch (e) {}
   return list.find(c => c.id === picked) || null;
+}
+
+// ---------- 公开：点赞（每人每天 3 次）+ 人气榜 ----------
+function likeTodayStr() {
+  const d = new Date(Date.now() + 8 * 3600000);
+  const p = n => (n < 10 ? '0' + n : '' + n);
+  return d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate());
+}
+function likeToday() {
+  try {
+    const rec = wx.getStorageSync('mock_like_daily');
+    const d = likeTodayStr();
+    return (rec && rec.date === d && typeof rec.n === 'number') ? rec.n : 0;
+  } catch (e) { return 0; }
+}
+function likeCatMock(catId) {
+  const c = MOCK_CATS.find(x => x.id === catId);
+  if (!c) return Promise.resolve({ ok: false, msg: '猫咪不存在' });
+  const used = likeToday();
+  if (used >= 3) return Promise.resolve({ ok: false, msg: '今天的 3 次点赞已经用完啦，明天再来' });
+  c.likeCount = (c.likeCount || 0) + 1;
+  saveStore(STORE_CATS, MOCK_CATS);
+  saveStore('mock_like_daily', { date: likeTodayStr(), n: used + 1 });
+  return Promise.resolve({ ok: true, likeCount: c.likeCount, left: 2 - used });
+}
+function likeStatusMock(catId) {
+  const used = likeToday();
+  const c = MOCK_CATS.find(x => x.id === catId);
+  return Promise.resolve({ ok: true, used, left: Math.max(0, 3 - used), likeCount: (c && c.likeCount) || 0 });
+}
+function likeRankMock() {
+  const list = MOCK_CATS.slice()
+    .sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0))
+    .map(c => ({ id: c.id, name: c.name, photo: (c.photos || [])[0] || '', likeCount: c.likeCount || 0 }));
+  return Promise.resolve({ ok: true, list });
+}
+// 云端：catLike 云函数（like/status/rank 三个 action）
+function likeCat(catId) {
+  return useCloud() ? call('catLike', { action: 'like', catId }) : likeCatMock(catId);
+}
+function likeStatus(catId) {
+  return useCloud() ? call('catLike', { action: 'status', catId }) : likeStatusMock(catId);
+}
+function likeRank() {
+  return useCloud() ? call('catLike', { action: 'rank' }) : likeRankMock();
 }
 
 // ---------- 管理员：新增近况 ----------
@@ -689,7 +734,7 @@ function rejectApplication(id) {
 
 module.exports = {
   getCats, getCat, checkAdmin, catManage, addUpdate, listAdmins, adminManage, initAdmin,
-  drawRandomCat,
+  drawRandomCat, likeCat, likeStatus, likeRank,
   submitCat, listSubmissions, approveSubmission, rejectSubmission, checkSubConflict,
   listUpdates, editUpdate, deleteUpdate,
   submitUpdate, listNoteSubmissions, handleNoteSubmission,

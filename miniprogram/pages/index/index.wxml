@@ -36,3 +36,6 @@
   </view>
   <view class="darrow">›</view>
 </view>
+
+<!-- 人气榜入口：右侧、屏幕约 3/4 高度处（离底部 1/4 屏） -->
+<view class="rankfab" bindtap="goRank">🏆 人气榜</view>

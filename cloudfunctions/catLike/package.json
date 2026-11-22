@@ -1,0 +1,9 @@
+{
+  "name": "catLike",
+  "version": "1.0.0",
+  "description": "游客点赞：每人每天3次，记录到 like_logs，计数写入 cats.likeCount；支持 status/rank 查询",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

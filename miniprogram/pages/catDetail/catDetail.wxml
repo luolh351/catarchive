@@ -14,6 +14,8 @@
 
   <view class="sharerow">
     <button class="sharebtn" style="margin:0 auto 0 0;display:inline-flex;width:469rpx;padding:12rpx 0;" open-type="share" plain>↗ 分享给朋友</button>
+    <!-- 点赞：分享按钮右侧；每人每天 3 次（云端 like_logs 按日校验） -->
+    <view class="likebtn" bindtap="doLike">❤ {{likeCount}}</view>
   </view>
 
   <!-- 全屏照片查看层：左右滑动或点箭头切换，支持保存到相册 -->
