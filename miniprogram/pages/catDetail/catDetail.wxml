@@ -13,7 +13,7 @@
   </view>
 
   <view class="sharerow">
-    <button class="sharebtn" style="margin:0 auto 0 0;display:inline-flex;width:auto;padding:12rpx 56rpx;min-width:300rpx;" open-type="share" plain>↗ 分享给朋友</button>
+    <button class="sharebtn" style="margin:0 auto 0 0;display:inline-flex;width:469rpx;padding:12rpx 0;" open-type="share" plain>↗ 分享给朋友</button>
   </view>
 
   <!-- 全屏照片查看层：左右滑动或点箭头切换，支持保存到相册 -->
