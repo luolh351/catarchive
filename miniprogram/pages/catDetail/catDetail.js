@@ -12,7 +12,9 @@ Page({
     playing: false,
     photoPages: [],      // 照片墙：每页 3 张（{k, items}）
     viewer: false,       // 全屏查看层开关
-    viewerIndex: 0       // 当前查看的照片序号
+    viewerIndex: 0,      // 当前查看的照片序号
+    likeCount: 0,        // 该猫点赞总数
+    likeLeft: 3          // 今天剩余可点赞次数
   },
   onLoad(options) {
     const id = options && options.id;
@@ -107,6 +109,28 @@ Page({
   onUnload() {
     if (this.audio) { this.audio.destroy(); this.audio = null; }
   },
+  // 查询点赞总数与今天剩余次数
+  refreshLike() {
+    service.likeStatus(this.data.id || '').then(r => {
+      if (r && r.ok) this.setData({ likeCount: r.likeCount || 0, likeLeft: typeof r.left === 'number' ? r.left : 3 });
+    }).catch(() => {});
+  },
+  // 点赞：每人每天 3 次（云端按 openid+日期校验），仅更新数字不弹提示
+  doLike() {
+    if (this._liking) return;
+    this._liking = true;
+    service.likeCat(this.data.id || '').then(r => {
+      this._liking = false;
+      if (r && r.ok) {
+        this.setData({ likeCount: r.likeCount || this.data.likeCount + 1, likeLeft: typeof r.left === 'number' ? r.left : Math.max(0, this.data.likeLeft - 1) });
+      } else {
+        wx.showToast({ title: (r && r.msg) || '点赞失败，请重试', icon: 'none' });
+      }
+    }).catch(() => {
+      this._liking = false;
+      wx.showToast({ title: '点赞失败，请检查网络', icon: 'none' });
+    });
+  },
   load(id) {
     service.getCat(id).then(res => {
       if (!res.cat) { this.setData({ notFound: true }); return; }
@@ -115,6 +139,7 @@ Page({
       const photoPages = [];
       for (let i = 0; i < photos.length; i += 3) photoPages.push({ k: String(i), items: photos.slice(i, i + 3) });
       this.setData({ cat: res.cat, photoPages, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
+      this.refreshLike();
     }).catch(() => { this.setData({ notFound: true }); wx.showToast({ title: '加载失败', icon: 'none' }); });
   },
   // 播放/停止猫叫声（本地文件直接播；云存储 cloud:// 需先下载为临时文件）
