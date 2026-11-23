@@ -25,15 +25,15 @@
 .darrow { color: rgba(255, 255, 255, .8); font-size: 44rpx; margin-left: 8rpx; }
 .dailycard:active { opacity: .88; }
 
-/* 人气榜浮游入口：右侧、屏幕约 3/4 高度处（离底部 1/4 屏），暖橙胶囊 */
+/* 人气榜浮游入口：右侧、屏幕约 3/4 高度处，仅一个奖杯图标（无底色无文字） */
 .rankfab {
   position: fixed; right: 24rpx; bottom: calc(100vh / 4); z-index: 80;
-  padding: 16rpx 30rpx; border-radius: 999rpx;
-  background: linear-gradient(135deg, #FFD59E, #FFB46B);
-  color: #7A4A12; font-size: 26rpx; font-weight: 600;
-  box-shadow: 0 8rpx 22rpx rgba(255, 180, 107, .45);
+  width: 96rpx; height: 96rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64rpx; line-height: 1;
+  filter: drop-shadow(0 4rpx 10rpx rgba(0, 0, 0, .18));
 }
-.rankfab:active { opacity: .85; }
+.rankfab:active { opacity: .7; }
 
 /* 风云猫子弹窗：白卡片居中弹层 + 半透明遮罩 */
 .rankmask {

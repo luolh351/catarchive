@@ -37,8 +37,8 @@
   <view class="darrow">›</view>
 </view>
 
-<!-- 人气榜入口：右侧、屏幕约 3/4 高度处（离底部 1/4 屏） -->
-<view class="rankfab" bindtap="goRank">🏆 风云猫子</view>
+<!-- 人气榜入口：右侧、屏幕约 3/4 高度处（离底部 1/4 屏），仅奖杯图标无底色 -->
+<view class="rankfab" bindtap="goRank">🏆</view>
 
 <!-- 风云猫子弹窗：点赞榜 ♡ / 人气榜 🔥（仿参考设计：白卡片弹层、排名徽章、右上角关闭） -->
 <view wx:if="{{rankShow}}" class="rankmask" bindtap="closeRank">
