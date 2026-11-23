@@ -14,11 +14,8 @@
 
   <view class="sharerow">
     <button class="sharebtn" style="margin:0 auto 0 0;display:inline-flex;width:469rpx;padding:12rpx 0;" open-type="share" plain>↗ 分享给朋友</button>
-    <!-- 点赞：分享按钮右侧；未赞空心 ♡ / 已赞实心 ♥，点赞时弹跳动画 -->
-    <view class="likebtn {{likedToday ? 'liked' : ''}}" bindtap="doLike">
-      <text class="heart {{pop ? 'pop' : ''}}">{{likedToday ? '♥' : '♡'}}</text>
-      <text class="lnum">{{likeCount}}</text>
-    </view>
+    <!-- 点赞：分享按钮右侧；无外框，仅红心+数字可点击（每人每天 3 次） -->
+    <view class="likebtn" bindtap="doLike">❤ {{likeCount}}</view>
   </view>
 
   <!-- 全屏照片查看层：左右滑动或点箭头切换，支持保存到相册 -->

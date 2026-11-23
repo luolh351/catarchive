@@ -49,21 +49,9 @@
       <view class="rtab {{rankTab==='hot'?'on':''}}" bindtap="setRankTab" data-t="hot">人气榜</view>
     </view>
     <scroll-view scroll-y class="rlist">
-      <!-- 前三名领奖台：第2 | 第1 | 第3，头像大小随名次递减，金银铜光环 -->
-      <view wx:if="{{podium.length===3}}" class="podium">
-        <view wx:for="{{podium}}" wx:key="id" wx:for-item="p" class="pcol p{{p.place}}" bindtap="goRankDetail" data-id="{{p.id}}">
-          <view class="phalo h{{p.place}}">
-            <image wx:if="{{p.photo}}" class="pimg" src="{{p.photo}}" mode="aspectFill" />
-            <block wx:else>{{p.initial}}</block>
-          </view>
-          <view class="pname">{{p.name}}</view>
-          <view class="pcnt">{{rankTab==='like'?'♡':'🔥'}} {{p.count}}</view>
-          <view class="pbadge b{{p.place}}">{{p.place}}</view>
-        </view>
-      </view>
-      <view wx:if="{{rankList.length===0 && podium.length===0}}" class="rempty">暂无数据，快去给喜欢的猫点个赞吧</view>
+      <view wx:if="{{rankList.length===0}}" class="rempty">暂无数据，快去给喜欢的猫点个赞吧</view>
       <view wx:for="{{rankList}}" wx:key="id" class="rrow" bindtap="goRankDetail" data-id="{{item.id}}">
-        <view class="rrank">{{item.rank}}</view>
+        <view class="rrank {{item.rank<=3?'top':''}}">{{item.rank}}</view>
         <view class="ravatar" style="background:linear-gradient(135deg,#FFD59E,#FFB46B)">
           <image wx:if="{{item.photo}}" class="rimg" src="{{item.photo}}" mode="aspectFill" />
           <block wx:else>{{item.initial}}</block>
@@ -72,7 +60,5 @@
         <view class="rcnt">{{rankTab==='like'?'♡':'🔥'}} {{item.count}}</view>
       </view>
     </scroll-view>
-    <!-- 今日点赞余额提示 -->
-    <view class="rfoot">今天还能点赞 <text class="rnum">{{likeLeft}}</text> 次 · 明天 0 点重置</view>
   </view>
 </view>

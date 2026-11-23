@@ -352,25 +352,13 @@ function likeCatMock(catId) {
   if (used >= 3) return Promise.resolve({ ok: false, msg: '今天的 3 次点赞已经用完啦，明天再来' });
   c.likeCount = (c.likeCount || 0) + 1;
   saveStore(STORE_CATS, MOCK_CATS);
-  // 记录当天赞过哪些猫（模拟端用于空心/实心状态；云端由 like_logs 提供）
-  let rec = { date: likeTodayStr(), n: used + 1, cats: [] };
-  try {
-    const old = wx.getStorageSync('mock_like_daily');
-    if (old && old.date === rec.date && Array.isArray(old.cats)) rec.cats = old.cats;
-  } catch (e) {}
-  if (rec.cats.indexOf(catId) < 0) rec.cats.push(catId);
-  saveStore('mock_like_daily', rec);
+  saveStore('mock_like_daily', { date: likeTodayStr(), n: used + 1 });
   return Promise.resolve({ ok: true, likeCount: c.likeCount, left: 2 - used });
 }
 function likeStatusMock(catId) {
   const used = likeToday();
   const c = MOCK_CATS.find(x => x.id === catId);
-  let likedToday = false;
-  try {
-    const rec = wx.getStorageSync('mock_like_daily');
-    likedToday = !!(rec && rec.date === likeTodayStr() && Array.isArray(rec.cats) && rec.cats.indexOf(catId) >= 0);
-  } catch (e) {}
-  return Promise.resolve({ ok: true, used, left: Math.max(0, 3 - used), likeCount: (c && c.likeCount) || 0, likedToday });
+  return Promise.resolve({ ok: true, used, left: Math.max(0, 3 - used), likeCount: (c && c.likeCount) || 0 });
 }
 function likeRankMock() {
   const list = MOCK_CATS.slice()

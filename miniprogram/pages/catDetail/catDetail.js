@@ -14,9 +14,7 @@ Page({
     viewer: false,       // 全屏查看层开关
     viewerIndex: 0,      // 当前查看的照片序号
     likeCount: 0,        // 该猫点赞总数
-    likeLeft: 3,         // 今天剩余可点赞次数
-    likedToday: false,   // 今天是否已赞过这只（空心/实心）
-    pop: false           // 点赞弹跳动画标记
+    likeLeft: 3          // 今天剩余可点赞次数
   },
   onLoad(options) {
     const id = options && options.id;
@@ -111,33 +109,20 @@ Page({
   onUnload() {
     if (this.audio) { this.audio.destroy(); this.audio = null; }
   },
-  // 查询点赞总数、剩余次数与今日是否已赞（决定 ♡/♥）
+  // 查询点赞总数与今天剩余次数
   refreshLike() {
-    const version = this._likeVersion || 0;
     service.likeStatus(this.data.id || '').then(r => {
-      if (version !== (this._likeVersion || 0)) return;
-      if (r && r.ok) this.setData({
-        likeCount: r.likeCount || 0,
-        likeLeft: typeof r.left === 'number' ? r.left : 3,
-        likedToday: !!r.likedToday
-      });
+      if (r && r.ok) this.setData({ likeCount: r.likeCount || 0, likeLeft: typeof r.left === 'number' ? r.left : 3 });
     }).catch(() => {});
   },
-  // 点赞：每人每天 3 次；成功空心变实心并弹跳，不弹提示
+  // 点赞：每人每天 3 次（云端按 openid+日期校验），仅更新数字不弹提示
   doLike() {
     if (this._liking) return;
     this._liking = true;
-    this._likeVersion = (this._likeVersion || 0) + 1;
     service.likeCat(this.data.id || '').then(r => {
       this._liking = false;
       if (r && r.ok) {
-        this.setData({
-          likeCount: typeof r.likeCount === 'number' ? r.likeCount : this.data.likeCount + 1,
-          likeLeft: typeof r.left === 'number' ? r.left : Math.max(0, this.data.likeLeft - 1),
-          likedToday: true,
-          pop: true
-        });
-        setTimeout(() => this.setData({ pop: false }), 420);
+        this.setData({ likeCount: r.likeCount || this.data.likeCount + 1, likeLeft: typeof r.left === 'number' ? r.left : Math.max(0, this.data.likeLeft - 1) });
       } else {
         wx.showToast({ title: (r && r.msg) || '点赞失败，请重试', icon: 'none' });
       }
