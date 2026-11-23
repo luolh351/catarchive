@@ -12,9 +12,12 @@ exports.main = async (event) => {
   const res = await cats.doc(event.id).get();
   const cat = res.data || null;
   if (!cat || cat.published === false) return { cat: null, timeline: [] };
-  cats.doc(event.id).update({ data: { viewCount: _.inc(1) } }).catch(() => {});
   delete cat.operatorOpenid;
   const up = await updates.where({ catId: event.id }).orderBy('createdAt', 'desc').limit(50).get();
   const timeline = (up.data || []).map(({ operatorOpenid, ...r }) => r);
+  // 等待写入结束，避免云函数返回后未完成的任务被挂起。
+  await cats.doc(event.id).update({ data: { viewCount: _.inc(1) } }).catch(e => {
+    console.warn('[view] 浏览计数写入失败', e);
+  });
   return { cat, timeline };
 };

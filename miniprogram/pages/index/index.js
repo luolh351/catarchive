@@ -4,7 +4,7 @@ const service = require('../../utils/service');
 const nav = require('../../utils/nav');
 
 Page({
-  data: { active: '在校', list: [], all: [], daily: null, rankShow: false, rankTab: 'like', rankList: [] },
+  data: { active: '在校', list: [], all: [], daily: null, rankShow: false, rankTab: 'like', podium: [], rankList: [], likeLeft: 3 },
   onLoad() {
     // 开启右上角菜单的「转发给朋友 / 分享到朋友圈 / 复制链接」
     wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
@@ -17,18 +17,22 @@ Page({
   },
   onShow() { this.loadAll(); },
   loadAll() {
+    if (this._loadingCats) return this._loadingCats;
     wx.showLoading({ title: '加载中' });
-    service.getCats()
+    this._loadingCats = service.getCats()
       .then(all => {
         this.setData({ all, daily: service.drawRandomCat(all) });
         this.applyView();
-        wx.hideLoading();
+        if (this.data.rankShow) this.loadRank(this.data.rankTab);
       })
       .catch(() => {
-        this.setData({ all: [], list: [], daily: null });
-        wx.hideLoading();
+        this.setData({ all: [], list: [], daily: null, rankList: [] });
         wx.showToast({ title: '加载失败，请重试', icon: 'none' });
+      }).finally(() => {
+        this._loadingCats = null;
+        wx.hideLoading();
       });
+    return this._loadingCats;
   },
   setTab(e) { this.setData({ active: e.currentTarget.dataset.s }); this.applyView(); },
   // 按当前状态标签过滤
@@ -51,6 +55,11 @@ Page({
   goRank() {
     this.setData({ rankShow: true });
     this.loadRank(this.data.rankTab);
+    this.loadAll();
+    // 打开弹窗时顺带刷新今日点赞余额（弹窗底部提示条）
+    service.likeStatus('').then(r => {
+      if (r && r.ok && typeof r.left === 'number') this.setData({ likeLeft: r.left });
+    }).catch(() => {});
   },
   closeRank() { this.setData({ rankShow: false }); },
   stop() {},   // 阻止弹层内点击冒泡关闭
@@ -64,21 +73,23 @@ Page({
     // 数据源：全量已发布猫（likeCount/viewCount 均在档案上），前端排序
     const key = tab === 'hot' ? 'viewCount' : 'likeCount';
     const src = (this.data.all && this.data.all.length) ? this.data.all : [];
-    const list = src.slice()
-      .sort((a, b) => (b[key] || 0) - (a[key] || 0))
-      .map((c, i) => ({
-        id: c.id, name: c.name, photo: c.photo || '', count: c[key] || 0,
-        initial: (c.name || '·')[0],
-        rank: i + 1
-      }));
-    this.setData({ rankList: list });
-    if (!src.length) {
-      // 直接进首页弹窗但列表还没加载完的兜底：拉一次全量
-      service.getCats().then(all => {
-        this.setData({ all });
-        this.loadRank(tab);
-      }).catch(() => {});
-    }
+    const sorted = src.slice().sort((a, b) => (b[key] || 0) - (a[key] || 0));
+    const fmt = (c, i) => ({
+      id: c.id, name: c.name, photo: c.photo || '', count: c[key] || 0,
+      initial: (c.name || '·')[0], rank: i + 1
+    });
+    // 前三名上领奖台（wxml 按 第2-第1-第3 居中排列）；其余进普通列表
+    const podium = [sorted[1], sorted[0], sorted[2]]
+      .map((c, idx) => {
+        if (!c) return null;
+        const place = idx === 1 ? 1 : (idx === 0 ? 2 : 3);   // sorted 下标与名次对应
+        const item = fmt(c, place - 1);
+        item.place = place;
+        return item;
+      })
+      .filter(Boolean);
+    const rest = sorted.slice(3).map((c, i) => fmt(c, i + 3));
+    this.setData({ podium, rankList: rest });
   },
   goRankDetail(e) {
     this.setData({ rankShow: false });

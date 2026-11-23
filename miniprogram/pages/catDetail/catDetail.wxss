@@ -21,14 +21,22 @@
   background: transparent;
 }
 .sharebtn::after { border: none; }
-/* 点赞：分享按钮右侧，无描边无底框，仅红心+数字 */
+/* 点赞：未赞空心灰粉 / 已赞实心玫红；点赞瞬间弹跳动画 */
 .likebtn {
   flex: none; margin-left: 20rpx;
-  display: inline-flex; align-items: center;
-  font-size: 30rpx; color: #E56A77; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6rpx;
   padding: 12rpx 4rpx;
 }
-.likebtn:active { opacity: .7; }
+.heart { font-size: 40rpx; line-height: 1; color: #D9A5AE; }
+.likebtn.liked .heart { color: #E56A77; }
+.heart.pop { animation: likepop .38s cubic-bezier(.2, 2.2, .4, 1); }
+@keyframes likepop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.55) rotate(-8deg); }
+  100% { transform: scale(1); }
+}
+.lnum { font-size: 30rpx; font-weight: 700; color: #4A5560; }
+.likebtn:active { opacity: .75; }
 /* 照片墙：一屏 3 张，swiper 翻页（高度须显式设定，含圆点空间） */
 .gwrap { margin-top: 20rpx; }
 .gswiper { height: 300rpx; }
