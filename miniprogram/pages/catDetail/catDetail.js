@@ -123,7 +123,6 @@ Page({
       this._liking = false;
       if (r && r.ok) {
         this.setData({ likeCount: r.likeCount || this.data.likeCount + 1, likeLeft: typeof r.left === 'number' ? r.left : Math.max(0, this.data.likeLeft - 1) });
-        wx.showToast({ title: '谢谢你的赞 ❤', icon: 'none' });
       } else {
         wx.showToast({ title: (r && r.msg) || '点赞失败，请重试', icon: 'none' });
       }
