@@ -38,4 +38,27 @@
 </view>
 
 <!-- 人气榜入口：右侧、屏幕约 3/4 高度处（离底部 1/4 屏） -->
-<view class="rankfab" bindtap="goRank">🏆 人气榜</view>
+<view class="rankfab" bindtap="goRank">🏆 风云猫子</view>
+
+<!-- 风云猫子弹窗：点赞榜 ♡ / 人气榜 🔥（仿参考设计：白卡片弹层、排名徽章、右上角关闭） -->
+<view wx:if="{{rankShow}}" class="rankmask" bindtap="closeRank">
+  <view class="ranksheet" catchtap="stop">
+    <view class="rh">风云猫子<text class="rx" catchtap="closeRank">×</text></view>
+    <view class="rtabs">
+      <view class="rtab {{rankTab==='like'?'on':''}}" bindtap="setRankTab" data-t="like">点赞榜</view>
+      <view class="rtab {{rankTab==='hot'?'on':''}}" bindtap="setRankTab" data-t="hot">人气榜</view>
+    </view>
+    <scroll-view scroll-y class="rlist">
+      <view wx:if="{{rankList.length===0}}" class="rempty">暂无数据，快去给喜欢的猫点个赞吧</view>
+      <view wx:for="{{rankList}}" wx:key="id" class="rrow" bindtap="goRankDetail" data-id="{{item.id}}">
+        <view class="rrank {{item.rank<=3?'top':''}}">{{item.rank}}</view>
+        <view class="ravatar" style="background:linear-gradient(135deg,#FFD59E,#FFB46B)">
+          <image wx:if="{{item.photo}}" class="rimg" src="{{item.photo}}" mode="aspectFill" />
+          <block wx:else>{{item.initial}}</block>
+        </view>
+        <view class="rname">{{item.name}}</view>
+        <view class="rcnt">{{rankTab==='like'?'♡':'🔥'}} {{item.count}}</view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

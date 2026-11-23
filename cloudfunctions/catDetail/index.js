@@ -1,15 +1,18 @@
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
+const _ = db.command;
 const cats = db.collection('cats');
 const updates = db.collection('cat_updates');
 
 // 公开：按 id 取档案与近况时间线；归档(published=false)或不存在返回 cat:null（阻止公开读取归档档案）
+// 每次公开读取 viewCount 原子 +1（人气榜热度数据），失败不影响返回
 exports.main = async (event) => {
   if (!event || !event.id) return { cat: null, timeline: [] };
   const res = await cats.doc(event.id).get();
   const cat = res.data || null;
   if (!cat || cat.published === false) return { cat: null, timeline: [] };
+  cats.doc(event.id).update({ data: { viewCount: _.inc(1) } }).catch(() => {});
   delete cat.operatorOpenid;
   const up = await updates.where({ catId: event.id }).orderBy('createdAt', 'desc').limit(50).get();
   const timeline = (up.data || []).map(({ operatorOpenid, ...r }) => r);

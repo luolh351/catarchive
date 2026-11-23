@@ -4,7 +4,7 @@ const service = require('../../utils/service');
 const nav = require('../../utils/nav');
 
 Page({
-  data: { active: '在校', list: [], all: [], daily: null },
+  data: { active: '在校', list: [], all: [], daily: null, rankShow: false, rankTab: 'like', rankList: [] },
   onLoad() {
     // 开启右上角菜单的「转发给朋友 / 分享到朋友圈 / 复制链接」
     wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
@@ -46,8 +46,42 @@ Page({
     const d = this.data.daily;
     if (d && d.id) nav.go('/pages/catDetail/catDetail?id=' + d.id);
   },
-  // 右下浮游入口 → 人气榜
+  // ---------- 风云猫子弹窗（点赞榜 ♡ / 人气榜 🔥，仿参考设计） ----------
+  // 打开时用全量猫数据按当前 tab 排序；点行进详情
   goRank() {
-    nav.go('/pages/likeRank/likeRank');
+    this.setData({ rankShow: true });
+    this.loadRank(this.data.rankTab);
+  },
+  closeRank() { this.setData({ rankShow: false }); },
+  stop() {},   // 阻止弹层内点击冒泡关闭
+  setRankTab(e) {
+    const t = e.currentTarget.dataset.t;
+    if (t === this.data.rankTab) return;
+    this.setData({ rankTab: t });
+    this.loadRank(t);
+  },
+  loadRank(tab) {
+    // 数据源：全量已发布猫（likeCount/viewCount 均在档案上），前端排序
+    const key = tab === 'hot' ? 'viewCount' : 'likeCount';
+    const src = (this.data.all && this.data.all.length) ? this.data.all : [];
+    const list = src.slice()
+      .sort((a, b) => (b[key] || 0) - (a[key] || 0))
+      .map((c, i) => ({
+        id: c.id, name: c.name, photo: c.photo || '', count: c[key] || 0,
+        initial: (c.name || '·')[0],
+        rank: i + 1
+      }));
+    this.setData({ rankList: list });
+    if (!src.length) {
+      // 直接进首页弹窗但列表还没加载完的兜底：拉一次全量
+      service.getCats().then(all => {
+        this.setData({ all });
+        this.loadRank(tab);
+      }).catch(() => {});
+    }
+  },
+  goRankDetail(e) {
+    this.setData({ rankShow: false });
+    nav.go('/pages/catDetail/catDetail?id=' + e.currentTarget.dataset.id);
   }
 });

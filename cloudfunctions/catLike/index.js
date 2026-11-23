@@ -17,7 +17,7 @@ function todayStr() {
 // 公开：游客点赞
 // action=like 点赞（校验每日上限，cats.likeCount 原子 +1，写 like_logs）
 // action=status 查询当天已赞次数与某猫点赞总数
-// action=rank 人气榜（按点赞数降序前 50）
+// 榜单数据由 catList（全字段含 likeCount/viewCount）提供，前端排序，无需 rank 接口
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
   if (!OPENID) return { ok: false, msg: '无法识别用户身份' };
@@ -33,17 +33,6 @@ exports.main = async (event) => {
       catLikes = (c && c.data && c.data.likeCount) || 0;
     }
     return { ok: true, used: used.total, left: Math.max(0, DAILY_LIMIT - used.total), likeCount: catLikes };
-  }
-
-  if (action === 'rank') {
-    const res = await cats.where({ published: _.neq(false) })
-      .orderBy('likeCount', 'desc').limit(50)
-      .get();
-    const list = (res.data || []).map(c => ({
-      id: c._id, name: c.name, photo: (c.photos || [])[0] || '',
-      likeCount: c.likeCount || 0
-    }));
-    return { ok: true, list };
   }
 
   // ---------- 点赞 ----------
