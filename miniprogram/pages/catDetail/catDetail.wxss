@@ -21,14 +21,6 @@
   background: transparent;
 }
 .sharebtn::after { border: none; }
-/* 点赞按钮：分享按钮右侧，固定窄宽；红心描边圆角 */
-.likebtn {
-  flex: none; width: 200rpx; margin-left: 16rpx;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 26rpx; color: #E56A77; border: 1rpx solid #E56A77;
-  border-radius: 999rpx; padding: 12rpx 0; background: transparent;
-}
-.likebtn:active { opacity: .8; }
 /* 照片墙：一屏 3 张，swiper 翻页（高度须显式设定，含圆点空间） */
 .gwrap { margin-top: 20rpx; }
 .gswiper { height: 300rpx; }
