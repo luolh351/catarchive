@@ -98,6 +98,14 @@ exports.main = async (event) => {
   if (voice === null) return { ok: false, msg: '音频须为 mp3 / wav / m4a 格式的云存储地址' };
 
   const life = d.lifeStatus || '在校';
+  // 离世原因：仅「喵星」必填（≤200字），其他状态一律清空
+  let deathReason = takeStr(d.deathReason, MAX.note);
+  if (deathReason === null) return { ok: false, msg: '离世原因≤200字' };
+  if (life === '喵星') {
+    if (!deathReason) return { ok: false, msg: '选择“喵星”需填写离世原因' };
+  } else {
+    deathReason = '';
+  }
   const data = {
     name,
     aliases: arrays.aliases,
@@ -111,6 +119,7 @@ exports.main = async (event) => {
     latestPhotos,
     more,
     lifeStatus: life,
+    deathReason,
     isAdoptable: !!d.isAdoptable && life === '在校',
     photos,
     voice,

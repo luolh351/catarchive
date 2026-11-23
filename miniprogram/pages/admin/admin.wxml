@@ -81,6 +81,7 @@
     <view class="kv"><text>健康</text><view class="vw"><text class="val">{{detail.healthNotes}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.healthNotes}}">复制</text></view></view>
     <view class="kv"><text>待领养</text><view class="vw"><text class="val">{{detail.isAdoptable ? '是' : '否'}}</text></view></view>
     <view class="kv"><text>去向</text><view class="vw"><text class="val">{{detail.lifeStatus}}</text></view></view>
+    <view class="kv" wx:if="{{detail.deathReason}}"><text>离世原因</text><view class="vw"><text class="val">{{detail.deathReason}}</text><text class="copy" catchtap="copySub" data-copy="{{detail.deathReason}}">复制</text></view></view>
     <view class="kv col" wx:if="{{detail.photos.length}}">
       <view class="vhead"><text>照片（{{detail.photos.length}}）</text><text class="copy" catchtap="saveSubPhotos">保存到相册</text></view>
       <view class="thumbs"><image wx:for="{{detail.photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" data-src="{{item}}" catchtap="previewSubPhoto" /></view>

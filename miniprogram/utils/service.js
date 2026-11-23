@@ -43,7 +43,7 @@ function defaultCats() {
     timeline: [ { t: '2026-05-20', c: '被食堂阿姨领养' } ] },
   { id: 'c7', name: '雪球', lifeStatus: '休学', isAdoptable: false, coatColor: '白', gender: '未知', sterilizationStatus: '未知', sterilizedAt: '', personalityTags: [], usualLocations: ['不明'], healthNotes: '3 个月无可靠记录', likeCount: 12, viewCount: 305, photos: [], voice: '', bg: 'linear-gradient(135deg,#CDD7E3,#9AA9BB)', photoText: '雪', sub: '不知所踪 · 3个月无记录',
     timeline: [ { t: '2026-07-01', c: '最后一次出现在宿舍区' } ] },
-  { id: 'c8', name: '老橘', lifeStatus: '喵星', isAdoptable: false, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2018-01', personalityTags: ['校园元老'], usualLocations: ['全校'], healthNotes: '享年约9岁', likeCount: 210, viewCount: 5623, photos: [], voice: '', bg: 'linear-gradient(135deg,#B8C0CC,#8C96A3)', photoText: '老', sub: '已回喵星 · 享年约9岁',
+  { id: 'c8', name: '老橘', lifeStatus: '喵星', isAdoptable: false, coatColor: '橘白', gender: '公', sterilizationStatus: '已绝育', sterilizedAt: '2018-01', personalityTags: ['校园元老'], usualLocations: ['全校'], healthNotes: '享年约9岁', likeCount: 210, viewCount: 5623, deathReason: '年老衰竭，安详离世', photos: [], voice: '', bg: 'linear-gradient(135deg,#B8C0CC,#8C96A3)', photoText: '老', sub: '已回喵星 · 享年约9岁',
     timeline: [ { t: '2025-12-01', c: '安详离世，感谢陪伴' } ] }
   ];
   // 给 mock 猫轮询分配照片与叫声
@@ -124,6 +124,8 @@ function attrsOf(c) {
     { k: '性别', v: c.gender || '未知' },
     { k: '性格', v: (Array.isArray(c.personalityTags) ? c.personalityTags.join('、') : (c.personalityTags || '')) || '—' },
     { k: '状况', v: c.healthNotes || '—' },
+    // 离世原因：仅「喵星」显示
+    ...(c.lifeStatus === '喵星' ? [{ k: '离世原因', v: c.deathReason || '—' }] : []),
     { k: '绝育情况', v: c.sterilizationStatus || '未知' },
     { k: '绝育时间', v: c.sterilizedAt || '—' },
     { k: '常出没', v: (Array.isArray(c.usualLocations) ? c.usualLocations.join('、') : (c.usualLocations || '')) || '—' }
@@ -170,6 +172,7 @@ function getCat(id) {
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
       healthNotes: c.healthNotes || '', aliases: c.aliases || [],
+      deathReason: c.deathReason || '',   // 离世原因（仅喵星展示）
       latestPhotos: c.latestPhotos || [], cover: c.cover || '', coverCard: c.coverCard || ''
     };
     return Promise.resolve({ cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(c) });
@@ -183,6 +186,7 @@ function getCat(id) {
       coatColor: c.coatColor, gender: c.gender, sterilizationStatus: c.sterilizationStatus,
       sterilizedAt: c.sterilizedAt, personalityTags: c.personalityTags || [], usualLocations: c.usualLocations || [],
       healthNotes: c.healthNotes || '', aliases: c.aliases || [],
+      deathReason: c.deathReason || '',   // 离世原因（仅喵星展示）
       latestPhotos: c.latestPhotos || [], cover: c.cover || '', coverCard: c.coverCard || ''
     };
     return { cat, attrs: attrsOf(c), more: moreOf(c), timeline: timelineOf(res) };
@@ -254,6 +258,7 @@ function catManage(action, payload) {
         coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
         sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
         aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '',
+        deathReason: life === '喵星' ? (d.deathReason || '').trim() : '',   // 离世原因：仅喵星保留
         photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
         cover: (d.photos && d.photos[0]) || '', coverCard: (d.photos && d.photos[0]) || '',
         more: d.more || '',
@@ -286,6 +291,9 @@ function catManage(action, payload) {
       if (d.lifeStatus !== undefined) cat.lifeStatus = d.lifeStatus;
       if (d.isAdoptable !== undefined) cat.isAdoptable = !!d.isAdoptable && nextLife === '在校';
       else if (nextLife !== '在校') cat.isAdoptable = false;
+      // 离世原因：仅「喵星」保留（没传则保留原值）；切到其他状态清空（与云端 update 一致）
+      if (nextLife !== '喵星') cat.deathReason = '';
+      else if (d.deathReason !== undefined) cat.deathReason = (d.deathReason || '').trim();
       if (d.photos !== undefined) cat.photos = d.photos;
       if (d.voice !== undefined) cat.voice = d.voice;
       cat.bg = pickBg(cat.coatColor); cat.photoText = (cat.name || '猫')[0];
@@ -521,6 +529,7 @@ function listSubmissions() {
       id: s.id, name: s.name, aliases: s.aliases || [], coatColor: s.coatColor, gender: s.gender,
       sterilizationStatus: s.sterilizationStatus, sterilizedAt: s.sterilizedAt || '', usualLocations: s.usualLocations || [],
       healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
+      deathReason: s.deathReason || '',
       personalityTags: s.personalityTags || [],
       isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
       latestPhotos: s.latestPhotos || [],
@@ -576,6 +585,7 @@ function approveSubmission(id, opts) {
       coatColor: d.coatColor || '未知', gender: d.gender || '未知', sterilizationStatus: d.sterilizationStatus || '未知',
       sterilizedAt: d.sterilizedAt || '', personalityTags: toArr(d.personalityTags) || [], usualLocations: toArr(d.usualLocations) || [],
       aliases: toArr(d.aliases) || [], healthNotes: d.healthNotes || '',
+      deathReason: (d.lifeStatus || '在校') === '喵星' ? (d.deathReason || '').trim() : '',
       photos: d.photos || [], voice: d.voice || '', latestPhotos: d.latestPhotos || [], published: true,
       cover: (d.photos && d.photos[0]) || '', coverCard: (d.photos && d.photos[0]) || '',
       more: d.more || '',

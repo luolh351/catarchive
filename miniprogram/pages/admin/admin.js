@@ -244,6 +244,7 @@ Page({
         id: s.id, name: s.name, aliasesText: arr2str(s.aliases) || '—', coatColor: s.coatColor || '—',
         gender: s.gender || '—', sterilizationStatus: s.sterilizationStatus || '—', sterilizedAt: s.sterilizedAt || '',
         usualText: arr2str(s.usualLocations) || '—', healthNotes: s.healthNotes || '—',
+        deathReason: s.lifeStatus === '喵星' ? (s.deathReason || '—') : '',
         more: s.more || '',
         personalityText: arr2str(s.personalityTags) || '—',
         isAdoptable: !!s.isAdoptable, lifeStatus: s.lifeStatus || '—',

@@ -13,10 +13,12 @@
   </view>
 
   <view class="sharerow">
-    <button class="sharebtn" style="margin:0 auto 0 0;display:inline-flex;width:469rpx;padding:12rpx 0;" open-type="share" plain>↗ 分享给朋友</button>
-    <!-- 点赞：分享按钮右侧；无外框，仅红心+数字可点击（每人每天 3 次） -->
-    <view class="likebtn" bindtap="doLike">❤ {{likeCount}}</view>
+    <button class="sharebtn" open-type="share" hover-class="action-pressed">↗ 分享给朋友</button>
+    <button class="likebtn" bindtap="doLike" hover-class="action-pressed">
+      <text class="like-icon">♡</text><text>{{likeCount}}</text>
+    </button>
   </view>
+  <view class="like-hint">{{likeLeft > 0 ? '今日还可点赞 ' + likeLeft + ' 次' : '今日点赞次数已用完'}}</view>
 
   <!-- 全屏照片查看层：左右滑动或点箭头切换，支持保存到相册 -->
   <view wx:if="{{viewer}}" class="viewer" catchtouchmove="stop">

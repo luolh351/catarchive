@@ -8,27 +8,45 @@
   background: var(--primary); color: #fff; text-align: center;
   padding: 20rpx 0; border-radius: 24rpx; font-size: 28rpx;
 }
-/* 页内分享：button 需去掉默认边框背景，小按钮靠左 */
-.sharerow { display: flex; align-items: center; justify-content: flex-start; padding: 0 4rpx; }
+/* 两个操作保持足够的点击区域，数字较长时允许按钮内容换行。 */
+.sharerow { display: flex; align-items: stretch; padding: 8rpx 0 0; }
 .sharebtn {
+  flex: 1; min-width: 0; min-height: 88rpx; box-sizing: border-box;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 26rpx; color: var(--primary); border: 1rpx solid var(--primary);
-  border-radius: 999rpx; padding: 12rpx 0; line-height: 1.4; width: 469rpx;   /* 5/8 屏宽(750rpx*5/8) */
-  /* 微信原生 button 默认 margin:0 auto 会吸收两侧空间导致“看起来居中”，
-     右侧 auto 强制吸收剩余空间 → 按钮恒定贴左 */
-  margin: 0 auto 0 0;
-  width: auto;
-  background: transparent;
+  font-size: 26rpx; font-weight: 400; color: #46556B;
+  border: none; border-radius: 28rpx; padding: 18rpx 16rpx;
+  line-height: 1.5; margin: 0; background: #DCE5F2;
 }
-.sharebtn::after { border: none; }
-/* 点赞：分享按钮右侧，无描边无底框，仅红心+数字 */
+.sharebtn::after, .likebtn::after { border: none; }
 .likebtn {
-  flex: none; margin-left: 20rpx;
-  display: inline-flex; align-items: center;
-  font-size: 30rpx; color: #E56A77; font-weight: 600;
-  padding: 12rpx 4rpx;
+  flex: 0 1 240rpx; min-width: 0; min-height: 88rpx; box-sizing: border-box;
+  margin: 0 0 0 16rpx; padding: 16rpx;
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  border: none; border-radius: 28rpx; background: #FBE9EC;
+  font-size: 30rpx; line-height: 1.5; color: #D76F80; font-weight: 500;
+  overflow-wrap: break-word; word-break: break-all;
 }
-.likebtn:active { opacity: .7; }
+.like-icon { font-size: 44rpx; line-height: 1; margin-right: 12rpx; }
+.action-pressed { opacity: .7; }
+.like-hint { text-align: right; color: #939BA6; font-size: 22rpx; line-height: 1.6; margin: 12rpx 4rpx 24rpx; }
+
+/* 使用 flex 换行固定双列，避免依赖不同微信渲染环境的 grid 支持。 */
+.attrs {
+  display: flex; flex-wrap: wrap; gap: 0; overflow: hidden;
+  margin: 24rpx 0 8rpx; padding: 0 12rpx;
+  border-radius: 24rpx; background: #fff;
+}
+.attrs .attr {
+  flex: 0 0 50%; width: 50%; min-width: 0; box-sizing: border-box;
+  margin: 0; padding: 24rpx 16rpx;
+  background: transparent; border-radius: 0; box-shadow: none;
+  border-bottom: 1rpx solid #EDF0F5;
+}
+.attrs .attr .k { color: #929BA8; font-size: 23rpx; line-height: 1.5; }
+.attrs .attr .v {
+  margin-top: 8rpx; color: #283343; font-size: 28rpx; line-height: 1.6;
+  white-space: pre-wrap; overflow-wrap: break-word; word-break: break-all;
+}
 /* 照片墙：一屏 3 张，swiper 翻页（高度须显式设定，含圆点空间） */
 .gwrap { margin-top: 20rpx; }
 .gswiper { height: 300rpx; }

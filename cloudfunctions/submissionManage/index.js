@@ -91,6 +91,8 @@ function normalize(d, requireName) {
   if (d.gender !== undefined) { if (!GENDER.includes(d.gender)) return { err: '性别枚举错误' }; out.gender = d.gender; }
   if (d.sterilizationStatus !== undefined) { if (!STER.includes(d.sterilizationStatus)) return { err: '绝育枚举错误' }; out.sterilizationStatus = d.sterilizationStatus; }
   if (d.lifeStatus !== undefined) { if (!LIFE.includes(d.lifeStatus)) return { err: '状态枚举错误' }; out.lifeStatus = d.lifeStatus; }
+  // 离世原因：仅「喵星」有意义（≤200字），其他状态清空
+  if (d.deathReason !== undefined) { const v = takeStr(d.deathReason, MAX.note); if (v === null) return { err: '离世原因≤200字' }; out.deathReason = d.lifeStatus === '喵星' ? v : ''; }
   if (d.isAdoptable !== undefined) out.isAdoptable = !!d.isAdoptable;
   if (d.photos !== undefined) { const v = takePhotos(d.photos, MAX.photos); if (v === null) return { err: '照片须为最多9项的云存储地址数组（不接受本地临时路径）' }; out.photos = v; }
   if (d.latestPhotos !== undefined) { const v = takePhotos(d.latestPhotos, MAX.notePhotos); if (v === null) return { err: '近况配图须为最多3项的云存储地址数组（不接受本地临时路径）' }; out.latestPhotos = v; }
@@ -118,6 +120,7 @@ exports.main = async (event) => {
       id: s._id, name: s.name, aliases: s.aliases || [], coatColor: s.coatColor, gender: s.gender,
       sterilizationStatus: s.sterilizationStatus, sterilizedAt: s.sterilizedAt || '', usualLocations: s.usualLocations || [],
       healthNotes: s.healthNotes || '', latestNote: s.latestNote || '', lifeStatus: s.lifeStatus,
+      deathReason: s.deathReason || '',
       more: s.more || '',
       personalityTags: s.personalityTags || [],   // 审核页要展示性格，与 mock 返回字段保持一致
       isAdoptable: !!s.isAdoptable, photos: s.photos || [], voice: s.voice || '',
@@ -195,11 +198,13 @@ exports.main = async (event) => {
           };
           const patch = { updatedAt: now, operatorOpenid: OPENID };
           // 描述类：投稿没填的保留档案；填了且管理员选「用投稿」才覆盖
-          ['coatColor', 'gender', 'sterilizationStatus', 'sterilizedAt', 'healthNotes', 'lifeStatus'].forEach(k => {
+          ['coatColor', 'gender', 'sterilizationStatus', 'sterilizedAt', 'healthNotes', 'lifeStatus', 'deathReason'].forEach(k => {
             if (nd[k] === undefined || nd[k] === '') return;
             if (useSub(k)) patch[k] = nd[k];
           });
           if (useSub('isAdoptable')) patch.isAdoptable = !!nd.isAdoptable && (patch.lifeStatus || c.lifeStatus) === '在校';
+          // 最终状态不是「喵星」时，清空档案可能残留的离世原因
+          if ((patch.lifeStatus || c.lifeStatus) !== '喵星') patch.deathReason = '';
           // 累积类：追加去重
           patch.photos = mergeArr(c.photos, remoteArr(nd.photos), 9);
           if (!c.voice && nd.voice) patch.voice = nd.voice;
@@ -227,7 +232,7 @@ exports.main = async (event) => {
 
     const life = nd.lifeStatus || '在校';
     const catData = Object.assign({
-      aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '',
+      aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '', deathReason: '',
       coatColor: '未知', gender: '未知', sterilizationStatus: '未知', photos: [], voice: '', latestPhotos: [],
       more: '', cover: ''
     }, nd, {

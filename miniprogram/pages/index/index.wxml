@@ -37,10 +37,12 @@
   <view class="darrow">›</view>
 </view>
 
-<!-- 人气榜入口：右侧、屏幕约 3/4 高度处（离底部 1/4 屏），仅奖杯图标无底色 -->
-<view class="rankfab" bindtap="goRank">🏆</view>
+<!-- 猫咪星标榜单入口。 -->
+<view class="rankfab" bindtap="goRank" hover-class="rankfab-pressed" aria-role="button" aria-label="打开猫咪榜单">
+  <image class="rankfab-icon" src="/assets/icons/cat-star.svg" mode="aspectFit" />
+</view>
 
-<!-- 风云猫子弹窗：点赞榜 ♡ / 人气榜 🔥（仿参考设计：白卡片弹层、排名徽章、右上角关闭） -->
+<!-- 简洁榜单：数字排名、细线标签、右侧计数。 -->
 <view wx:if="{{rankShow}}" class="rankmask" bindtap="closeRank">
   <view class="ranksheet" catchtap="stop">
     <view class="rh">风云猫子<text class="rx" catchtap="closeRank">×</text></view>
@@ -48,16 +50,17 @@
       <view class="rtab {{rankTab==='like'?'on':''}}" bindtap="setRankTab" data-t="like">点赞榜</view>
       <view class="rtab {{rankTab==='hot'?'on':''}}" bindtap="setRankTab" data-t="hot">人气榜</view>
     </view>
+    <view class="rank-column-label">{{rankTab==='like'?'点赞数':'浏览次数'}}</view>
     <scroll-view scroll-y class="rlist">
-      <view wx:if="{{rankList.length===0}}" class="rempty">暂无数据，快去给喜欢的猫点个赞吧</view>
+      <view wx:if="{{rankList.length===0}}" class="rempty">暂无猫咪数据</view>
       <view wx:for="{{rankList}}" wx:key="id" class="rrow" bindtap="goRankDetail" data-id="{{item.id}}">
         <view class="rrank {{item.rank<=3?'top':''}}">{{item.rank}}</view>
-        <view class="ravatar" style="background:linear-gradient(135deg,#FFD59E,#FFB46B)">
+        <view class="ravatar">
           <image wx:if="{{item.photo}}" class="rimg" src="{{item.photo}}" mode="aspectFill" />
           <block wx:else>{{item.initial}}</block>
         </view>
         <view class="rname">{{item.name}}</view>
-        <view class="rcnt">{{rankTab==='like'?'♡':'🔥'}} {{item.count}}</view>
+        <view class="rcnt">{{item.count}}</view>
       </view>
     </scroll-view>
   </view>

@@ -25,62 +25,65 @@
 .darrow { color: rgba(255, 255, 255, .8); font-size: 44rpx; margin-left: 8rpx; }
 .dailycard:active { opacity: .88; }
 
-/* 人气榜浮游入口：右侧、屏幕约 3/4 高度处，仅一个奖杯图标（无底色无文字，浅色滤镜） */
+/* B 方案：蓝色猫咪轮廓与星标，白色圆形点击区域。 */
 .rankfab {
-  position: fixed; right: 24rpx; bottom: calc(100vh / 4); z-index: 80;
-  width: 76rpx; height: 76rpx;
+  position: fixed; right: 24rpx; bottom: calc(25vh - 24rpx); z-index: 80;
+  width: 96rpx; height: 96rpx; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center;
-  font-size: 50rpx; line-height: 1;
-  filter: brightness(1.28) saturate(.62) drop-shadow(0 3rpx 8rpx rgba(0, 0, 0, .12));
+  background: #fff; border: 2rpx solid #DCE5F2; border-radius: 50%;
+  box-shadow: 0 6rpx 18rpx rgba(60, 88, 130, .14);
 }
-.rankfab:active { opacity: .7; }
+.rankfab-icon { display: block; width: 60rpx; height: 60rpx; }
+.rankfab-pressed { opacity: .7; }
 
 /* 风云猫子弹窗：白卡片居中弹层 + 半透明遮罩 */
 .rankmask {
   position: fixed; left: 0; right: 0; top: 0; bottom: 0;
-  background: rgba(0, 0, 0, .45); z-index: 500;
+  background: rgba(31, 43, 61, .36); z-index: 500;
   display: flex; align-items: center; justify-content: center;
 }
 .ranksheet {
-  width: 640rpx; max-height: 76vh;
-  background: #fff; border-radius: 28rpx;
-  padding: 32rpx 32rpx 24rpx;
+  width: calc(100vw - 64rpx); max-width: 686rpx; max-height: 80vh; box-sizing: border-box;
+  background: #fff; border-radius: 32rpx;
+  padding: 36rpx 32rpx 16rpx;
   display: flex; flex-direction: column;
-  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, .18);
+  box-shadow: 0 16rpx 56rpx rgba(31, 43, 61, .12);
 }
 .rh {
-  text-align: center; font-size: 34rpx; font-weight: 700; color: #333;
-  position: relative; padding-bottom: 20rpx;
+  text-align: left; font-size: 34rpx; font-weight: 600; color: #283343;
+  position: relative; padding: 0 64rpx 28rpx 4rpx;
 }
-.rx { position: absolute; right: 0; top: -6rpx; font-size: 40rpx; color: #B8BEC6; font-weight: 400; padding: 0 8rpx; }
-.rtabs { display: flex; justify-content: center; gap: 16rpx; padding-bottom: 20rpx; }
+.rx { position: absolute; right: -8rpx; top: -16rpx; font-size: 40rpx; color: #929BA8; font-weight: 400; padding: 8rpx 16rpx; }
+.rtabs { display: flex; border-bottom: 1rpx solid #E9EDF3; }
 .rtab {
-  font-size: 26rpx; color: #9AA3AD; padding: 10rpx 30rpx;
-  border-radius: 999rpx;
+  flex: 1; position: relative; text-align: center;
+  font-size: 28rpx; line-height: 1.5; color: #929BA8; padding: 16rpx 0 20rpx;
 }
-.rtab.on { color: #E56A77; background: #FDEEF0; font-weight: 600; }
-.rlist { flex: 1; max-height: 56vh; }
+.rtab.on { color: #5079C6; font-weight: 600; }
+.rtab.on::after { content: ''; position: absolute; left: 28%; right: 28%; bottom: 0; height: 4rpx; border-radius: 4rpx; background: #5079C6; }
+.rank-column-label { text-align: right; color: #929BA8; font-size: 22rpx; padding: 20rpx 4rpx 4rpx; }
+.rlist { flex: 1; min-height: 0; height: 54vh; max-height: 54vh; }
 .rempty { text-align: center; color: #9AA3AD; font-size: 26rpx; padding: 60rpx 0; }
 .rrow {
   display: flex; align-items: center;
-  padding: 18rpx 4rpx;
-  border-bottom: 1rpx solid #F2F4F7;
+  padding: 22rpx 4rpx;
+  border-bottom: 1rpx solid #EDF0F5;
 }
 .rrow:last-child { border-bottom: none; }
 .rrank {
-  width: 48rpx; height: 48rpx; border-radius: 50%; flex-shrink: 0;
-  background: #EFF1F4; color: #9AA3AD;
+  width: 40rpx; flex-shrink: 0;
+  color: #929BA8;
   display: flex; align-items: center; justify-content: center;
-  font-size: 24rpx; font-weight: 700;
+  font-size: 28rpx; font-weight: 500;
 }
-.rrank.top { background: #F0852E; color: #fff; font-size: 26rpx; }
+.rrank.top { color: #5079C6; font-weight: 600; }
 .ravatar {
   width: 76rpx; height: 76rpx; border-radius: 50%;
-  margin: 0 20rpx; overflow: hidden; flex-shrink: 0;
+  margin: 0 20rpx 0 12rpx; overflow: hidden; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 30rpx; font-weight: 600;
+  background: #EDF2F9; color: #7489A9; font-size: 30rpx; font-weight: 500;
 }
 .rimg { width: 100%; height: 100%; }
-.rname { flex: 1; min-width: 0; font-size: 28rpx; color: #333; font-weight: 500; }
-.rcnt { font-size: 28rpx; color: #333; font-weight: 700; flex-shrink: 0; }
+.rname { flex: 1; min-width: 0; padding-right: 16rpx; font-size: 28rpx; line-height: 1.5; color: #283343; font-weight: 400; overflow-wrap: break-word; word-break: break-all; }
+.rcnt { max-width: 40%; font-size: 28rpx; line-height: 1.5; color: #596271; font-weight: 500; flex-shrink: 0; overflow-wrap: break-word; word-break: break-all; }
 .rrow:active { background: #FAFBFC; }

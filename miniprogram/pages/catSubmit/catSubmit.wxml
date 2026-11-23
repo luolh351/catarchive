@@ -91,6 +91,11 @@
     <view class="opt {{form.lifeStatus==='喵星'?'on':''}}" bindtap="selectOpt" data-group="lifeStatus" data-val="喵星">喵星</view>
   </view>
 </view>
+<!-- 仅「喵星」出现：离世原因（必填） -->
+<view class="field" wx:if="{{form.lifeStatus==='喵星'}}">
+  <view class="lab">离世原因（必填）</view>
+  <textarea class="ta" auto-height placeholder="如：车祸、年老衰竭、疾病等（≤200字）" value="{{form.deathReason}}" bindinput="onInput" data-field="deathReason" maxlength="200" />
+</view>
 
 <view class="save {{saving?'disabled':''}}" bindtap="submit">{{saving ? '提交中…' : '提交投稿'}}</view>
 <view class="cancel" bindtap="cancel">取消</view>

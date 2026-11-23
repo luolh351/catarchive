@@ -15,6 +15,7 @@ Page({
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '',
       photos: [], voice: '', isAdoptable: false, lifeStatus: '在校',
+      deathReason: '',   // 离世原因：仅「喵星」出现且必填
       more: ''      // 「更多」栏目：一整段自由补充资料
     }
   },
@@ -52,6 +53,10 @@ Page({
     if (group === 'lifeStatus' && val !== '在校' && form.isAdoptable) {
       form.isAdoptable = false;
       wx.showToast({ title: '非在校已取消待领养', icon: 'none' });
+    }
+    // 切走「喵星」时清空离世原因（避免残留脏数据）
+    if (group === 'lifeStatus' && val !== '喵星' && form.deathReason) {
+      form.deathReason = '';
     }
     this.setData({ form });
     this.markDirty();
@@ -154,8 +159,14 @@ Page({
       photos: f.photos, voice: f.voice,
       more: f.more || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
-      lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校'
+      lifeStatus: LIFES.includes(f.lifeStatus) ? f.lifeStatus : '在校',
+      deathReason: f.lifeStatus === '喵星' ? (f.deathReason || '').trim() : ''
     };
+    // 喵星必须填写离世原因（此时尚未进入 loading 状态，直接 return）
+    if (data.lifeStatus === '喵星' && !data.deathReason) {
+      wx.showToast({ title: '选择“喵星”需填写离世原因', icon: 'none' });
+      return;
+    }
     this.setData({ saving: true });
     wx.showLoading({ title: '提交中' });
     service.submitCat(data).then(r => {

@@ -80,6 +80,8 @@ function normalize(d, requireName) {
   }
   if (d.sterilizedAt !== undefined) { const v = takeStr(d.sterilizedAt, MAX.short); if (v === null) return { err: '绝育时间格式错误' }; out.sterilizedAt = v; }
   if (d.healthNotes !== undefined) { const v = takeStr(d.healthNotes, MAX.note); if (v === null) return { err: '健康状况≤200字' }; out.healthNotes = v; }
+  // 离世原因：仅「喵星」有意义；非喵星时统一清空（update 分支处理），这里只做格式校验
+  if (d.deathReason !== undefined) { const v = takeStr(d.deathReason, MAX.note); if (v === null) return { err: '离世原因≤200字' }; out.deathReason = v; }
   // 「更多」栏目：一整段自由补充资料（父母 / 子女 / 独特特点等），≤500 字
   if (d.more !== undefined) { const v = takeStr(d.more, MAX.latest); if (v === null) return { err: '更多≤500字' }; out.more = v; }
   if (d.latestNote !== undefined) { const v = takeStr(d.latestNote, MAX.latest); if (v === null) return { err: '最近情况≤500字' }; out.latestNote = v; }   // 兼容旧客户端提交（字段已废弃，正常请求不再携带）
@@ -125,12 +127,16 @@ exports.main = async (event) => {
     const d = r.data;
     const now = db.serverDate();
     const life = d.lifeStatus || '在校';
+    // 离世原因：仅「喵星」保留，其他状态清空
+    const deathReason = life === '喵星' ? (d.deathReason || '').trim() : '';
+    if (life === '喵星' && !deathReason) return { ok: false, msg: '选择“喵星”需填写离世原因' };
     const data = Object.assign({
-      aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '',
+      aliases: [], personalityTags: [], usualLocations: [], sterilizedAt: '', healthNotes: '', latestNote: '', deathReason: '',
       latestPhotos: [], more: '',
       coatColor: '未知', gender: '未知', sterilizationStatus: '未知', photos: [], voice: '', isAdoptable: false
     }, d, {
       lifeStatus: life,
+      deathReason,   // 非喵星强制为空串（覆盖 d 中可能残留的值）
       isAdoptable: !!d.isAdoptable && life === '在校', // 不在“在校”不允许标记待领养
       published: true, createdAt: now, updatedAt: now, operatorOpenid: OPENID
     });
@@ -164,6 +170,13 @@ exports.main = async (event) => {
     if (d.isAdoptable !== undefined) patch.isAdoptable = !!d.isAdoptable && nextLife === '在校';
     // 统一业务规则：去向一旦不是“在校”，无论是否传 isAdoptable 都取消待领养
     if (nextLife !== '在校') patch.isAdoptable = false;
+    // 离世原因：仅「喵星」保留（本次没传则保留原值）；切到其他状态一律清空
+    if (nextLife !== '喵星') {
+      patch.deathReason = '';
+    } else if (d.deathReason !== undefined && !String(d.deathReason).trim()) {
+      // 改成「喵星」但没填原因 → 阻止保存
+      return { ok: false, msg: '选择“喵星”需填写离世原因' };
+    }
     return write(async tx => {
       const current = await tx.collection('cats').doc(id).get();
       if (!current.data || current.data.published === false) throw new Error('档案不存在或已归档');
