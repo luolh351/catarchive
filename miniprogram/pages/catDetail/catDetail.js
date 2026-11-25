@@ -134,8 +134,15 @@ Page({
   load(id) {
     service.getCat(id).then(res => {
       if (!res.cat) { this.setData({ notFound: true }); return; }
+      // 照片墙：档案照片在前，近况时间线里的照片追加在后（按地址去重，档案照优先）
+      const seen = {};
+      (res.cat.photos || []).forEach(p => { seen[p] = 1; });
+      const tlPhotos = [];
+      (res.timeline || []).forEach(u => (u.photos || []).forEach(p => {
+        if (p && !seen[p]) { seen[p] = 1; tlPhotos.push(p); }
+      }));
+      const photos = (res.cat.photos || []).concat(tlPhotos);
       // 照片按每页 3 张分块，供照片墙 swiper 渲染
-      const photos = res.cat.photos || [];
       const photoPages = [];
       for (let i = 0; i < photos.length; i += 3) photoPages.push({ k: String(i), items: photos.slice(i, i + 3) });
       this.setData({ cat: res.cat, photoPages, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
