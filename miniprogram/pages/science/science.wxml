@@ -1,0 +1,20 @@
+<!-- 科普页：参考「武大猫咪图鉴」科普栏目布局——顶部子 tab + 主题插图，文字内容后续补充 -->
+<view class="stabs">
+  <view
+    wx:for="{{tabs}}"
+    wx:key="key"
+    class="stab {{tab===item.key?'on':''}}"
+    bindtap="setTab"
+    data-key="{{item.key}}"
+  >{{item.name}}</view>
+</view>
+
+<!-- 当前主题的插图（横幅大图，圆角） -->
+<view class="sbody">
+  <block wx:for="{{tabs}}" wx:key="key">
+    <view wx:if="{{tab===item.key}}" class="spanel">
+      <image class="shero" src="{{item.img}}" mode="aspectFill" />
+      <!-- 科普文字内容占位：后续按主题在此补充（禁食清单 / TNR 说明 / 领养须知等） -->
+    </view>
+  </block>
+</view>

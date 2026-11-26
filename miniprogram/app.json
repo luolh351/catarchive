@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/search/search",
     "pages/catDetail/catDetail",
+    "pages/science/science",
     "pages/about/about",
     "pages/admin/admin",
     "pages/catForm/catForm",
@@ -29,6 +30,7 @@
     "borderStyle": "white",
     "list": [
       { "pagePath": "pages/index/index", "text": "查猫" },
+      { "pagePath": "pages/science/science", "text": "科普" },
       { "pagePath": "pages/about/about", "text": "关于" }
     ]
   },
