@@ -19,9 +19,9 @@
 
   <!-- 小节内容：t 为节标题（可空），blocks 内 h 为条目小标题、ps 为段落 -->
   <view class="spanel scontent">
-    <view class="ssec" wx:for="{{cur.content.sections}}" wx:for-item="sec" wx:key="t">
+    <view class="ssec" wx:for="{{cur.content.sections}}" wx:for-item="sec" wx:key="k">
       <view wx:if="{{sec.t}}" class="ssec-t">{{sec.t}}</view>
-      <view class="sblock" wx:for="{{sec.blocks}}" wx:for-item="b" wx:key="index">
+      <view class="sblock" wx:for="{{sec.blocks}}" wx:for-item="b" wx:key="k">
         <view wx:if="{{b.h}}" class="sb-h">{{b.h}}</view>
         <view class="sb-p" wx:for="{{b.ps}}" wx:for-item="p" wx:key="*this">{{p}}</view>
       </view>

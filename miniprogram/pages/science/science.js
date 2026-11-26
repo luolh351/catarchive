@@ -127,11 +127,18 @@ Page({
   },
   onLoad() {
     // 三个主题的完整内容（插图 + 文案），切 tab 直接切换渲染
+    // 给小节与内容块编号（WXML 列表需要稳定且合法的 wx:key）
     const tabs = [
       { key: 'feeding', name: '投喂', img: '/assets/science/feeding.jpg', content: CONTENT.feeding },
       { key: 'neuter', name: '绝育', img: '/assets/science/neuter-care.jpg', content: CONTENT.neuter },
       { key: 'adopt', name: '领养', img: '/assets/science/adoption.jpg', content: CONTENT.adopt }
     ];
+    tabs.forEach(t => {
+      t.content.sections.forEach((s, si) => {
+        s.k = 's' + si;
+        s.blocks.forEach((b, bi) => { b.k = si + '-' + bi; });
+      });
+    });
     this.setData({ tabs, cur: tabs[0] });
   },
   setTab(e) {
