@@ -583,7 +583,7 @@ Page({
       wx.showToast({ title: '检测失败，请重试', icon: 'none' });
     });
   },
-  // 合并对比视图：候选猫 + 冲突字段逐个开关（默认建议「用投稿」）
+  // 合并对比视图：候选猫 + 冲突字段逐个开关（冲突默认「留档案」，管理员可逐项改「用投稿」）
   openMergeView(cands) {
     this._mergeCands = cands;
     this.setData({ mergeView: this.buildMergeView(cands, cands[0].id) });
@@ -602,9 +602,10 @@ Page({
     ].map(f => {
       // mine = 档案值（同名候选猫 picked）；sub = 投稿值（正在审核的投稿 d）
       // 注意：detail 是投稿、cands 是档案，两者别对调——对调会导致对比行「档案/投稿」标签显示颠倒
+      // 默认「留档案」（use=false）：档案现状优先，管理员逐项手动改用投稿
       const mine = toS(picked[f.key]);
       const sub = toS(d[f.key]);
-      return { key: f.key, label: f.label, mine, sub, conflict: mine !== sub, use: true };
+      return { key: f.key, label: f.label, mine, sub, conflict: mine !== sub, use: false };
     });
     return {
       candidates: cands.map(c => ({
