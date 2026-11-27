@@ -15,6 +15,7 @@ Page({
     // 统计键用 ASCII，避免 WXML 表达式解析器不支持“点+中文属性名”
     stats: { zaixiao: 0, dailingyang: 0, biye: 0, xiuxue: 0, miaoxing: 0 },
     cats: [],
+    catKw: '',   // 猫咪管理搜索关键字（名字/别名/出没地点/状态）
     admins: [],
     subs: [],
     noteSubs: [],   // 游客近况投稿（待审）
@@ -67,9 +68,13 @@ Page({
       const cats = list.map(c => {
         if (map[c.lifeStatus]) s[map[c.lifeStatus]]++;
         if (c.isAdoptable) s.dailingyang++;
-        return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : '') };
+        // hay：搜索 haystack——名字 / 别名 / 出没地点 / 状态，全部小写匹配
+        const hay = [c.name, c.aliasesText, c.locationsText, c.lifeStatus, c.isAdoptable ? '待领养' : '']
+          .filter(Boolean).join(' ').toLowerCase();
+        return { id: c.id, name: c.name, s: c.lifeStatus + (c.isAdoptable ? ' · 待领养' : ''), hay };
       });
-      this.setData({ stats: s, cats });
+      this._allCats = cats;   // 全量保留，统计与搜索都基于它
+      this.setData({ stats: s, cats: this.filterCats(this.data.catKw) });
     }).catch(failed);
     service.listSubmissions().then(list => this.setData({ subs: list || [] })).catch(failed);
     // 游客近况投稿（先审后显）：有新投稿时面板自动出现
@@ -98,6 +103,20 @@ Page({
       // 修复：映射里曾丢失 role，导致 noEditor 恒为 true、提示一直显示
       this.setData({ admins, noEditor: admins.filter(a => a.role === 'editor').length === 0 });
     }).catch(failed);
+  },
+  // 猫咪管理：本地过滤（输入即搜，不请求云端）
+  filterCats(kw) {
+    const k = (kw || '').trim().toLowerCase();
+    const all = this._allCats || [];
+    if (!k) return all;
+    return all.filter(c => c.hay && c.hay.indexOf(k) >= 0);
+  },
+  onCatSearch(e) {
+    const kw = e.detail.value || '';
+    this.setData({ catKw: kw, cats: this.filterCats(kw) });
+  },
+  clearCatSearch() {
+    this.setData({ catKw: '', cats: this._allCats || [] });
   },
   async runOperation(work, after) {
     if (this.operationBusy) return;

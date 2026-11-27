@@ -169,6 +169,12 @@
 
 <view class="panel">
   <view class="h">猫咪管理</view>
+  <!-- 搜索：名字 / 别名 / 出没地点 / 状态（本地过滤） -->
+  <view class="catsearch">
+    <text class="csearch-ico">🔍</text>
+    <input class="csearch-in" placeholder="搜索名字 / 别名 / 出没地点" value="{{catKw}}" bindinput="onCatSearch" confirm-type="search" />
+    <text class="csearch-x" wx:if="{{catKw}}" catchtap="clearCatSearch">×</text>
+  </view>
   <view class="mrow" wx:for="{{cats}}" wx:key="id">
     <view class="l">
       <view class="n">{{item.name}}</view>
@@ -181,6 +187,7 @@
       <text class="mini" bindtap="archive" data-id="{{item.id}}" style="margin-left:12rpx">归档</text>
     </view>
   </view>
+  <view wx:if="{{catKw && !cats.length}}" class="mempty">没有匹配「{{catKw}}」的猫咪</view>
 </view>
 
 <view class="panel" wx:if="{{apps.length}}">
