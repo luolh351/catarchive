@@ -89,12 +89,14 @@ Page({
     this.goReport();
   },
   // 转发给朋友：带猫咪名与封面，接收者点击直达该猫详情页
+  // 分享卡片图优先用「卡片封面」横图（coverCard 15:8，最接近微信卡片 5:4 比例），
+  // 其次首页圆形封面 cover，最后回退第一张照片
   onShareAppMessage() {
     const c = this.data.cat || {};
     return {
       title: c.name ? '来认识「' + c.name + '」｜校园猫咪档案馆' : '校园猫咪档案馆',
       path: '/pages/catDetail/catDetail?id=' + encodeURIComponent(this.data.id || ''),
-      imageUrl: (c.photos && c.photos[0]) || ''
+      imageUrl: c.coverCard || c.cover || (c.photos && c.photos[0]) || ''
     };
   },
   // 分享到朋友圈：单页模式打开，query 即页面参数
@@ -103,7 +105,7 @@ Page({
     return {
       title: c.name ? '来认识「' + c.name + '」' : '校园猫咪档案馆',
       query: 'id=' + encodeURIComponent(this.data.id || ''),
-      imageUrl: (c.photos && c.photos[0]) || ''
+      imageUrl: c.coverCard || c.cover || (c.photos && c.photos[0]) || ''
     };
   },
   onUnload() {
