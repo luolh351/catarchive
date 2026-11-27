@@ -235,10 +235,11 @@ function uploadList(list) { return Promise.all((list || []).map(p => uploadOne(p
 function prepareMedia(data) {
   const d = Object.assign({}, data || {});
   if (!useCloud() || !wx.cloud || !wx.cloud.uploadFile) return Promise.resolve(d);
-  // latestPhotos（近况配图）同样要上传，否则会把本地临时路径写库；cover（裁剪封面）同
+  // latestPhotos（近况配图）同样要上传，否则会把本地临时路径写库；cover（裁剪封面）同。
+  // 仅对请求中实际携带的媒体字段回写结果——未携带的字段不能置空，否则编辑请求会误清档案数据
   return Promise.all([ uploadList(d.photos), uploadOne(d.voice, 'mp3'), uploadList(d.latestPhotos), uploadOne(d.cover, 'jpg'), uploadOne(d.coverCard, 'jpg') ]).then(r => {
-    d.photos = r[0] || [];
-    d.voice = r[1] || '';
+    if (d.photos !== undefined) d.photos = r[0] || [];
+    if (d.voice !== undefined) d.voice = r[1] || '';
     if (d.latestPhotos !== undefined) d.latestPhotos = r[2] || [];
     if (d.cover !== undefined) d.cover = r[3] || '';
     if (d.coverCard !== undefined) d.coverCard = r[4] || '';
@@ -309,9 +310,12 @@ function catManage(action, payload) {
     }
     return Promise.resolve({ ok: false, msg: '未知 action' });
   }
-  // 云端：先把照片/音频上传到云存储拿到 fileID，再写入数据库
+  // 云端：先把照片/音频/封面/叫声上传到云存储拿到 fileID，再写入数据库。
+  // 注意封面(cover/coverCard)来自裁剪页的本地临时路径，与 photos/voice 不总是同时出现
+  // （如新增档案只传了封面没传照片），任一媒体字段出现都要走上传流程
   const d0 = (payload && payload.data) || {};
-  if (d0.photos || d0.voice) {
+  const MEDIA_KEYS = ['photos', 'voice', 'latestPhotos', 'cover', 'coverCard'];
+  if (MEDIA_KEYS.some(k => d0[k] !== undefined)) {
     return prepareMedia(d0).then(d => call('catManage', Object.assign({ action }, payload, { data: d })));
   }
   return call('catManage', Object.assign({ action }, payload));
