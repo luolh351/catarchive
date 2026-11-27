@@ -600,8 +600,10 @@ Page({
       { key: 'healthNotes', label: '健康状况' },
       { key: 'lifeStatus', label: '去向' }
     ].map(f => {
-      const mine = toS(d[f.key]);
-      const sub = toS(picked[f.key]);
+      // mine = 档案值（同名候选猫 picked）；sub = 投稿值（正在审核的投稿 d）
+      // 注意：detail 是投稿、cands 是档案，两者别对调——对调会导致对比行「档案/投稿」标签显示颠倒
+      const mine = toS(picked[f.key]);
+      const sub = toS(d[f.key]);
       return { key: f.key, label: f.label, mine, sub, conflict: mine !== sub, use: true };
     });
     return {
