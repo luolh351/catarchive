@@ -1,6 +1,25 @@
 /* 管理台样式 */
 .s2 { font-size: 22rpx; color: #8a8f99; margin-top: 6rpx; line-height: 1.4; }
 
+/* 游客近况投稿：卡片式（独立于通用 mrow 行，长文/配图不再挤压按钮） */
+.ncard {
+  background: var(--tagBg, #F4F6FA); border-radius: 20rpx;
+  padding: 20rpx 22rpx; margin-bottom: 16rpx;
+}
+.ncard:last-child { margin-bottom: 0; }
+.nhead { display: flex; align-items: baseline; justify-content: space-between; gap: 16rpx; }
+.nname { font-size: 28rpx; font-weight: 600; color: var(--fg, #2F3B4C); }
+.nmeta { flex: none; font-size: 22rpx; color: var(--sub); }
+.ncontent {
+  font-size: 25rpx; color: #4A5560; line-height: 1.6; margin-top: 10rpx;
+  display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; overflow: hidden;
+}
+.nimgs { display: flex; gap: 12rpx; margin-top: 14rpx; }
+.nimg { width: 110rpx; height: 110rpx; border-radius: 12rpx; }
+.nbtns { display: flex; justify-content: flex-end; gap: 14rpx; margin-top: 16rpx; }
+.nbtns .mini { padding: 8rpx 26rpx; }
+
 /* 一键通过 · 同名对比视图 */
 .mv-tip { font-size: 22rpx; color: var(--sub); line-height: 1.6; margin: 8rpx 0 20rpx; }
 .mv-pick { display: flex; flex-direction: column; gap: 16rpx; margin-bottom: 24rpx; }
