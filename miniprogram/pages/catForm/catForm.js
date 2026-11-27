@@ -298,17 +298,24 @@ Page({
     this.setData({ 'form.voice': '', voicePlaying: false });
     this.markDirty();
   },
+  // 试听叫声：新选的是本地文件可直接播；编辑已有档案时是 cloud:// fileID，
+  // InnerAudioContext 不支持，必须先 resolveLocal 转本地临时文件再播
   previewVoice() {
     if (this.audio) { this.audio.stop(); this.audio.destroy(); this.audio = null; }
     if (this.data.voicePlaying) { this.setData({ voicePlaying: false }); return; }
-    const a = wx.createInnerAudioContext();
-    a.src = this.data.form.voice;
-    a.onEnded(() => this.setData({ voicePlaying: false }));
-    a.onStop(() => this.setData({ voicePlaying: false }));
-    a.onError(() => { this.setData({ voicePlaying: false }); wx.showToast({ title: '播放失败', icon: 'none' }); });
-    a.play();
-    this.setData({ voicePlaying: true });
-    this.audio = a;
+    this.resolveLocal(this.data.form.voice).then(r => {
+      const a = wx.createInnerAudioContext();
+      a.src = r.path;
+      a.onEnded(() => this.setData({ voicePlaying: false }));
+      a.onStop(() => this.setData({ voicePlaying: false }));
+      a.onError(() => { this.setData({ voicePlaying: false }); wx.showToast({ title: '播放失败', icon: 'none' }); });
+      a.play();
+      this.setData({ voicePlaying: true });
+      this.audio = a;
+    }).catch(() => {
+      this.setData({ voicePlaying: false });
+      wx.showToast({ title: '音频下载失败', icon: 'none' });
+    });
   },
   save() {
     if (this.data.saving) return; // 防重复点击

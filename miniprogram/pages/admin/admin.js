@@ -294,17 +294,23 @@ Page({
     wx.previewImage({ urls: list, current: e.currentTarget.dataset.src });
   },
   // 投稿详情：试听投稿音频
+  // 注意：InnerAudioContext 不支持 cloud:// fileID，必须先经 resolveLocal 转成本地临时文件
+  // （详情页 catDetail 也是同样的先下载再播流程）
   playSubVoice() {
     if (this.subAudio) { this.subAudio.stop(); this.subAudio.destroy(); this.subAudio = null; }
     if (this.data.subPlaying) { this.setData({ subPlaying: false }); return; }
-    const a = wx.createInnerAudioContext();
-    a.src = this.data.detail.voice;
-    a.onEnded(() => this.setData({ subPlaying: false }));
-    a.onStop(() => this.setData({ subPlaying: false }));
-    a.onError(() => { this.setData({ subPlaying: false }); wx.showToast({ title: '播放失败', icon: 'none' }); });
-    a.play();
-    this.setData({ subPlaying: true });
-    this.subAudio = a;
+    const voice = this.data.detail && this.data.detail.voice;
+    if (!voice) return;
+    this.resolveLocal(voice).then(local => {
+      const a = wx.createInnerAudioContext();
+      a.src = local;
+      a.onEnded(() => this.setData({ subPlaying: false }));
+      a.onStop(() => this.setData({ subPlaying: false }));
+      a.onError(() => { this.setData({ subPlaying: false }); wx.showToast({ title: '播放失败', icon: 'none' }); });
+      a.play();
+      this.setData({ subPlaying: true });
+      this.subAudio = a;
+    }).catch(() => wx.showToast({ title: '音频下载失败', icon: 'none' }));
   },
   copySub(e) {
     const text = e.currentTarget.dataset.copy;
