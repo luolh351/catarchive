@@ -92,7 +92,8 @@
       <view class="covst">{{coverPick === 'card' ? '选择「卡片封面」的原图' : '选择「首页圆形封面」的原图'}}</view>
       <view class="covskip">裁剪时请把想显示的部分框在中间；点 × 则默认取中间区域。</view>
       <view class="covgrid">
-        <view class="covcell" wx:for="{{form.photos}}" wx:key="*this" bindtap="pickCoverFrom" data-src="{{item}}">
+        <!-- 候选 = 详情页照片墙全部照片（档案照片 + 近况配图），与详情页看到的一致 -->
+        <view class="covcell" wx:for="{{wallPhotos}}" wx:key="*this" bindtap="pickCoverFrom" data-src="{{item}}">
           <image src="{{item}}" mode="aspectFill" />
         </view>
         <view class="covcell covadd" catchtap="chooseCoverNew">＋<text>拍照/相册</text></view>

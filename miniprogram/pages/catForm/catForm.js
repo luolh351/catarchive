@@ -13,6 +13,7 @@ Page({
     dirty: false,       // 是否有未保存改动
     voicePlaying: false,
     coverPick: '',   // 正在为哪个封面选图：'' | 'home' | 'card'
+    wallPhotos: [],  // 封面候选 = 详情页照片墙全部照片（档案照片 + 近况配图，去重）
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '',
@@ -59,14 +60,23 @@ Page({
       wx.hideLoading();
       if (!res.cat) { wx.showToast({ title: '未找到', icon: 'none' }); return; }
       const c = res.cat;
+      const base = this.safePhotos(c.photos);
+      // 封面候选 = 详情页照片墙的全部照片：档案照片在前 + 近况配图去重追加在后
+      const seen = {};
+      base.forEach(p => { seen[p] = 1; });
+      const tlPhotos = [];
+      (res.timeline || []).forEach(u => (u.photos || []).forEach(p => {
+        if (p && !seen[p]) { seen[p] = 1; tlPhotos.push(p); }
+      }));
       this.setData({
+        wallPhotos: base.concat(tlPhotos),
         form: {
           name: c.name || '', aliases: (c.aliases || []).join('、'), coatColor: c.coatColor || '',
           gender: c.gender || '', sterilizationStatus: c.sterilizationStatus || '', sterilizedAt: c.sterilizedAt || '',
           usualLocations: (c.usualLocations || []).join('、'),
           personalityTags: (c.personalityTags || []).join('、'), healthNotes: c.healthNotes || '',
           more: res.more || '',
-          photos: this.safePhotos(c.photos), voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校',
+          photos: base, voice: this.safeVoice(c.voice), isAdoptable: !!c.isAdoptable, lifeStatus: c.lifeStatus || '在校',
           deathReason: c.deathReason || '',
           cover: (c.cover && this.mediaOk(c.cover)) ? c.cover : '',
           coverCard: (c.coverCard && this.mediaOk(c.coverCard)) ? c.coverCard : ''
@@ -149,7 +159,7 @@ Page({
     this.setData({ form });
     this.markDirty();
   },
-  // 照片：支持拍照/相册，最多 MAX_PHOTOS 张
+  // 照片：支持拍照/相册，最多 MAX_PHOTOS 张（新照片同时进入封面候选）
   chooseImage() {
     const remain = MAX_PHOTOS - this.data.form.photos.length;
     if (remain <= 0) { wx.showToast({ title: '最多 ' + MAX_PHOTOS + ' 张', icon: 'none' }); return; }
@@ -158,7 +168,7 @@ Page({
       success: res => {
         const paths = (res.tempFiles || []).map(f => f.tempFilePath).filter(Boolean);
         if (!paths.length) return;
-        this.setData({ 'form.photos': this.data.form.photos.concat(paths) });
+        this.setData({ 'form.photos': this.data.form.photos.concat(paths), wallPhotos: this.data.wallPhotos.concat(paths) });
         this.markDirty();
       },
       fail: () => {}
@@ -174,6 +184,7 @@ Page({
     // 删除的正是某处封面的原图时清空该项，回退默认
     if (form.cover === removed) patch['form.cover'] = '';
     if (form.coverCard === removed) patch['form.coverCard'] = '';
+    patch.wallPhotos = this.data.wallPhotos.filter(p => p !== removed);   // 同步移出封面候选
     this.setData(patch);
     this.markDirty();
   },
