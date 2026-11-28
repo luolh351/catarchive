@@ -14,6 +14,7 @@ Page({
     voicePlaying: false,
     coverPick: '',   // 正在为哪个封面选图：'' | 'home' | 'card'
     wallPhotos: [],  // 封面候选 = 详情页照片墙全部照片（档案照片 + 近况配图，去重）
+    wallPages: [],   // 照片区分页（每页 3 张，左右滑动），与 wallPhotos 同步
     form: {
       name: '', aliases: '', coatColor: '', gender: '', sterilizationStatus: '',
       sterilizedAt: '', usualLocations: '', personalityTags: '', healthNotes: '',
@@ -82,7 +83,15 @@ Page({
           coverCard: (c.coverCard && this.mediaOk(c.coverCard)) ? c.coverCard : ''
         }
       });
+      this.buildWallPages();
     }).catch(() => { wx.hideLoading(); wx.showToast({ title: '加载失败', icon: 'none' }); });
+  },
+  // 照片区分页（每页 3 张）：wallPhotos 变化后重建
+  buildWallPages() {
+    const wp = this.data.wallPhotos || [];
+    const pages = [];
+    for (let i = 0; i < wp.length; i += 3) pages.push({ k: String(i), n: i, items: wp.slice(i, i + 3) });
+    this.setData({ wallPages: pages });
   },
   // 有改动时标记未保存，并开启“离开提醒”
   // 是否是可长期使用的媒体地址：cloud:// 或真实域名；包内 /assets 演示资源也算可用
@@ -169,6 +178,7 @@ Page({
         const paths = (res.tempFiles || []).map(f => f.tempFilePath).filter(Boolean);
         if (!paths.length) return;
         this.setData({ 'form.photos': this.data.form.photos.concat(paths), wallPhotos: this.data.wallPhotos.concat(paths) });
+        this.buildWallPages();
         this.markDirty();
       },
       fail: () => {}
@@ -186,11 +196,12 @@ Page({
     if (form.coverCard === removed) patch['form.coverCard'] = '';
     patch.wallPhotos = this.data.wallPhotos.filter(p => p !== removed);   // 同步移出封面候选
     this.setData(patch);
+    this.buildWallPages();
     this.markDirty();
   },
-  // 点缩略图看大图
+  // 点缩略图看大图（档案照片 + 近况配图全量预览）
   previewPhoto(e) {
-    const photos = this.data.form.photos || [];
+    const photos = this.data.wallPhotos || [];
     if (!photos.length) return;
     wx.previewImage({ urls: photos, current: e.currentTarget.dataset.src });
   },

@@ -79,12 +79,19 @@
   </view>
   <view class="covclear" wx:if="{{form.cover || form.coverCard}}" catchtap="clearCovers">清除封面设置，恢复默认第一张</view>
 
-  <view class="imgs" wx:if="{{form.photos.length}}">
-    <view class="img" wx:for="{{form.photos}}" wx:key="*this">
-      <image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
-      <text class="x" catchtap="removeImage" data-i="{{index}}">×</text>
-    </view>
-  </view>
+  <!-- 照片区：档案照片（可删除）+ 近况配图（只读，带角标），每页 3 张左右滑动 -->
+  <swiper wx:if="{{wallPhotos.length}}" class="wswiper" indicator-dots indicator-color="rgba(47,111,219,.25)" indicator-active-color="#2F6FDB">
+    <swiper-item wx:for="{{wallPages}}" wx:key="k" wx:for-item="page">
+      <view class="imgs">
+        <view class="img" wx:for="{{page.items}}" wx:for-index="ci" wx:for-item="p" wx:key="*this">
+          <image src="{{p}}" mode="aspectFill" data-src="{{p}}" bindtap="previewPhoto" />
+          <text wx:if="{{page.n + ci < form.photos.length}}" class="x" catchtap="removeImage" data-i="{{page.n + ci}}">×</text>
+          <text wx:else class="tltag">近况</text>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+  <view wx:if="{{wallPhotos.length > form.photos.length}}" class="tlmeta">带「近况」角标的配图来自时间线，仅可查看；如需调整请在对应近况中修改。</view>
 
   <!-- 选择封面原图的浮层 -->
   <view wx:if="{{coverPick}}" class="covmask" bindtap="closeCoverPicker">

@@ -41,3 +41,12 @@
 }
 .covadd text { font-size: 20rpx; color: #8a8f99; margin-top: 4rpx; }
 .covcancel { text-align: center; font-size: 27rpx; color: #5B6470; padding: 26rpx 0 6rpx; }
+
+/* 照片区：档案照片 + 近况配图，swiper 分页左右滑动 */
+.wswiper { height: 228rpx; margin-top: 20rpx; }
+.tltag {
+  position: absolute; left: 8rpx; top: 8rpx;
+  background: rgba(47,111,219,.85); color: #fff;
+  font-size: 20rpx; padding: 4rpx 12rpx; border-radius: 8rpx;
+}
+.tlmeta { font-size: 22rpx; color: #8a8f99; line-height: 1.5; margin-top: 12rpx; }
