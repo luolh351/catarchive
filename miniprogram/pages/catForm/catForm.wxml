@@ -91,7 +91,6 @@
       </view>
     </swiper-item>
   </swiper>
-  <view wx:if="{{wallPhotos.length > form.photos.length}}" class="tlmeta">带「近况」角标的配图来自时间线，仅可查看；如需调整请在对应近况中修改。</view>
 
   <!-- 选择封面原图的浮层 -->
   <view wx:if="{{coverPick}}" class="covmask" bindtap="closeCoverPicker">

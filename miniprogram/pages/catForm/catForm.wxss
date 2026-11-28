@@ -49,4 +49,3 @@
   background: rgba(47,111,219,.85); color: #fff;
   font-size: 20rpx; padding: 4rpx 12rpx; border-radius: 8rpx;
 }
-.tlmeta { font-size: 22rpx; color: #8a8f99; line-height: 1.5; margin-top: 12rpx; }
