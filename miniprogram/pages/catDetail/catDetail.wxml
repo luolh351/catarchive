@@ -23,20 +23,20 @@
   <!-- 全屏照片查看层：左右滑动或点箭头切换，支持保存到相册 -->
   <view wx:if="{{viewer}}" class="viewer" catchtouchmove="stop">
     <swiper class="vswiper" current="{{viewerIndex}}" circular bindchange="onViewerChange">
-      <swiper-item wx:for="{{cat.photos}}" wx:key="*this">
+      <swiper-item wx:for="{{photos}}" wx:key="*this">
         <image src="{{item}}" mode="aspectFit" class="vimg" bindtap="closeViewer" />
       </swiper-item>
     </swiper>
     <view class="vnav left" catchtap="prevPhoto">‹</view>
     <view class="vnav right" catchtap="nextPhoto">›</view>
     <view class="vbar">
-      <text class="vcount">{{viewerIndex + 1}} / {{cat.photos.length}}</text>
+      <text class="vcount">{{viewerIndex + 1}} / {{photos.length}}</text>
       <button class="vsave" catchtap="savePhoto">⤓ 保存图片</button>
     </view>
   </view>
 
-  <!-- 照片墙：一屏 3 张，左右滑动翻页（第 2 张起全部照片） -->
-  <view wx:if="{{cat.photos.length > 1}}" class="gwrap">
+  <!-- 照片墙：一屏 3 张，左右滑动翻页（档案照片 + 近况配图，全量见 photos） -->
+  <view wx:if="{{photos.length > 1}}" class="gwrap">
     <swiper class="gswiper" indicator-dots indicator-color="rgba(255,255,255,.4)" indicator-active-color="#2F6FDB" circular>
       <swiper-item wx:for="{{photoPages}}" wx:key="k" wx:for-index="pi" wx:for-item="page">
         <view class="gpage">

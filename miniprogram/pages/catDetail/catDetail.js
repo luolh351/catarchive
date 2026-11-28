@@ -10,6 +10,7 @@ Page({
     timeline: [],
     notFound: false,
     playing: false,
+    photos: [],          // 照片墙全量：档案照片 + 近况配图（去重），全屏查看层与保存共用
     photoPages: [],      // 照片墙：每页 3 张（{k, items}）
     viewer: false,       // 全屏查看层开关
     viewerIndex: 0,      // 当前查看的照片序号
@@ -147,7 +148,7 @@ Page({
       // 照片按每页 3 张分块，供照片墙 swiper 渲染
       const photoPages = [];
       for (let i = 0; i < photos.length; i += 3) photoPages.push({ k: String(i), items: photos.slice(i, i + 3) });
-      this.setData({ cat: res.cat, photoPages, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
+      this.setData({ cat: res.cat, photos, photoPages, attrs: res.attrs || [], more: res.more || [], timeline: res.timeline || [] });
       this.refreshLike();
     }).catch(() => { this.setData({ notFound: true }); wx.showToast({ title: '加载失败', icon: 'none' }); });
   },
@@ -195,28 +196,29 @@ Page({
   },
 
   // ---------- 全屏照片查看层 ----------
+  // 数据源为 photos（档案照片 + 近况配图，与照片墙一致）
   openViewer(e) {
     const i = parseInt(e.currentTarget.dataset.i || 0, 10) || 0;
-    if (!this.data.cat.photos.length) return;
-    this.setData({ viewer: true, viewerIndex: Math.min(i, this.data.cat.photos.length - 1) });
+    if (!this.data.photos.length) return;
+    this.setData({ viewer: true, viewerIndex: Math.min(i, this.data.photos.length - 1) });
   },
   closeViewer() { this.setData({ viewer: false }); },
   stop() {},   // 阻止查看层背景滚动穿透
   onViewerChange(e) { this.setData({ viewerIndex: e.detail.current }); },
   // 左右箭头切换（循环）
   prevPhoto() {
-    const n = this.data.cat.photos.length;
+    const n = this.data.photos.length;
     if (!n) return;
     this.setData({ viewerIndex: (this.data.viewerIndex - 1 + n) % n });
   },
   nextPhoto() {
-    const n = this.data.cat.photos.length;
+    const n = this.data.photos.length;
     if (!n) return;
     this.setData({ viewerIndex: (this.data.viewerIndex + 1) % n });
   },
   // 保存当前大图到相册（游客可用）；cloud:// 需先下载为临时文件
   savePhoto() {
-    const photos = this.data.cat.photos || [];
+    const photos = this.data.photos || [];
     const src = photos[this.data.viewerIndex];
     if (!src) return;
     const save = path => wx.saveImageToPhotosAlbum({
