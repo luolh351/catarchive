@@ -22,7 +22,7 @@
     <text class="play" bindtap="previewVoice">{{voicePlaying ? '播放中 ♪' : '▶ 试听'}}</text>
     <text class="x" catchtap="clearVoice">×</text>
   </view>
-  <view class="muted" style="margin-top:16rpx">这里上传的照片会进入它的档案照片墙（第一张作封面）；不要传到别处。</view>
+  <view class="muted" style="margin-top:16rpx">请上传本人拍摄或已获授权的照片，使用他人作品可能侵权且不予采纳。</view>
 </view>
 <view class="field">
   <view class="lab">昵称（用于搜索）</view>
