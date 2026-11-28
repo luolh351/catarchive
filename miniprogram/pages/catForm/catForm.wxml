@@ -14,7 +14,6 @@
     <view class="opt {{form.coatColor==='狸花'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="狸花">狸花</view>
     <view class="opt {{form.coatColor==='白'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="白">白</view>
     <view class="opt {{form.coatColor==='其他'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="其他">其他</view>
-    <view class="opt {{form.coatColor==='未知'?'on':''}}" bindtap="selectOpt" data-group="coatColor" data-val="未知">未知</view>
   </view>
   <input class="custom" placeholder="或输入自定义毛色" value="{{form.coatColor}}" bindinput="onCoatInput" />
 </view>
@@ -23,7 +22,6 @@
   <view class="opts">
     <view class="opt {{form.gender==='公'?'on':''}}" bindtap="selectOpt" data-group="gender" data-val="公">公</view>
     <view class="opt {{form.gender==='母'?'on':''}}" bindtap="selectOpt" data-group="gender" data-val="母">母</view>
-    <view class="opt {{form.gender==='未知'?'on':''}}" bindtap="selectOpt" data-group="gender" data-val="未知">未知</view>
   </view>
 </view>
 <view class="field">
@@ -31,7 +29,6 @@
   <view class="opts">
     <view class="opt {{form.sterilizationStatus==='已绝育'?'on':''}}" bindtap="selectOpt" data-group="sterilizationStatus" data-val="已绝育">已绝育</view>
     <view class="opt {{form.sterilizationStatus==='未绝育'?'on':''}}" bindtap="selectOpt" data-group="sterilizationStatus" data-val="未绝育">未绝育</view>
-    <view class="opt {{form.sterilizationStatus==='未知'?'on':''}}" bindtap="selectOpt" data-group="sterilizationStatus" data-val="未知">未知</view>
   </view>
 </view>
 <view class="field">

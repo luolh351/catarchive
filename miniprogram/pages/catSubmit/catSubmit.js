@@ -1,7 +1,7 @@
 // 游客投稿表单：外观同管理编辑页，但无需管理员身份；提交后进入待审核（管理员采纳才公开）
 const service = require('../../utils/service');
-const GENDERS = ['公', '母', '未知'];
-const STERS = ['已绝育', '未绝育', '未知'];
+const GENDERS = ['公', '母'];
+const STERS = ['已绝育', '未绝育'];
 const LIFES = ['在校', '毕业', '休学', '喵星'];
 const MAX_PHOTOS = 9;
 const MAX_NAME = 20;

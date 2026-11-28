@@ -1,7 +1,7 @@
 // 新增/编辑档案表单：保存走 service.catManage（本地模拟真写入；连云走云函数，服务端校验）
 const service = require('../../utils/service');
-const GENDERS = ['公', '母', '未知'];
-const STERS = ['已绝育', '未绝育', '未知'];
+const GENDERS = ['公', '母'];
+const STERS = ['已绝育', '未绝育'];
 const LIFES = ['在校', '毕业', '休学', '喵星'];
 const MAX_PHOTOS = 9;   // 照片总数上限
 const MAX_NAME = 20;    // 名字长度上限（与云端校验一致）
