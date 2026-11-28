@@ -43,7 +43,8 @@
 .covcancel { text-align: center; font-size: 27rpx; color: #5B6470; padding: 26rpx 0 6rpx; }
 
 /* 照片区：档案照片 + 近况配图，swiper 分页左右滑动 */
-.wswiper { height: 228rpx; margin-top: 20rpx; }
+/* 高度 = 图 192rpx + 指示点区域 ~70rpx，避免分页点叠在图片上 */
+.wswiper { height: 262rpx; margin-top: 20rpx; }
 .tltag {
   position: absolute; left: 8rpx; top: 8rpx;
   background: rgba(47,111,219,.85); color: #fff;
