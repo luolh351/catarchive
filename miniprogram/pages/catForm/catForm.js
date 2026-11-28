@@ -329,6 +329,9 @@ Page({
       sterilizationStatus: STERS.includes(f.sterilizationStatus) ? f.sterilizationStatus : '未知',
       sterilizedAt: f.sterilizedAt, usualLocations: f.usualLocations,
       personalityTags: f.personalityTags, healthNotes: f.healthNotes,
+      // 照片与叫声必须随表单提交：service.catManage 会先上传本地媒体到云存储再写库
+      // （此前 photos/voice 未包含在 data 里，新增/编辑档案保存后照片丢失，只剩裁剪的封面）
+      photos: this.safePhotos(f.photos), voice: this.safeVoice(f.voice),
       cover: f.cover || '', coverCard: f.coverCard || '',
       more: f.more || '',
       isAdoptable: !!f.isAdoptable && f.lifeStatus === '在校',
